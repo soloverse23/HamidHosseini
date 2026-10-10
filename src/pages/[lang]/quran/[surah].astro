@@ -1,7 +1,7 @@
 ---
 import '@fontsource/amiri-quran/400.css';
 import Icon from '../../../components/Icon.astro';
-import { LOCALES, type Locale } from '../../../i18n/locales';
+import { LOCALES, isRtl, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { arabic, quranFa, surahs, translatedCount } from '../../../lib/data';
@@ -21,7 +21,7 @@ const tr = quranFa.surahs[meta.n] ?? {};
 const done = translatedCount(meta.n);
 const prev = surahs[meta.n - 2];
 const next = surahs[meta.n];
-const localName = (m: typeof meta) => (locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit);
+const localName = (m: typeof meta) => (locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? m.ar : m.translit);
 const subtitle = locale === 'en' ? meta.en : locale === 'ro' ? meta.translit : undefined;
 const showBasmala = meta.n !== 1 && meta.n !== 9;
 const title = `${s.quran.surah} ${localName(meta)}`;
@@ -113,7 +113,7 @@ const title = `${s.quran.surah} ${localName(meta)}`;
                       </ul>
                     </details>
                   )}
-                  <a class="ayah__src meta" href={`https://t.me/hamidhossaini/${v.post}`} rel="noopener" target="_blank" dir={locale === 'fa' || locale === 'ar' ? 'rtl' : 'ltr'}>
+                  <a class="ayah__src meta" href={`https://t.me/hamidhossaini/${v.post}`} rel="noopener" target="_blank" dir={isRtl(locale) ? 'rtl' : 'ltr'}>
                     {s.quran.proposedIn} #{plain(locale, v.post)} · {date(locale, v.date, 'short')}
                   </a>
                 </div>

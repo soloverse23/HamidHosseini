@@ -16,7 +16,7 @@ const locale = Astro.params.lang as Locale;
 const s = t(locale);
 const page = href(locale, 'search');
 const names = new Intl.DisplayNames([LOCALE_META[locale].intl.split('-u-')[0]], { type: 'language' });
-const LANGS = ['fa', 'ar', 'ro', 'en'] as const;
+const LANGS = ['fa', 'ar', 'ur', 'ro', 'en'] as const;
 ---
 
 <Base locale={locale} path="search" title={s.search.title} description={s.search.lede} noindex>

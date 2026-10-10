@@ -3,18 +3,20 @@
 //
 //  - Telegram companions of a YouTube episode (the AI clip, the podcast)
 //    are attached to that episode instead of listed separately.
+//  - The same upload in several languages on one day is one card; each
+//    reader sees their own language first.
 //  - Consecutive short videos (TikTok, YouTube Shorts) on the same day
 //    become one strip.
 //  - Quran-translation posts carry the verse range they produced.
 
-import { instagram, notes, quranByPost, tiktok, youtube } from './data';
+import { instagram, notes, quranByPost, tiktok, uploadKey, youtube } from './data';
 import type { FeedItem } from './feed-types';
 
 export type FeedKind = 'note' | 'video' | 'shorts' | 'photo';
 
 export type FeedEntry =
   | { kind: 'note'; item: FeedItem; verses?: { surah: number; from: number; to: number } }
-  | { kind: 'video'; item: FeedItem; companions: FeedItem[] }
+  | { kind: 'video'; item: FeedItem; versions: FeedItem[]; companions: FeedItem[] }
   | { kind: 'shorts'; items: FeedItem[] }
   | { kind: 'photo'; item: FeedItem };
 
@@ -67,9 +69,17 @@ function buildDays(pool: FeedItem[], limit = Infinity): FeedDay[] {
       }
       entries.push({ day, date: item.date, entry: { kind: 'shorts', items: [item] } });
     } else if (item.source === 'youtube') {
+      const key = uploadKey.get(item.id);
+      const twin = key
+        ? entries.find((e) => e.day === day && e.entry.kind === 'video' && uploadKey.get(e.entry.item.id) === key)
+        : undefined;
+      if (twin?.entry.kind === 'video') {
+        twin.entry.versions.push(item);
+        continue; // one card per upload
+      }
       const companions =
         item.episode && NEWEST_VIDEO_OF.get(item.episode) === item.id ? (COMPANIONS.get(item.episode) ?? []) : [];
-      entries.push({ day, date: item.date, entry: { kind: 'video', item, companions } });
+      entries.push({ day, date: item.date, entry: { kind: 'video', item, versions: [item], companions } });
     } else if (item.source === 'instagram') {
       entries.push({ day, date: item.date, entry: { kind: 'photo', item } });
     } else {

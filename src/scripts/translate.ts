@@ -7,7 +7,7 @@
 // The text goes to Google's free web endpoint straight from the browser, so
 // each reader's own quota applies and the site needs no key or server.
 
-import { isLocale, type Locale } from '../i18n/locales';
+import { isLocale, isRtl, type Locale } from '../i18n/locales';
 import { TR_STRINGS } from '../i18n/translate';
 
 const ENDPOINT = 'https://translate.googleapis.com/translate_a/t';
@@ -280,12 +280,12 @@ function show(u: Unit, translated: boolean) {
   if (translated && u.translated !== undefined) {
     el.innerHTML = u.translated;
     el.lang = target;
-    el.dir = target === 'fa' || target === 'ar' ? 'rtl' : 'ltr';
+    el.dir = isRtl(target) ? 'rtl' : 'ltr';
     el.setAttribute('data-tr-state', 'done');
   } else {
     el.innerHTML = u.original;
     el.lang = u.sl;
-    el.dir = u.sl === 'fa' || u.sl === 'ar' ? 'rtl' : 'ltr';
+    el.dir = isRtl(u.sl) ? 'rtl' : 'ltr';
     el.removeAttribute('data-tr-state');
   }
 }
@@ -328,7 +328,7 @@ function disable() {
 }
 
 // ---------- UI: a popup that asks, then a button in the corner ----------
-const DIR = target === 'fa' || target === 'ar' ? 'rtl' : 'ltr';
+const DIR = isRtl(target) ? 'rtl' : 'ltr';
 const ICON =
   '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 5c.8 3.4 3 6 6 7.5M11 5c-.6 3-2.8 6-6.5 8"/><path d="m13 21 4-9 4 9M14.4 18h5.2"/></svg>';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');

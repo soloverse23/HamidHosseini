@@ -1,7 +1,7 @@
 // One place for every external channel: identity, brand mark and the live
 // numbers the fetchers keep in sync (followers, posts, last post date).
 
-import { CHANNEL_URLS, instagram, notes, telegram, tiktok, youtube } from './data';
+import { CHANNEL_URLS, instagram, notes, telegram, tiktok, youtube, type YtLang } from './data';
 import type { FeedItem } from './feed-types';
 
 export type Platform = 'telegram' | 'youtube' | 'tiktok' | 'instagram';
@@ -16,7 +16,7 @@ export interface Channel {
   handle: string;
   url: string;
   /** Content language of the channel */
-  lang: 'fa' | 'ro';
+  lang: YtLang;
   /** Site section that mirrors this channel */
   page: string;
   followers?: number;
@@ -26,8 +26,15 @@ export interface Channel {
 }
 
 const last = (items: FeedItem[]) => items[0]?.date;
-const ytFa = youtube.items.filter((i) => i.channel === 'fa');
-const ytRo = youtube.items.filter((i) => i.channel === 'ro');
+
+// One YouTube channel per language of "Islam: why and how?", in this order.
+const YOUTUBE: { lang: YtLang; url: string; name: string; handle: string }[] = [
+  { lang: 'fa', url: CHANNEL_URLS.youtubeFa, name: 'کلام - سید حمید حسینی', handle: '@kalam-hamidhossaini' },
+  { lang: 'ro', url: CHANNEL_URLS.youtubeRo, name: 'Islam, de ce și cum?', handle: '@Islamdeceșicum' },
+  { lang: 'ar', url: CHANNEL_URLS.youtubeAr, name: 'الإسلام، لماذا وكيف؟', handle: '@الإسلاملماذاوكيف' },
+  { lang: 'ur', url: CHANNEL_URLS.youtubeUr, name: 'اسلام، کیوں اور کیسے؟', handle: '@اسلامکیوںاورکیسے' },
+  { lang: 'en', url: CHANNEL_URLS.youtubeEn, name: 'Islam, Why and How?', handle: '@IslamWhyandHow' },
+];
 
 export const CHANNELS: Channel[] = [
   {
@@ -44,34 +51,23 @@ export const CHANNELS: Channel[] = [
     lastPost: last(notes),
     brand: '#229ED9',
   },
-  {
-    id: 'youtube-fa',
-    platform: 'youtube',
-    label: 'YouTube',
-    name: youtube.profiles.fa?.name ?? 'کلام - سید حمید حسینی',
-    handle: '@kalam-hamidhossaini',
-    url: CHANNEL_URLS.youtubeFa,
-    lang: 'fa',
-    page: 'videos',
-    followers: youtube.profiles.fa?.followers,
-    count: ytFa.length,
-    lastPost: last(ytFa),
-    brand: '#E62117',
-  },
-  {
-    id: 'youtube-ro',
-    platform: 'youtube',
-    label: 'YouTube',
-    name: youtube.profiles.ro?.name ?? 'Islam, de ce și cum?',
-    handle: '@Islamdeceșicum',
-    url: CHANNEL_URLS.youtubeRo,
-    lang: 'ro',
-    page: 'videos',
-    followers: youtube.profiles.ro?.followers,
-    count: ytRo.length,
-    lastPost: last(ytRo),
-    brand: '#E62117',
-  },
+  ...YOUTUBE.map((y): Channel => {
+    const items = youtube.items.filter((i) => i.channel === y.lang);
+    return {
+      id: `youtube-${y.lang}`,
+      platform: 'youtube',
+      label: 'YouTube',
+      name: youtube.profiles[y.lang]?.name ?? y.name,
+      handle: y.handle,
+      url: y.url,
+      lang: y.lang,
+      page: 'videos',
+      followers: youtube.profiles[y.lang]?.followers,
+      count: items.length,
+      lastPost: last(items),
+      brand: '#E62117',
+    };
+  }),
   {
     id: 'tiktok',
     platform: 'tiktok',

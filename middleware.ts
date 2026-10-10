@@ -4,7 +4,7 @@
 
 export const config = { matcher: '/' };
 
-const SUPPORTED = ['en', 'ro', 'ar', 'fa'] as const;
+const SUPPORTED = ['en', 'ro', 'ar', 'fa', 'ur'] as const;
 type Locale = (typeof SUPPORTED)[number];
 
 function fromAcceptLanguage(header: string | null): Locale | undefined {

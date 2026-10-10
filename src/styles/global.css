@@ -95,6 +95,10 @@
   --font-serif: 'Noto Naskh Arabic Variable', serif;
   --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
 }
+:root[lang='ur'] {
+  --font-serif: 'Noto Naskh Arabic Variable', 'Vazirmatn Variable', serif;
+  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+}
 
 /* ---------- Reset ---------- */
 
@@ -171,7 +175,8 @@ a:hover {
 /* ---------- Content-language islands ---------- */
 /* Persian posts on an English page, Romanian titles on a Persian page… */
 
-[lang='fa'] {
+[lang='fa'],
+[lang='ur'] {
   font-family: var(--font-persian);
 }
 [lang='ar'] {
@@ -186,7 +191,8 @@ a:hover {
   font-family: 'Newsreader Variable', Georgia, serif;
 }
 .serif[lang='fa'],
-.serif[lang='ar'] {
+.serif[lang='ar'],
+.serif[lang='ur'] {
   font-family: var(--font-naskh);
 }
 .quran-ar {
@@ -547,7 +553,8 @@ p {
   overflow-wrap: anywhere;
 }
 .prose[lang='fa'],
-.prose[lang='ar'] {
+.prose[lang='ar'],
+.prose[lang='ur'] {
   font-size: 1.0625rem;
   line-height: 2;
 }
@@ -631,7 +638,7 @@ p {
 }
 /* Optical balance: Arabic-script glyphs look smaller than Latin ones at the
    same size, and need more leading. */
-:root[dir='ltr'] .x:is([lang='fa'], [lang='ar']) {
+:root[dir='ltr'] .x:is([lang='fa'], [lang='ar'], [lang='ur']) {
   font-size: 1.06em;
   line-height: 1.85;
 }
@@ -823,6 +830,10 @@ bdi,
   --font-serif: 'Noto Naskh Arabic Variable', serif;
   --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
 }
+:root[lang='ur'] {
+  --font-serif: 'Noto Naskh Arabic Variable', 'Vazirmatn Variable', serif;
+  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+}
 
 /* ---------- Reset ---------- */
 
@@ -899,7 +910,8 @@ a:hover {
 /* ---------- Content-language islands ---------- */
 /* Persian posts on an English page, Romanian titles on a Persian page… */
 
-[lang='fa'] {
+[lang='fa'],
+[lang='ur'] {
   font-family: var(--font-persian);
 }
 [lang='ar'] {
@@ -914,7 +926,8 @@ a:hover {
   font-family: 'Newsreader Variable', Georgia, serif;
 }
 .serif[lang='fa'],
-.serif[lang='ar'] {
+.serif[lang='ar'],
+.serif[lang='ur'] {
   font-family: var(--font-naskh);
 }
 .quran-ar {
@@ -1275,7 +1288,8 @@ p {
   overflow-wrap: anywhere;
 }
 .prose[lang='fa'],
-.prose[lang='ar'] {
+.prose[lang='ar'],
+.prose[lang='ur'] {
   font-size: 1.0625rem;
   line-height: 2;
 }
@@ -1359,7 +1373,7 @@ p {
 }
 /* Optical balance: Arabic-script glyphs look smaller than Latin ones at the
    same size, and need more leading. */
-:root[dir='ltr'] .x:is([lang='fa'], [lang='ar']) {
+:root[dir='ltr'] .x:is([lang='fa'], [lang='ar'], [lang='ur']) {
   font-size: 1.06em;
   line-height: 1.85;
 }

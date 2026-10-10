@@ -1,5 +1,5 @@
 ---
-import { LOCALES } from '../i18n/locales';
+import { LOCALES, isRtl } from '../i18n/locales';
 import { STRINGS } from '../i18n/strings';
 import Base from '../layouts/Base.astro';
 import { href } from '../lib/paths';
@@ -12,7 +12,7 @@ const s = STRINGS.en;
   <div class="wrap nf">
     {
       LOCALES.map((l) => (
-        <section lang={l} dir={l === 'fa' || l === 'ar' ? 'rtl' : 'ltr'} data-nf={l} hidden={l !== 'en'}>
+        <section lang={l} dir={isRtl(l) ? 'rtl' : 'ltr'} data-nf={l} hidden={l !== 'en'}>
           <h1>{STRINGS[l].notFound.title}</h1>
           <p class="lede">{STRINGS[l].notFound.text}</p>
           <p>

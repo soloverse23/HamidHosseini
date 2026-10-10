@@ -13,6 +13,8 @@ const MAP: Record<string, string> = {
   'ك': 'ک', 'ڪ': 'ک',
   // Teh marbuta, heh with hamza, waw with hamza
   'ة': 'ه', 'ۀ': 'ه', 'ە': 'ه', 'ؤ': 'و',
+  // Urdu heh forms and yeh barree with hamza: بقرہ finds بقره
+  'ہ': 'ه', 'ۂ': 'ه', 'ۃ': 'ه', 'ھ': 'ه', 'ۓ': 'ی',
   // Bare hamza adds nothing to a search
   'ء': '',
 };

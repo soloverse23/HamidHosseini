@@ -1,7 +1,7 @@
 ---
 // One Telegram post. `full` renders the whole body (permalink page);
 // otherwise a reading-list entry with an excerpt.
-import type { Locale } from '../i18n/locales';
+import { isRtl, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import type { FeedItem } from '../lib/feed-types';
 import { compact, date, duration } from '../lib/format';
@@ -20,7 +20,7 @@ interface Props {
 const { locale, item, full = false } = Astro.props;
 const s = t(locale);
 const lang = item.lang ?? 'fa';
-const dir = lang === 'fa' || lang === 'ar' ? 'rtl' : 'ltr';
+const dir = isRtl(lang) ? 'rtl' : 'ltr';
 // Readers may machine-translate posts in their browser; never the Quran translation.
 const quran = item.series === 'quran-translation';
 

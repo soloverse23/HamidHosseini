@@ -2,14 +2,15 @@
 // One entry of the combined feed. Chrome (source, time, links) follows the
 // page direction; the content block keeps its own language and direction
 // and lines up with the page's start edge (see `.x` in global.css).
-import { LOCALE_META, type Locale } from '../i18n/locales';
+import { LOCALE_META, isRtl, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { ui } from '../i18n/ui';
-import { surahs } from '../lib/data';
+import { forReader, surahs, type YtLang } from '../lib/data';
 import type { FeedItem } from '../lib/feed-types';
 import type { FeedEntry } from '../lib/feed';
 import { compact, duration, num } from '../lib/format';
 import { href } from '../lib/paths';
+import { withoutEpisodeNo } from '../lib/series';
 import { excerpt, firstLine } from '../lib/text';
 import { topicsOf } from '../lib/topics';
 import Icon from './Icon.astro';
@@ -33,7 +34,7 @@ const time = (iso: string) =>
     hourCycle: 'h23',
     timeZone: 'Asia/Tehran',
   }).format(new Date(iso));
-const dirOf = (lang?: string) => (lang === 'fa' || lang === 'ar' ? 'rtl' : 'ltr');
+const dirOf = (lang?: string) => (isRtl(lang) ? 'rtl' : 'ltr');
 // Opt-in for in-browser translation (src/scripts/translate.ts); never the Quran translation.
 const tr = (i: FeedItem) => (i.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' });
 const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
@@ -47,7 +48,7 @@ const bodyOf = (i: FeedItem) => {
 };
 const surahName = (n: number) => {
   const m = surahs[n - 1];
-  return locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit;
+  return locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? m.ar : m.translit;
 };
 const companionLabel = (c: FeedItem) =>
   (c.tags ?? []).includes('#پادکست') || c.kind === 'audio'
@@ -138,11 +139,11 @@ const companionLabel = (c: FeedItem) =>
 {
   entry.kind === 'video' &&
     (() => {
-      const i = entry.item;
+      const [i, ...others] = forReader(entry.versions, locale);
       const m = i.media[0];
       const internal = i.episode ? href(locale, `videos#ep-${i.episode}`) : i.url;
-      const lang = i.channel === 'fa' ? s.videos.persian : s.videos.romanian;
-      const title = (i.title ?? '').replace(/^\s*[\d۰-۹]+\s*[-–.]\s*/, '');
+      const lang = s.videos.langs[i.channel as YtLang];
+      const title = withoutEpisodeNo(i.title);
       return (
         <article class="card card--video" data-kind="video">
           <div class="card__meta">
@@ -166,6 +167,15 @@ const companionLabel = (c: FeedItem) =>
               <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
                 <a href={internal}>{title}</a>
               </h3>
+              {others.length > 0 && (
+                <p class="card__companions">
+                  {others.map((o) => (
+                    <a class="card__chip" href={o.url} rel="noopener" target="_blank">
+                      {s.videos.langs[o.channel as YtLang]}
+                    </a>
+                  ))}
+                </p>
+              )}
               {entry.companions.length > 0 && (
                 <p class="card__companions">
                   <span class="src is-telegram" style={`--brand:${BRAND.telegram}`}>
@@ -315,7 +325,8 @@ const companionLabel = (c: FeedItem) =>
     letter-spacing: 0;
   }
   .card__title[lang='fa'],
-  .card__title[lang='ar'] {
+  .card__title[lang='ar'],
+  .card__title[lang='ur'] {
     font-family: var(--font-persian);
     font-weight: 700;
   }

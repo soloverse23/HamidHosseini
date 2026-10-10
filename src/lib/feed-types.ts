@@ -46,7 +46,7 @@ export interface FeedItem {
   episode?: number;
   tags?: string[];
   forwardedFrom?: { name: string; url?: string };
-  /** Channel key when a source has several accounts (YouTube: 'fa' | 'ro') */
+  /** Channel key when a source has several accounts (YouTube: a language code, see YT_LANGS) */
   channel?: string;
   linkPreview?: LinkPreview;
 }

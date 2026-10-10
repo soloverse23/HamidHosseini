@@ -1,5 +1,6 @@
 // Small text helpers shared by the fetch scripts and the pages.
 
+const URDU_ONLY = /[ٹڈڑںہۃے]/;
 const PERSIAN_ONLY = /[پچژگکی]/;
 const ARABIC_SCRIPT = /[؀-ۿ]/;
 const ROMANIAN = /[ăâîșțşţĂÂÎȘȚ]|\b(și|este|care|pentru|despre|religia|islamul)\b/i;
@@ -7,7 +8,7 @@ const ROMANIAN = /[ăâîșțşţĂÂÎȘȚ]|\b(și|este|care|pentru|despre|reli
 /** Rough content-language guess, good enough for a badge and `lang` attribute. */
 export function guessLang(text: string): string | undefined {
   const t = text.slice(0, 600);
-  if (ARABIC_SCRIPT.test(t)) return PERSIAN_ONLY.test(t) ? 'fa' : 'ar';
+  if (ARABIC_SCRIPT.test(t)) return URDU_ONLY.test(t) ? 'ur' : PERSIAN_ONLY.test(t) ? 'fa' : 'ar';
   if (ROMANIAN.test(t)) return 'ro';
   if (/[a-z]/i.test(t)) return 'en';
   return undefined;

@@ -10,6 +10,7 @@ import surahsJson from '../data/quran/surahs.json';
 import arabicJson from '../data/quran/arabic.json';
 import faTranslation from '../data/quran/fa.json';
 import { LECTURES } from '../data/writings';
+import type { Locale } from '../i18n/locales';
 import type { FeedFile, FeedItem } from './feed-types';
 
 export const telegram = telegramFeed as unknown as FeedFile;
@@ -23,6 +24,9 @@ export const CHANNEL_URLS = {
   telegramPersonal: 'https://t.me/hamidhosseiniii',
   youtubeFa: 'https://www.youtube.com/@kalam-hamidhossaini',
   youtubeRo: 'https://www.youtube.com/@Islamdece%C8%99icum',
+  youtubeAr: 'https://www.youtube.com/@%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%84%D9%85%D8%A7%D8%B0%D8%A7%D9%88%D9%83%D9%8A%D9%81',
+  youtubeUr: 'https://www.youtube.com/@%D8%A7%D8%B3%D9%84%D8%A7%D9%85%DA%A9%DB%8C%D9%88%DA%BA%D8%A7%D9%88%D8%B1%DA%A9%DB%8C%D8%B3%DB%92',
+  youtubeEn: 'https://www.youtube.com/@IslamWhyandHow',
   tiktok: 'https://www.tiktok.com/@islam.de.ce.si.cum',
   instagram: 'https://www.instagram.com/kalam_hamidhosseini/',
 } as const;
@@ -34,12 +38,12 @@ export const noteById = new Map(notes.map((n) => [n.id, n]));
 
 /* ---------- YouTube ---------- */
 
-export interface Episode {
-  n: number;
-  fa?: FeedItem;
-  ro?: FeedItem;
-  date: string;
-}
+/** One YouTube channel per language, all publishing the same numbered series. */
+export const YT_LANGS = ['fa', 'ro', 'ar', 'ur', 'en'] as const;
+export type YtLang = (typeof YT_LANGS)[number];
+export const isYtLang = (v?: string): v is YtLang => !!v && (YT_LANGS as readonly string[]).includes(v);
+
+export type Episode = { n: number; date: string } & Partial<Record<YtLang, FeedItem>>;
 
 const ytVideos = youtube.items.filter((i) => i.kind === 'video');
 
@@ -47,8 +51,8 @@ export const episodes: Episode[] = (() => {
   const map = new Map<number, Episode>();
   for (const v of ytVideos) {
     if (!v.episode) continue;
-    const ep = map.get(v.episode) ?? { n: v.episode, date: v.date };
-    if (v.channel === 'fa' || v.channel === 'ro') ep[v.channel] ??= v;
+    const ep: Episode = map.get(v.episode) ?? { n: v.episode, date: v.date };
+    if (isYtLang(v.channel)) ep[v.channel] ??= v;
     if (v.date < ep.date) ep.date = v.date;
     map.set(v.episode, ep);
   }
@@ -56,6 +60,48 @@ export const episodes: Episode[] = (() => {
 })();
 
 export const otherTalks = ytVideos.filter((v) => !v.episode);
+
+/** The reader's own language first, then the ones they most likely also read. */
+const YT_ORDER: Record<Locale, YtLang[]> = {
+  en: ['en', 'ro', 'fa', 'ar', 'ur'],
+  ro: ['ro', 'en', 'fa', 'ar', 'ur'],
+  ar: ['ar', 'fa', 'ur', 'en', 'ro'],
+  fa: ['fa', 'ur', 'ar', 'en', 'ro'],
+  ur: ['ur', 'fa', 'ar', 'en', 'ro'],
+};
+export const ytOrder = (locale: Locale) => YT_ORDER[locale];
+
+/** Language versions of one upload, ordered for a reader of `locale`. */
+export function forReader(versions: FeedItem[], locale: Locale): FeedItem[] {
+  const rank = (v: FeedItem) => {
+    const i = YT_ORDER[locale].indexOf(v.channel as YtLang);
+    return i < 0 ? YT_ORDER[locale].length : i;
+  };
+  return [...versions].sort((a, b) => rank(a) - rank(b));
+}
+
+/**
+ * Talks outside the numbered series carry no number to pair them by, but each
+ * one goes up on every channel within minutes. Uploads from different
+ * channels less than an hour apart are treated as the same talk.
+ */
+export const talks: FeedItem[][] = (() => {
+  const groups: FeedItem[][] = [];
+  for (const v of otherTalks) {
+    const near = (g: FeedItem[]) =>
+      Math.abs(Date.parse(g[0].date) - Date.parse(v.date)) < 3600_000 && !g.some((x) => x.channel === v.channel);
+    const g = groups.find(near);
+    if (g) g.push(v);
+    else groups.push([v]);
+  }
+  return groups;
+})();
+
+/** Same key = same upload in another language: the episode number, or the talk group. */
+export const uploadKey = new Map<string, string>([
+  ...ytVideos.filter((v) => v.episode).map((v) => [v.id, `ep:${v.episode}`] as const),
+  ...talks.flatMap((g, i) => g.map((v) => [v.id, `talk:${i}`] as const)),
+]);
 export const shorts = youtube.items.filter((i) => i.kind === 'short');
 
 /* ---------- Quran ---------- */

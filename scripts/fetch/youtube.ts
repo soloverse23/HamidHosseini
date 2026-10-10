@@ -13,7 +13,7 @@ import { episodeFromTitle } from '../../src/lib/series';
 import { ytdlpJson } from './lib/ytdlp';
 import { fetchText, mergeFeed, readFeed, sleep } from './lib/store';
 
-/** Both channels publish the same numbered series, in Persian and in Romanian. */
+/** Every channel publishes the same numbered series, each in its own language. */
 export const CHANNELS = [
   {
     key: 'fa',
@@ -28,6 +28,27 @@ export const CHANNELS = [
     name: 'Islam, de ce și cum?',
     handle: '@Islamdeceșicum',
     url: 'https://www.youtube.com/@Islamdece%C8%99icum',
+  },
+  {
+    key: 'ar',
+    id: 'UCHUDgWntRDzOtqoN04B30lw',
+    name: 'الإسلام، لماذا وكيف؟',
+    handle: '@الإسلاملماذاوكيف',
+    url: 'https://www.youtube.com/@%D8%A7%D9%84%D8%A5%D8%B3%D9%84%D8%A7%D9%85%D9%84%D9%85%D8%A7%D8%B0%D8%A7%D9%88%D9%83%D9%8A%D9%81',
+  },
+  {
+    key: 'ur',
+    id: 'UCLMWrXU_hfQURMEAxrRsSuQ',
+    name: 'اسلام، کیوں اور کیسے؟',
+    handle: '@اسلامکیوںاورکیسے',
+    url: 'https://www.youtube.com/@%D8%A7%D8%B3%D9%84%D8%A7%D9%85%DA%A9%DB%8C%D9%88%DA%BA%D8%A7%D9%88%D8%B1%DA%A9%DB%8C%D8%B3%DB%92',
+  },
+  {
+    key: 'en',
+    id: 'UCYkJnIw36B3SSjJlbqdzIBA',
+    name: 'Islam, Why and How?',
+    handle: '@IslamWhyandHow',
+    url: 'https://www.youtube.com/@IslamWhyandHow',
   },
 ] as const;
 type Channel = (typeof CHANNELS)[number];

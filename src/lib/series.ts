@@ -40,8 +40,11 @@ export function detectSeries(text: string): { series?: SeriesKey; episode?: numb
   return {};
 }
 
-/** Episode number from a YouTube/TikTok title like "59- Are moralitatea …" */
+/** Episode number from a YouTube/TikTok title like "59- Are moralitatea …", "۱ـ …" or "1۔ …" */
 export function episodeFromTitle(title: string): number | undefined {
-  const m = toAsciiDigits(title).match(/^\s*(\d{1,3})\s*[-–.:)]/);
+  const m = toAsciiDigits(title).match(/^\s*(\d{1,3})\s*[-–.:)ـ۔]/);
   return m ? Number(m[1]) : undefined;
 }
+
+/** A title without its leading episode number ("59- …", "٥٩- …", "56-- …", "۱ـ …", "1۔ …"). */
+export const withoutEpisodeNo = (title = '') => title.replace(/^\s*[\d۰-۹٠-٩]+\s*[-–.ـ۔]+\s*/, '').trim();

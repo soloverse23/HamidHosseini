@@ -15,7 +15,7 @@ const { locale, compact = false } = Astro.props;
 const s = t(locale);
 const name = (n: number) => {
   const m = surahs[n - 1];
-  return locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit;
+  return locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? m.ar : m.translit;
 };
 ---
 

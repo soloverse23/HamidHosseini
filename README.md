@@ -1,13 +1,13 @@
 # Seyed Hamid Hosseini: website
 
-A static site (Astro) in English, Romanian, Arabic and Persian. It collects his books and writings, his Quran translation, the Telegram channel, both YouTube channels, TikTok and Instagram. A scheduled GitHub Action keeps it up to date.
+A static site (Astro) in English, Romanian, Arabic, Persian and Urdu. It collects his books and writings, his Quran translation, the Telegram channel, the five YouTube channels of “Islam, why and how?” (Persian, Romanian, Arabic, Urdu, English), TikTok and Instagram. A scheduled GitHub Action keeps it up to date.
 
 ## How content arrives
 
 | Source | How it's read | Command |
 |---|---|---|
 | Telegram `@hamidhossaini` | public preview `t.me/s/…` (no bot needed) | `npm run fetch:telegram` (`-- --full` to re-read all) |
-| YouTube (fa + ro channels) | RSS on every run + `yt-dlp` for the full list | `npm run fetch:youtube` |
+| YouTube (fa, ro, ar, ur, en channels) | RSS on every run + `yt-dlp` for the full list | `npm run fetch:youtube` |
 | TikTok `@islam.de.ce.si.cum` | `yt-dlp` on the public profile | `npm run fetch:tiktok` |
 | Instagram `@kalam_hamidhosseini` | Instagram API with a session cookie (see below) | `npm run fetch:instagram` |
 | Quran translation (fa) | built from the "ترجمه گروهی قرآن" Telegram posts | `npx tsx scripts/quran/from-telegram.ts` |
