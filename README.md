@@ -11,6 +11,7 @@ A static site (Astro) in English, Romanian, Arabic, Persian and Urdu. It collect
 | TikTok `@islam.de.ce.si.cum` | `yt-dlp` on the public profile | `npm run fetch:tiktok` |
 | Instagram `@kalam_hamidhosseini` | Instagram API with a session cookie (see below) | `npm run fetch:instagram` |
 | Quran translation (fa) | built from the "ترجمه گروهی قرآن" Telegram posts | `npx tsx scripts/quran/from-telegram.ts` |
+| Articles from kalaam.ir (his blog, 2003–2019) | WordPress REST API, one-off import (the blog is no longer updated) | `npm run fetch:kalaam` |
 
 `npm run fetch:all` runs everything. Results go to `src/data/feeds/*.json`, and images go to `public/media/` because the platforms' image links expire.
 
@@ -39,6 +40,7 @@ Until the secret is set, the Instagram page shows the profile link. Individual p
 - **Biography, press:** the strings `about.*` in `src/i18n/strings.ts`, one block per language.
 - **UI text:** `src/i18n/strings.ts`.
 - **Topics on the Notes page:** `src/lib/topics.ts` maps his hashtags to topics.
+- **Articles (kalaam.ir):** topics, series and the pages folded into their posts are in `src/data/articles.ts`. The import (`src/data/kalaam.json`) is cleaned HTML; `src/lib/articles.ts` builds what the `/articles/` pages and search use.
 
 ## Search
 

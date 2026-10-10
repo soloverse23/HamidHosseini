@@ -24,8 +24,11 @@ export function searchCtx(locale: Locale): Ctx {
         interview: s.books.articles,
         dialogue: s.books.articles,
         lectures: s.books.lectures,
+        series: s.articles.series,
+        blog: s.sections.articles.title,
       },
       sessions: s.books.sessions('{n}'),
+      minutes: s.minutes('{n}'),
     },
   };
 }

@@ -21,7 +21,7 @@ const manual = instagramManualPosts.filter((u) => !known.has(u.match(/\/(?:p|ree
 
 <Base locale={locale} path="instagram" crumbs={[{ name: s.sections.instagram.title, path: 'instagram' }]} title={s.sections.instagram.title} description={s.sections.instagram.lede}>
   <div class="wrap">
-    <Chapter locale={locale} no={6} title={s.sections.instagram.title} lede={s.sections.instagram.lede}>
+    <Chapter locale={locale} no={7} title={s.sections.instagram.title} lede={s.sections.instagram.lede}>
       {profile?.followers && <span class="meta">{s.followers(compact(locale, profile.followers))}</span>}
       <a class="link-arrow" href={CHANNEL_URLS.instagram} rel="noopener" target="_blank">
         <Icon name="instagram" /> {s.followOn('Instagram')}

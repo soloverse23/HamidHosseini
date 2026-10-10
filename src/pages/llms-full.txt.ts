@@ -1,6 +1,8 @@
 import type { APIContext } from 'astro';
 import { ARTICLES, BOOKS, LECTURES, type Localized } from '../data/writings';
-import { episodes, notes } from '../lib/data';
+import { CATEGORIES } from '../data/articles';
+import { articles } from '../lib/articles';
+import { episodes, notes, YT_LANGS } from '../lib/data';
 
 const pick = (l?: Localized) => (l ? (l.en ?? l.fa ?? Object.values(l)[0]) : undefined);
 
@@ -20,6 +22,14 @@ export function GET({ site }: APIContext) {
     out.push('');
   }
 
+  out.push('## Articles from kalaam.ir (Persian; titles and summaries)', '');
+  for (const a of articles) {
+    out.push(`### ${a.title} — ${o}/fa/articles/${a.id}/ (${a.date.slice(0, 10)})`);
+    out.push(`Topics: ${a.categories.map((k) => CATEGORIES[k].title.en).join(', ')}`);
+    if (a.excerpt) out.push(a.excerpt);
+    out.push('');
+  }
+
   out.push('## Lecture series', '');
   for (const l of LECTURES) {
     out.push(`### ${pick(l.title)} (${l.years})`);
@@ -32,7 +42,7 @@ export function GET({ site }: APIContext) {
 
   out.push('## “Islam, why and how?” episodes', '');
   for (const ep of episodes) {
-    for (const k of ['ro', 'fa'] as const) {
+    for (const k of YT_LANGS) {
       const v = ep[k];
       if (v) out.push(`- #${ep.n} [${k}] ${v.title ?? ''} — ${v.url} (${v.date.slice(0, 10)})`);
     }

@@ -22,6 +22,7 @@ export interface Labels {
   on: string;
   work: Record<string, string>;
   sessions: string;
+  minutes: string;
 }
 
 export interface Ctx {
@@ -356,7 +357,7 @@ export interface Hit {
   badge?: string;
 }
 
-const RTL = new Set(['fa', 'ar']);
+const RTL = new Set(['fa', 'ar', 'ur']);
 export const dirOf = (lang?: string) => (lang && RTL.has(lang) ? 'rtl' : lang ? 'ltr' : 'auto');
 
 export function localHref(locale: string, path: string): string {
@@ -383,7 +384,7 @@ export function toHit(d: PFData, terms: string[], ctx: Ctx, full: boolean): Hit 
 
   switch (m.kind) {
     case 'ayah': {
-      const surahName = loc === 'fa' ? m.sfa : loc === 'ar' ? m.sar : m.str;
+      const surahName = loc === 'fa' || loc === 'ur' ? m.sfa : loc === 'ar' ? m.sar : m.str;
       return {
         href: internal(m.path),
         external: false,
@@ -397,7 +398,7 @@ export function toHit(d: PFData, terms: string[], ctx: Ctx, full: boolean): Hit 
       };
     }
     case 'surah': {
-      const name = loc === 'fa' ? m.fa : loc === 'ar' ? m.ar : m.tr;
+      const name = loc === 'fa' || loc === 'ur' ? m.fa : loc === 'ar' ? m.ar : m.tr;
       return {
         href: internal(m.path),
         external: false,
@@ -442,6 +443,20 @@ export function toHit(d: PFData, terms: string[], ctx: Ctx, full: boolean): Hit 
         bodyLang: m.lang,
         image: m.image,
         vertical: m.vertical === '1',
+      };
+    }
+    case 'article': {
+      return {
+        href: d.url,
+        external: false,
+        type,
+        kind: 'article',
+        eyebrow: [L.work.blog ?? L.types.writings, pick('c') ?? '', day(m.date)],
+        titleHtml: marked(m.title, terms),
+        titleLang: 'fa',
+        bodyHtml: m.text ? marked(m.text, terms, full ? 260 : 130) : undefined,
+        bodyLang: 'fa',
+        image: full ? m.image : undefined,
       };
     }
     case 'work': {

@@ -6,6 +6,7 @@ import SearchField from '../../components/SearchField.astro';
 import Timeline from '../../components/Timeline.astro';
 import YouTubePlayer from '../../components/YouTubePlayer.astro';
 import { ARTICLES, BOOKS, LECTURES } from '../../data/writings';
+import { articles as blogArticles } from '../../lib/articles';
 import { LOCALE_META, type Locale } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
 import { ui } from '../../i18n/ui';
@@ -24,12 +25,15 @@ import {
   surahsStarted,
   tiktok,
   totalTranslated,
+  type YtLang,
   youtube,
+  ytOrder,
 } from '../../lib/data';
 import { TIMELINE, TIMELINE_SPAN, featuredNote } from '../../lib/feed';
 import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
 import { CHANNELS } from '../../lib/social';
+import { withoutEpisodeNo } from '../../lib/series';
 import { excerpt, firstLine } from '../../lib/text';
 import { topicsOf } from '../../lib/topics';
 
@@ -54,12 +58,11 @@ const nowVerse = quranNow ? quranFa.surahs[quranNow.surah]?.[quranNow.ayah] : un
 const nowArabic = quranNow ? arabic[quranNow.surah]?.[quranNow.ayah - 1] : undefined;
 const surahName = (m: (typeof surahs)[number]) => (locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit);
 
-/* Now: episode */
-const ep = episodes[0];
-const prefer: ('fa' | 'ro')[] = locale === 'fa' || locale === 'ar' ? ['fa', 'ro'] : ['ro', 'fa'];
-const epMain = ep ? (ep[prefer[0]] ?? ep[prefer[1]]) : undefined;
-const epOther = ep ? (ep[prefer[0]] ? ep[prefer[1]] : undefined) : undefined;
-const cleanTitle = (x = '') => x.replace(/^\s*[\d۰-۹]+\s*[-–.]\s*/, '');
+/* Now: the newest episode in the reader's language, else the newest at all */
+const order = ytOrder(locale);
+const ep = episodes.find((e) => e[order[0]]) ?? episodes[0];
+const epVersions = ep ? order.flatMap((k) => (ep[k] ? [ep[k]] : [])) : [];
+const [epMain, epOther] = epVersions;
 
 /* Now: short videos */
 const shortPool = [...tiktok.items, ...shorts].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
@@ -72,9 +75,10 @@ const next = TIMELINE[1];
 const sessionsTotal = LECTURES.reduce((a, l) => a + (lectureSessions[l.id]?.length ?? 0), 0);
 const sections = [
   { key: 'writings', title: s.sections.writings.title, count: BOOKS.length + ARTICLES.length + LECTURES.length, detail: s.books.sessions(n(sessionsTotal)) },
+  { key: 'articles', title: s.sections.articles.title, count: blogArticles.length, detail: 'kalaam.ir' },
   { key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` },
   { key: 'notes', title: s.sections.notes.title, count: notes.length, detail: 'Telegram' },
-  { key: 'videos', title: s.sections.videos.title, count: youtube.items.length, detail: s.episode(n(ep?.n ?? 0)) },
+  { key: 'videos', title: s.sections.videos.title, count: youtube.items.length, detail: s.episode(n(episodes[0]?.n ?? 0)) },
   { key: 'tiktok', title: s.sections.tiktok.title, count: tiktok.items.length, detail: 'TikTok' },
   { key: 'instagram', title: s.sections.instagram.title, count: instagram.items.length || undefined, detail: 'Instagram' },
 ];
@@ -104,7 +108,7 @@ const jsonLd = [
     alternateName: ['سید حمید حسینی', 'Hamid Hosseini'],
     url: `${origin}/${locale}/`,
     jobTitle: 'Islamic scholar',
-    knowsLanguage: ['fa', 'ro', 'ar', 'en'],
+    knowsLanguage: ['fa', 'ro', 'ar', 'ur', 'en'],
     sameAs: Object.values(CHANNEL_URLS),
   },
 ];
@@ -199,11 +203,12 @@ const jsonLd = [
               <a class="more" href={href(locale, `videos#ep-${ep.n}`)}>{s.sections.videos.title}<Icon name="chevron" class="flip" /></a>
             </header>
             <YouTubePlayer locale={locale} id={epMain.id} title={epMain.title ?? ''} duration={epMain.media[0]?.duration} lang={epMain.lang} />
-            <p class="ep__title x" lang={epMain.lang} dir={dirOf(epMain.lang)} data-tr>{cleanTitle(epMain.title)}</p>
-            {epOther && <p class="ep__alt x" lang={epOther.lang} dir={dirOf(epOther.lang)}>{cleanTitle(epOther.title)}</p>}
+            <p class="ep__title x" lang={epMain.lang} dir={dirOf(epMain.lang)} data-tr>{withoutEpisodeNo(epMain.title)}</p>
+            {epOther && <p class="ep__alt x" lang={epOther.lang} dir={dirOf(epOther.lang)}>{withoutEpisodeNo(epOther.title)}</p>}
             <p class="ep__langs">
-              {ep.fa && <a class="pill" href={ep.fa.url} rel="noopener" target="_blank"><Icon name="youtube" />{s.videos.persian}</a>}
-              {ep.ro && <a class="pill" href={ep.ro.url} rel="noopener" target="_blank"><Icon name="youtube" />{s.videos.romanian}</a>}
+              {epVersions.map((v) => (
+                <a class="pill" href={v.url} rel="noopener" target="_blank"><Icon name="youtube" />{s.videos.langs[v.channel as YtLang]}</a>
+              ))}
             </p>
           </article>
         )
@@ -304,7 +309,7 @@ const jsonLd = [
               <span class="ch__id">
                 <span class="ch__label">
                   {c.label}
-                  <span class="ch__lang">{c.lang === 'fa' ? s.videos.persian : s.videos.romanian}</span>
+                  <span class="ch__lang">{s.videos.langs[c.lang]}</span>
                 </span>
                 <span class="ch__handle handle">{c.handle}</span>
               </span>

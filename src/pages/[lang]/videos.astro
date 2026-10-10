@@ -5,25 +5,24 @@ import YouTubePlayer from '../../components/YouTubePlayer.astro';
 import { type Locale } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
 import Base from '../../layouts/Base.astro';
-import { CHANNEL_URLS, episodes, otherTalks, shorts, youtube } from '../../lib/data';
+import { episodes, forReader, shorts, talks, YT_LANGS, ytOrder, type YtLang } from '../../lib/data';
 import type { FeedItem } from '../../lib/feed-types';
 import { compact, date, duration, num } from '../../lib/format';
 import { localePaths } from '../../lib/paths';
+import { withoutEpisodeNo } from '../../lib/series';
+import { CHANNELS } from '../../lib/social';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
 const s = t(locale);
 const n = (x: number) => num(locale, x);
 
-// Show the version in a script the reader can read first.
-const prefer: ('fa' | 'ro')[] = locale === 'fa' || locale === 'ar' ? ['fa', 'ro'] : ['ro', 'fa'];
-const strip = (title = '') => title.replace(/^\s*[\d۰-۹]+\s*[-–.]\s*/, '').trim();
-const langLabel = { fa: s.videos.persian, ro: s.videos.romanian };
+// The reader's own language first, then the ones they most likely also read.
+const order = ytOrder(locale);
+const versionsOf = (ep: (typeof episodes)[number]) => order.flatMap((k) => (ep[k] ? [ep[k]] : []));
+const langLabel = (v: FeedItem) => s.videos.langs[v.channel as YtLang];
 
-const channels = [
-  { key: 'fa' as const, url: CHANNEL_URLS.youtubeFa, p: youtube.profiles.fa },
-  { key: 'ro' as const, url: CHANNEL_URLS.youtubeRo, p: youtube.profiles.ro },
-];
+const channels = order.map((k) => CHANNELS.find((c) => c.id === `youtube-${k}`)!);
 const shortList: FeedItem[] = shorts.slice(0, 18);
 const iso = (sec?: number) => (sec ? `PT${Math.floor(sec / 3600) ? `${Math.floor(sec / 3600)}H` : ''}${Math.floor((sec % 3600) / 60)}M${Math.floor(sec % 60)}S` : undefined);
 const site = Astro.site!;
@@ -31,7 +30,7 @@ const videoLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
   itemListElement: episodes.slice(0, 40).flatMap((ep, i) =>
-    (['ro', 'fa'] as const).flatMap((k) => {
+    YT_LANGS.flatMap((k) => {
       const v = ep[k];
       if (!v) return [];
       const thumb = v.media.find((m) => m.src)?.src;
@@ -57,13 +56,15 @@ const videoLd = {
 
 <Base locale={locale} path="videos" jsonLd={videoLd} crumbs={[{ name: s.sections.videos.title, path: 'videos' }]} title={s.sections.videos.title} description={s.sections.videos.lede}>
   <div class="wrap">
-    <Chapter locale={locale} no={4} title={s.sections.videos.title} lede={s.sections.videos.lede}>
+    <Chapter locale={locale} no={5} title={s.sections.videos.title} lede={s.sections.videos.lede}>
       {
         channels.map((c) => (
           <a class="link-arrow" href={c.url} rel="noopener" target="_blank">
             <Icon name="youtube" />
-            <span dir="auto">{c.p?.name}</span>
-            {c.p?.followers ? <span class="meta">({compact(locale, c.p.followers)})</span> : null}
+            <span lang={c.lang} dir="auto">{c.name}</span>
+            <span class="meta">
+              ({s.videos.langs[c.lang]}{c.followers ? ` · ${compact(locale, c.followers)}` : ''})
+            </span>
           </a>
         ))
       }
@@ -77,10 +78,8 @@ const videoLd = {
       <ol class="eps">
         {
           episodes.map((ep) => {
-            const main = (ep[prefer[0]] ?? ep[prefer[1]])!;
-            const mainKey = ep[prefer[0]] ? prefer[0] : prefer[1];
-            const otherKey = mainKey === 'fa' ? 'ro' : 'fa';
-            const other = ep[otherKey];
+            const versions = versionsOf(ep);
+            const [main, other] = versions;
             return (
               <li class="ep" id={`ep-${ep.n}`}>
                 <span class="ep__n num" aria-hidden="true">{n(ep.n)}</span>
@@ -91,23 +90,19 @@ const videoLd = {
                   <p class="eyebrow">
                     {s.episode(n(ep.n))} · <time datetime={ep.date}>{date(locale, ep.date, 'month')}</time>
                   </p>
-                  <h3 class="serif align-start" lang={main.lang} dir="auto" data-tr>{strip(main.title)}</h3>
+                  <h3 class="serif align-start" lang={main.lang} dir="auto" data-tr>{withoutEpisodeNo(main.title)}</h3>
                   {other && (
                     <p class="ep__alt serif align-start" lang={other.lang} dir="auto">
-                      {strip(other.title)}
+                      {withoutEpisodeNo(other.title)}
                     </p>
                   )}
                   <p class="btn-row">
-                    <button class="btn" type="button" data-swap={main.id} data-title={main.title}>
-                      <Icon name="play" /> {langLabel[mainKey]}
-                      {main.media[0]?.duration && <span class="meta num">{duration(main.media[0].duration)}</span>}
-                    </button>
-                    {other && (
-                      <button class="btn" type="button" data-swap={other.id} data-title={other.title}>
-                        <Icon name="play" /> {langLabel[otherKey]}
-                        {other.media[0]?.duration && <span class="meta num">{duration(other.media[0].duration)}</span>}
+                    {versions.map((v) => (
+                      <button class="btn" type="button" data-swap={v.id} data-title={v.title}>
+                        <Icon name="play" /> {langLabel(v)}
+                        {v.media[0]?.duration && <span class="meta num">{duration(v.media[0].duration)}</span>}
                       </button>
-                    )}
+                    ))}
                     <a class="link-arrow" href={main.url} rel="noopener" target="_blank">
                       YouTube <Icon name="external" />
                     </a>
@@ -121,24 +116,36 @@ const videoLd = {
     </section>
 
     {
-      otherTalks.length > 0 && (
+      talks.length > 0 && (
         <section aria-labelledby="other" class="block">
           <div class="section-title">
             <h2 id="other">{s.videos.other}</h2>
           </div>
           <ul class="talks">
-            {otherTalks.map((v) => (
-              <li id={`v-${v.id}`}>
-                <YouTubePlayer locale={locale} id={v.id} title={v.title ?? ''} duration={v.media[0]?.duration} lang={v.lang} />
-                <p class="talks__title align-start" lang={v.lang} dir="auto" data-tr>
-                  {v.title}
-                </p>
-                <p class="meta">
-                  <span>{langLabel[v.channel as 'fa' | 'ro']}</span>
-                  <time datetime={v.date}>{date(locale, v.date, 'short')}</time>
-                </p>
-              </li>
-            ))}
+            {talks.map((group) => {
+              const [v, ...others] = forReader(group, locale);
+              return (
+                <li id={`v-${v.id}`}>
+                  <YouTubePlayer locale={locale} id={v.id} title={v.title ?? ''} duration={v.media[0]?.duration} lang={v.lang} />
+                  <p class="talks__title align-start" lang={v.lang} dir="auto" data-tr>
+                    {v.title}
+                  </p>
+                  <p class="meta">
+                    <span>{langLabel(v)}</span>
+                    <time datetime={v.date}>{date(locale, v.date, 'short')}</time>
+                  </p>
+                  {others.length > 0 && (
+                    <p class="talks__langs">
+                      {others.map((o) => (
+                        <a class="link-arrow" id={`v-${o.id}`} href={o.url} rel="noopener" target="_blank">
+                          {langLabel(o)} <Icon name="external" />
+                        </a>
+                      ))}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </section>
       )
@@ -260,6 +267,12 @@ const videoLd = {
   .talks__title {
     font-weight: 500;
     line-height: 1.6;
+  }
+  .talks__langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    font-size: var(--step--1);
   }
   .shorts {
     list-style: none;

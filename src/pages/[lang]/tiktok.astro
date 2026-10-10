@@ -17,7 +17,7 @@ const views = items.reduce((a, i) => a + (i.views ?? 0), 0);
 
 <Base locale={locale} path="tiktok" crumbs={[{ name: s.sections.tiktok.title, path: 'tiktok' }]} title={s.sections.tiktok.title} description={s.sections.tiktok.lede}>
   <div class="wrap">
-    <Chapter locale={locale} no={5} title={s.sections.tiktok.title} lede={s.sections.tiktok.lede}>
+    <Chapter locale={locale} no={6} title={s.sections.tiktok.title} lede={s.sections.tiktok.lede}>
       <span class="meta">
         <span>{s.videosCount(num(locale, items.length))}</span>
         <span>{s.views(compact(locale, views))}</span>

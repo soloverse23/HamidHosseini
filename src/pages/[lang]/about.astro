@@ -7,6 +7,7 @@ import Base from '../../layouts/Base.astro';
 import { CHANNEL_URLS, instagram, notes, telegram, tiktok, youtube } from '../../lib/data';
 import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
+import { CHANNELS } from '../../lib/social';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
@@ -16,8 +17,7 @@ const c = (x?: number) => (x ? compact(locale, x) : '—');
 
 const channels = [
   { icon: 'telegram', name: telegram.profiles.main?.name ?? 'کلام', handle: '@hamidhossaini', url: CHANNEL_URLS.telegram, lang: 'fa', followers: telegram.profiles.main?.followers, items: notes.length, since: notes.at(-1)?.date, page: 'notes' },
-  { icon: 'youtube', name: youtube.profiles.fa?.name ?? '', handle: '@kalam-hamidhossaini', url: CHANNEL_URLS.youtubeFa, lang: 'fa', followers: youtube.profiles.fa?.followers, items: youtube.items.filter((i) => i.channel === 'fa').length, since: youtube.items.filter((i) => i.channel === 'fa').at(-1)?.date, page: 'videos' },
-  { icon: 'youtube', name: youtube.profiles.ro?.name ?? '', handle: '@Islamdeceșicum', url: CHANNEL_URLS.youtubeRo, lang: 'ro', followers: youtube.profiles.ro?.followers, items: youtube.items.filter((i) => i.channel === 'ro').length, since: youtube.items.filter((i) => i.channel === 'ro').at(-1)?.date, page: 'videos' },
+  ...CHANNELS.filter((ch) => ch.platform === 'youtube').map((ch) => ({ icon: 'youtube' as const, name: ch.name, handle: ch.handle, url: ch.url, lang: ch.lang, followers: ch.followers, items: ch.count, since: youtube.items.filter((i) => i.channel === ch.lang).at(-1)?.date, page: 'videos' })),
   { icon: 'tiktok', name: tiktok.profiles.main?.name ?? '', handle: '@islam.de.ce.si.cum', url: CHANNEL_URLS.tiktok, lang: 'ro', followers: tiktok.profiles.main?.followers, items: tiktok.items.length, since: tiktok.items.at(-1)?.date, page: 'tiktok' },
   { icon: 'instagram', name: instagram.profiles.main?.name ?? '', handle: '@kalam_hamidhosseini', url: CHANNEL_URLS.instagram, lang: 'fa', followers: instagram.profiles.main?.followers, items: instagram.items.length, since: instagram.items.at(-1)?.date, page: 'instagram' },
 ] as const;
@@ -25,27 +25,33 @@ const channels = [
 const sources: Record<Locale, string[]> = {
   en: [
     'Telegram posts are read from the channel’s public web page every 30 minutes and kept here in full, including posts deleted from the preview later.',
-    'YouTube videos come from both channels’ public feeds; episodes with the same number are paired across languages.',
+    'YouTube videos come from the public feeds of all five channels (Persian, Romanian, Arabic, Urdu and English); episodes with the same number are paired across languages.',
     'TikTok and Instagram are read from the public profiles on the same schedule. Images are stored on this site, so they keep working when the platforms’ links expire.',
     'The Quran translation is assembled from the “group translation” posts: each verse is checked against the Arabic text before it is shown.',
   ],
   ro: [
     'Postările de pe Telegram sunt citite de pe pagina publică a canalului la fiecare 30 de minute și păstrate aici integral.',
-    'Videoclipurile YouTube provin din fluxurile publice ale ambelor canale; episoadele cu același număr sunt asociate între limbi.',
+    'Videoclipurile YouTube provin din fluxurile publice ale celor cinci canale (persană, română, arabă, urdu și engleză); episoadele cu același număr sunt asociate între limbi.',
     'TikTok și Instagram sunt citite din profilurile publice după același program. Imaginile sunt păstrate pe acest site, astfel încât să funcționeze și după ce linkurile platformelor expiră.',
     'Traducerea Coranului este alcătuită din postările „traducerii de grup”: fiecare verset este verificat față de textul arab înainte de a fi afișat.',
   ],
   ar: [
     'تُقرأ منشورات تيليغرام من الصفحة العامة للقناة كل 30 دقيقة وتُحفظ هنا كاملة.',
-    'تأتي مقاطع يوتيوب من الخلاصات العامة للقناتين، وتُقرن الحلقات ذات الرقم نفسه بين اللغتين.',
+    'تأتي مقاطع يوتيوب من الخلاصات العامة للقنوات الخمس (الفارسية والرومانية والعربية والأردية والإنجليزية)، وتُقرن الحلقات ذات الرقم نفسه بين اللغات.',
     'يُقرأ تيك توك وإنستغرام من الملفات العامة بالجدول نفسه، وتُحفظ الصور في هذا الموقع كي تبقى صالحة بعد انتهاء روابط المنصات.',
     'تُجمع ترجمة القرآن من منشورات «الترجمة الجماعية»، وتُطابق كل آية مع النص العربي قبل عرضها.',
   ],
   fa: [
     'پست‌های تلگرام هر ۳۰ دقیقه از صفحهٔ عمومی کانال خوانده و به‌طور کامل در اینجا نگهداری می‌شوند.',
-    'ویدئوهای یوتیوب از خوراک عمومی هر دو کانال دریافت می‌شوند و قسمت‌های هم‌شماره در دو زبان کنار هم قرار می‌گیرند.',
+    'ویدئوهای یوتیوب از خوراک عمومی هر پنج کانال (فارسی، رومانیایی، عربی، اردو و انگلیسی) دریافت می‌شوند و قسمت‌های هم‌شماره در زبان‌های مختلف کنار هم قرار می‌گیرند.',
     'تیک‌تاک و اینستاگرام با همین برنامه از صفحه‌های عمومی خوانده می‌شوند. تصاویر روی همین سایت ذخیره می‌شوند تا پس از منقضی شدن پیوندهای پلتفرم‌ها هم در دسترس بمانند.',
     'ترجمهٔ قرآن از پست‌های «ترجمهٔ گروهی» گردآوری می‌شود و هر آیه پیش از نمایش با متن عربی تطبیق داده می‌شود.',
+  ],
+  ur: [
+    'ٹیلی گرام کی پوسٹس ہر 30 منٹ بعد چینل کے عوامی صفحے سے پڑھی جاتی ہیں اور یہاں مکمل محفوظ رہتی ہیں۔',
+    'یوٹیوب ویڈیوز پانچوں چینلز (فارسی، رومانیائی، عربی، اردو اور انگریزی) کی عوامی فیڈز سے آتی ہیں؛ ایک ہی نمبر کی اقساط مختلف زبانوں میں ایک ساتھ رکھی جاتی ہیں۔',
+    'ٹک ٹاک اور انسٹاگرام اسی شیڈول پر عوامی پروفائلز سے پڑھے جاتے ہیں۔ تصاویر اسی سائٹ پر محفوظ کی جاتی ہیں تاکہ پلیٹ فارمز کے روابط ختم ہونے کے بعد بھی کام کرتی رہیں۔',
+    'قرآن کا ترجمہ “گروہی ترجمہ” کی پوسٹس سے جمع کیا جاتا ہے: ہر آیت دکھانے سے پہلے عربی متن سے ملائی جاتی ہے۔',
   ],
 };
 ---
@@ -57,6 +63,7 @@ const sources: Record<Locale, string[]> = {
     <div class="about__grid">
       <div class="stack about__text">
         <p class="lede">{s.about.placeholder}</p>
+        <p><a href={href('fa', 'articles/2141524168')}>{s.articles.bio} →</a></p>
         <h2>{s.about.tv}</h2>
         <p>{s.about.tvText} <a href={href(locale, 'writings#ethics-of-servitude')}>{s.nav.writings} →</a></p>
       </div>

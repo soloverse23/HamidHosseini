@@ -91,7 +91,7 @@ const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^
       alternates={false}
     >
       <div class="wrap">
-        <Chapter locale={locale} no={3} title={props.topic ? s.topics[props.topic] : s.sections.notes.title} lede={s.sections.notes.lede}>
+        <Chapter locale={locale} no={4} title={props.topic ? s.topics[props.topic] : s.sections.notes.title} lede={s.sections.notes.lede}>
           <span class="meta">
             <span>{s.posts(num(locale, notes.length))}</span>
             {telegram.profiles.main?.followers && <span>{s.followers(compact(locale, telegram.profiles.main.followers))}</span>}

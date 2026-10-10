@@ -14,12 +14,12 @@ const locale = Astro.params.lang as Locale;
 const s = t(locale);
 const n = (x: number) => num(locale, x);
 const localName = (m: (typeof surahs)[number]) =>
-  locale === 'fa' ? m.fa : locale === 'ar' ? null : locale === 'ro' ? m.translit : `${m.translit} · ${m.en}`;
+  locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? null : locale === 'ro' ? m.translit : `${m.translit} · ${m.en}`;
 ---
 
 <Base locale={locale} path="quran" crumbs={[{ name: s.sections.quran.title, path: 'quran' }]} title={s.sections.quran.title} description={s.sections.quran.lede}>
   <div class="wrap">
-    <Chapter locale={locale} no={2} title={s.sections.quran.title} lede={s.sections.quran.lede}>
+    <Chapter locale={locale} no={3} title={s.sections.quran.title} lede={s.sections.quran.lede}>
       <span class="meta">
         <span>{s.quran.translated(n(totalTranslated), n(6236))}</span>
         <span>{n(surahsStarted)} {s.quran.surahs}</span>

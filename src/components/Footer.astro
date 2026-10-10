@@ -21,6 +21,7 @@ const u = ui(locale);
 const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
 const sections = [
   ['writings', s.nav.writings],
+  ['articles', s.nav.articles],
   ['quran', s.nav.quran],
   ['notes', s.nav.notes],
   ['videos', s.nav.videos],
@@ -237,7 +238,8 @@ const sections = [
     font-weight: 600;
   }
   .f-list a[lang='fa'],
-  .f-list a[lang='ar'] {
+  .f-list a[lang='ar'],
+  .f-list a[lang='ur'] {
     font-family: var(--font-persian);
   }
   .f-no {

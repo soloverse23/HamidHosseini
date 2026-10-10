@@ -2,8 +2,7 @@
 // Two tiers:
 //  1. A thin channel bar: every platform with its live follower count, the
 //     language switch and the theme toggle.
-//  2. The nameplate (name in the page's script, quietly repeated in the other
-//     script) and the numbered section index, like a book's contents.
+//  2. The nameplate (logo mark) and the numbered section index, like a book's contents.
 import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { ui } from '../i18n/ui';
@@ -26,9 +25,10 @@ const section = path.split('/')[0];
 const gloss = new Intl.DisplayNames([LOCALE_META[locale].intl.split('-u-')[0]], { type: 'language' });
 const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
 
-const NAV = ['writings', 'quran', 'notes', 'videos', 'tiktok', 'instagram'] as const;
+const NAV = ['writings', 'articles', 'quran', 'notes', 'videos', 'tiktok', 'instagram'] as const;
 const label: Record<string, string> = {
   writings: s.nav.writings,
+  articles: s.nav.articles,
   quran: s.nav.quran,
   notes: s.nav.notes,
   videos: s.nav.videos,
@@ -106,7 +106,6 @@ const label: Record<string, string> = {
   <div class="wrap mainbar">
     <a class="plate" href={href(locale)} aria-label={s.nav.home}>
       <Mark size={34} class="plate__mark" />
-      <span class="plate__name">{s.name}</span>
     </a>
 
     <nav class="primary" aria-label={s.contents}>
@@ -349,7 +348,8 @@ const label: Record<string, string> = {
     text-align: var(--start);
   }
   .lang__native[lang='fa'],
-  .lang__native[lang='ar'] {
+  .lang__native[lang='ar'],
+  .lang__native[lang='ur'] {
     font-family: var(--font-persian);
   }
   .lang__native[lang='en'],
@@ -426,18 +426,6 @@ const label: Record<string, string> = {
   }
   .plate:hover :global(.plate__mark) {
     transform: rotate(45deg);
-  }
-  .plate__name {
-    font-family: var(--font-serif);
-    font-size: 1.375rem;
-    font-weight: 500;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-  :root[dir='rtl'] .plate__name {
-    font-weight: 700;
-    font-size: 1.3125rem;
-    line-height: 1.5;
   }
   .primary {
     grid-area: nav;
@@ -580,9 +568,6 @@ const label: Record<string, string> = {
     }
     .social {
       gap: 0;
-    }
-    .plate__name {
-      font-size: 1.125rem;
     }
     .plate :global(.plate__mark) {
       width: 28px;

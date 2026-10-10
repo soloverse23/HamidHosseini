@@ -22,6 +22,7 @@ import { t } from '../../src/i18n/strings';
 import {
   arabic,
   episodes,
+  YT_LANGS,
   instagram,
   lectureSessions,
   notes,
@@ -35,6 +36,8 @@ import type { FeedItem } from '../../src/lib/feed-types';
 import { indexText, vocabKey } from '../../src/lib/search/normalize';
 import { firstLine } from '../../src/lib/text';
 import { topicsOf } from '../../src/lib/topics';
+import { CATEGORIES, SERIES, SERIES_KEYS } from '../../src/data/articles';
+import { articles } from '../../src/lib/articles';
 
 type Meta = Record<string, string | number | undefined>;
 interface Rec {
@@ -127,7 +130,7 @@ for (const n of notes) {
 /* ---------- Videos: YouTube, TikTok, Instagram ---------- */
 
 const onPage = new Map<string, string>();
-for (const ep of episodes) for (const v of [ep.fa, ep.ro]) if (v) onPage.set(v.id, `videos#ep-${ep.n}`);
+for (const ep of episodes) for (const v of YT_LANGS.map((k) => ep[k])) if (v) onPage.set(v.id, `videos#ep-${ep.n}`);
 for (const v of otherTalks) onPage.set(v.id, `videos#v-${v.id}`);
 for (const v of shorts.slice(0, 18)) onPage.set(v.id, `videos#v-${v.id}`);
 
@@ -161,7 +164,7 @@ const video = (i: FeedItem, platform: string) => {
     date: i.date,
   });
 };
-for (const ep of episodes) for (const v of [ep.fa, ep.ro]) if (v) video(v, 'youtube');
+for (const ep of episodes) for (const v of YT_LANGS.map((k) => ep[k])) if (v) video(v, 'youtube');
 for (const v of [...otherTalks, ...shorts]) video(v, 'youtube');
 for (const v of tiktok.items) video(v, 'tiktok');
 for (const v of instagram.items) video(v, 'instagram');
@@ -210,9 +213,56 @@ for (const l of LECTURES) {
   });
 }
 
+/* ---------- Articles (kalaam.ir) ---------- */
+
+for (const a of articles) {
+  const cats = a.categories.map((k) => CATEGORIES[k].title);
+  const series = a.series ? SERIES[a.series.key].title : undefined;
+  records.push({
+    url: `/fa/articles/${a.id}/`,
+    type: 'writings',
+    lang: ['fa'],
+    title: a.title,
+    // Topic and series names in every language, so "ethics" or "اخلاق" finds them.
+    body: [a.text, ...a.tags, ...cats.flatMap((c) => Object.values(c)), ...Object.values(series ?? {})].join(' '),
+    meta: {
+      kind: 'article',
+      id: a.id,
+      title: a.title,
+      text: a.excerpt,
+      date: a.date,
+      image: a.image?.src,
+      minutes: a.minutes,
+      ...localized('c', Object.fromEntries(LOCALES.map((l) => [l, cats.map((c) => c[l] ?? c.en).join(' · ')]))),
+      ...localized('s', series),
+    },
+    date: a.date,
+    topics: a.categories.map((k) => `article-${k}`),
+  });
+}
+for (const key of SERIES_KEYS) {
+  const sr = SERIES[key];
+  records.push({
+    url: `/fa/articles/series/${key}/`,
+    type: 'writings',
+    lang: ['fa'],
+    title: Object.values(sr.title).join(' '),
+    body: [...Object.values(sr.summary ?? {}), ...sr.ids.map((id) => articles.find((a) => a.id === id)?.title ?? '')].join(' '),
+    meta: {
+      kind: 'work',
+      work: 'series',
+      path: `articles/series/${key}`,
+      orig: 'fa',
+      sessions: sr.ids.length,
+      ...localized('t', sr.title),
+      ...localized('d', sr.summary),
+    },
+  });
+}
+
 /* ---------- Section pages ---------- */
 
-const SECTIONS = ['writings', 'quran', 'notes', 'videos', 'tiktok', 'instagram', 'about'] as const;
+const SECTIONS = ['writings', 'articles', 'quran', 'notes', 'videos', 'tiktok', 'instagram', 'about'] as const;
 for (const key of SECTIONS) {
   const per = LOCALES.map((l) => {
     const s = t(l);

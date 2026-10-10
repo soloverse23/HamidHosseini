@@ -10,6 +10,7 @@
     "fetch:youtube": "tsx scripts/fetch/youtube.ts",
     "fetch:tiktok": "tsx scripts/fetch/tiktok.ts",
     "fetch:instagram": "tsx scripts/fetch/instagram.ts",
+    "fetch:kalaam": "tsx scripts/fetch/kalaam.ts",
     "fetch:all": "tsx scripts/fetch/all.ts"
   },
   "dependencies": {

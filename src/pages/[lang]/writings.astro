@@ -5,9 +5,10 @@ import { ARTICLES, BOOKS, LECTURES, type Localized, type Work, type WorkLink } f
 import { type Locale } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
 import Base from '../../layouts/Base.astro';
+import { articles as blogArticles } from '../../lib/articles';
 import { lectureSessions } from '../../lib/data';
 import { num, year } from '../../lib/format';
-import { localePaths } from '../../lib/paths';
+import { href, localePaths } from '../../lib/paths';
 import { toAsciiDigits } from '../../lib/text';
 
 export const getStaticPaths = localePaths;
@@ -109,6 +110,18 @@ const sessionNo = (title: string) => toAsciiDigits(title).match(/(\d+)\s*$/)?.[1
           })
         }
       </ol>
+    </section>
+
+    <section aria-labelledby="archive" class="block">
+      <div class="section-title"><h2 id="archive">{s.sections.articles.title}</h2></div>
+      <a class="archive" href={href(locale, 'articles')}>
+        <span class="archive__count">{num(locale, blogArticles.length)}</span>
+        <span class="archive__text">
+          <span class="archive__title">{s.articles.fromArchive}</span>
+          <span class="summary">{s.sections.articles.lede}</span>
+        </span>
+        <Icon name="arrow" class="flip" />
+      </a>
     </section>
 
     <section aria-labelledby="lectures" class="block">
@@ -227,6 +240,34 @@ const sessionNo = (title: string) => toAsciiDigits(title).match(/(\d+)\s*$/)?.[1
       flex-wrap: wrap;
       gap: var(--space-4);
     }
+  }
+
+  .archive {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--space-5);
+    align-items: center;
+    padding: var(--space-5);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+  }
+  .archive:hover {
+    border-color: var(--accent);
+    background: var(--accent-wash);
+  }
+  .archive__count {
+    font-family: var(--font-serif);
+    font-size: var(--step-3);
+    color: var(--accent);
+  }
+  .archive__text {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .archive__title {
+    font-weight: 600;
   }
 
   .series {

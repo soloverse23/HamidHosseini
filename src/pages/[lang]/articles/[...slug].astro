@@ -1,0 +1,878 @@
+---
+// /articles/                 all articles, by year, with the series
+// /articles/topic/K/         one topic
+// /articles/series/K/        one series, in reading order
+// /articles/<id>/            a single article (Persian, one copy under /fa/)
+import Chapter from '../../../components/Chapter.astro';
+import Icon from '../../../components/Icon.astro';
+import SearchField from '../../../components/SearchField.astro';
+import { CATEGORIES, SERIES, SERIES_KEYS, type CategoryKey, type SeriesKey } from '../../../data/articles';
+import type { Localized } from '../../../data/writings';
+import { LOCALES, LOCALE_META, type Locale } from '../../../i18n/locales';
+import { t } from '../../../i18n/strings';
+import Base from '../../../layouts/Base.astro';
+import {
+  articles,
+  categoriesInUse,
+  categoryCounts,
+  neighbours,
+  related,
+  seriesArticles,
+  type Article,
+} from '../../../lib/articles';
+import { date, num } from '../../../lib/format';
+import { href } from '../../../lib/paths';
+
+type Props =
+  | { kind: 'list'; topic?: CategoryKey; series?: SeriesKey; items: Article[] }
+  | { kind: 'article'; item: Article };
+
+export function getStaticPaths() {
+  const lists: { slug?: string; props: Props }[] = [
+    { slug: undefined, props: { kind: 'list', items: articles } },
+    ...categoriesInUse.map((k) => ({
+      slug: `topic/${k}`,
+      props: { kind: 'list', topic: k, items: articles.filter((a) => a.categories.includes(k)) } as Props,
+    })),
+    ...SERIES_KEYS.map((k) => ({ slug: `series/${k}`, props: { kind: 'list', series: k, items: seriesArticles(k) } as Props })),
+  ];
+  const singles = articles.map((item) => ({ slug: String(item.id), props: { kind: 'article', item } as Props }));
+  return LOCALES.flatMap((lang) =>
+    [...lists, ...(lang === 'fa' ? singles : [])].map((r) => ({ params: { lang, slug: r.slug }, props: r.props })),
+  );
+}
+
+const locale = Astro.params.lang as Locale;
+const slug = Astro.params.slug ?? '';
+const s = t(locale);
+const a = s.articles;
+const props = Astro.props as Props;
+const n = (x: number) => num(locale, x);
+const pick = (l?: Localized) => (l ? (l[locale] ?? l.en ?? l.fa) : undefined);
+const catTitle = (k: CategoryKey) => pick(CATEGORIES[k].title)!;
+const listHref = (path = '') => href(locale, `articles/${path}`);
+const site = Astro.site ?? new URL('https://hamidhosseini.vercel.app');
+const abs = (p: string) => new URL(p, site).toString();
+
+/** Group by year in the reader's calendar (solar hijri for Persian). */
+function byYear(list: Article[]) {
+  const fmt = new Intl.DateTimeFormat(LOCALE_META[locale].intl, { year: 'numeric', timeZone: 'Asia/Tehran' });
+  const groups: { label: string; items: Article[] }[] = [];
+  for (const it of list) {
+    const label = fmt.format(new Date(it.date)).replace(/\s*(AP|ه‍.ش.|ه\.ش\.)\s*$/u, '');
+    if (groups.at(-1)?.label !== label) groups.push({ label, items: [] });
+    groups.at(-1)!.items.push(it);
+  }
+  return groups;
+}
+
+const years = articles.map((x) => Number(x.date.slice(0, 4)));
+const span = `${n(Math.min(...years)).replace(/[,.\s٬]/g, '')}–${n(Math.max(...years)).replace(/[,.\s٬]/g, '')}`;
+
+// ---- list page ----
+const listTitle =
+  props.kind === 'list'
+    ? props.topic
+      ? catTitle(props.topic)
+      : props.series
+        ? pick(SERIES[props.series].title)!
+        : s.sections.articles.title
+    : '';
+const listLede =
+  props.kind === 'list'
+    ? props.topic
+      ? (pick(CATEGORIES[props.topic].summary) ?? s.sections.articles.lede)
+      : props.series
+        ? (pick(SERIES[props.series].summary) ?? s.sections.articles.lede)
+        : s.sections.articles.lede
+    : '';
+
+// ---- article page ----
+const item = props.kind === 'article' ? props.item : undefined;
+const series = item?.series ? { key: item.series.key, ...SERIES[item.series.key], parts: seriesArticles(item.series.key) } : undefined;
+const near = item ? neighbours(item) : undefined;
+const more = item ? related(item) : [];
+const showToc = !!item && item.headings.length >= 3 && item.headings.length <= 24;
+const description = item ? item.excerpt.slice(0, 200) : listLede;
+const jsonLd = item
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: item.title,
+      description,
+      articleBody: item.text,
+      wordCount: item.words,
+      timeRequired: `PT${item.minutes}M`,
+      datePublished: item.date,
+      dateModified: item.modified,
+      inLanguage: 'fa',
+      articleSection: item.categories.map((k) => CATEGORIES[k].title.fa),
+      keywords: [...item.tags, ...item.categories.map((k) => CATEGORIES[k].title.fa)].join('، '),
+      url: abs(href('fa', `articles/${item.id}`)),
+      mainEntityOfPage: abs(href('fa', `articles/${item.id}`)),
+      isBasedOn: item.source,
+      ...(item.image ? { image: abs(item.image.src) } : {}),
+      author: { '@type': 'Person', '@id': `${site.origin}/#person`, name: 'سید حمید حسینی', alternateName: 'Seyed Hamid Hosseini', url: abs('/fa/') },
+      publisher: { '@type': 'Person', '@id': `${site.origin}/#person`, name: 'سید حمید حسینی' },
+      ...(series
+        ? { isPartOf: { '@type': 'CreativeWorkSeries', name: series.title.fa, url: abs(href('fa', `articles/series/${series.key}`)) }, position: item.series!.index + 1 }
+        : {}),
+    }
+  : {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: listTitle,
+      description: listLede,
+      inLanguage: locale,
+      url: abs(href(locale, `articles/${slug}`)),
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: props.kind === 'list' ? props.items.length : 0,
+        itemListElement: (props.kind === 'list' ? props.items : []).slice(0, 100).map((x, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: abs(href('fa', `articles/${x.id}`)),
+          name: x.title,
+        })),
+      },
+    };
+const crumbs =
+  props.kind === 'article'
+    ? [
+        { name: s.sections.articles.title, path: 'articles' },
+        ...(series
+          ? [{ name: pick(series.title)!, path: `articles/series/${series.key}` }]
+          : [{ name: catTitle(props.item.categories[0]), path: `articles/topic/${props.item.categories[0]}` }]),
+        { name: props.item.title, path: `articles/${props.item.id}` },
+      ]
+    : [
+        { name: s.sections.articles.title, path: 'articles' },
+        ...(slug ? [{ name: listTitle, path: `articles/${slug}` }] : []),
+      ];
+---
+
+{
+  props.kind === 'list' ? (
+    <Base locale={locale} path={`articles/${slug}`} title={listTitle} description={listLede} crumbs={crumbs} jsonLd={jsonLd}>
+      <div class="wrap">
+        <Chapter locale={locale} no={2} title={listTitle} lede={listLede}>
+          <span class="meta">
+            <span>{a.count(n(props.items.length))}</span>
+            {!props.series && <span class="num-plain">{span}</span>}
+            <span>{a.persian}</span>
+          </span>
+          {(props.topic || props.series) && (
+            <a class="link-arrow" href={listHref()}>
+              <Icon name="arrow" class="flip-back" /> {a.back}
+            </a>
+          )}
+        </Chapter>
+
+        <div class="arts-layout">
+          <nav class="arts-side" aria-label={a.topics}>
+            <SearchField locale={locale} type="writings" class="arts-side__search" />
+            <p class="eyebrow">{a.topics}</p>
+            <ul class="chips">
+              <li>
+                <a class="chip" href={listHref()} aria-current={!props.topic && !props.series ? 'page' : undefined}>
+                  {a.all}
+                  <span class="num">{n(articles.length)}</span>
+                </a>
+              </li>
+              {categoriesInUse.map((k) => (
+                <li>
+                  <a class="chip" href={listHref(`topic/${k}`)} aria-current={props.topic === k ? 'page' : undefined}>
+                    {catTitle(k)}
+                    <span class="num">{n(categoryCounts[k])}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p class="eyebrow">{a.series}</p>
+            <ul class="side-series">
+              {SERIES_KEYS.map((k) => (
+                <li>
+                  <a href={listHref(`series/${k}`)} aria-current={props.series === k ? 'page' : undefined}>
+                    <span>{pick(SERIES[k].title)}</span>
+                    <span class="num">{n(seriesArticles(k).length)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div class="arts-main">
+            {!props.topic && !props.series && (
+              <section class="series-cards" aria-labelledby="series-h">
+                <div class="section-title">
+                  <h2 id="series-h">{a.series}</h2>
+                </div>
+                <ul>
+                  {SERIES_KEYS.map((k) => {
+                    const parts = seriesArticles(k);
+                    return (
+                      <li>
+                        <a href={listHref(`series/${k}`)}>
+                          <span class="eyebrow">{a.parts(n(parts.length))}</span>
+                          <span class="series-card__title">{pick(SERIES[k].title)}</span>
+                          {pick(SERIES[k].summary) && <span class="series-card__sum">{pick(SERIES[k].summary)}</span>}
+                          <span class="series-card__first" lang="fa" dir="rtl">
+                            {parts[0]?.title}
+                          </span>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
+
+            {props.series ? (
+              <ol class="rows arts arts--series">
+                {props.items.map((x, i) => (
+                  <li class="art">
+                    <span class="art__no">{n(i + 1)}</span>
+                    <div class="art__body">
+                      <h2 class="art__title serif" lang="fa" dir="rtl">
+                        <a href={href('fa', `articles/${x.id}`)}>{x.title}</a>
+                      </h2>
+                      <p class="art__excerpt" lang="fa" dir="rtl">{x.excerpt}</p>
+                      <p class="meta">
+                        <time datetime={x.date}>{date(locale, x.date)}</time>
+                        <span>{s.minutes(n(x.minutes))}</span>
+                      </p>
+                    </div>
+                    {x.image && (
+                      <a class="art__thumb frame" href={href('fa', `articles/${x.id}`)} tabindex="-1" aria-hidden="true">
+                        <img src={x.image.src} alt="" loading="lazy" decoding="async" width={x.image.width} height={x.image.height} />
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <div class="years">
+                {!props.topic && (
+                  <div class="section-title">
+                    <h2>{a.years}</h2>
+                  </div>
+                )}
+                {byYear(props.items).map((g) => (
+                  <section class="year" aria-label={g.label}>
+                    <h3 class="year__label num-plain">{g.label}</h3>
+                    <ol class="rows arts">
+                      {g.items.map((x) => (
+                        <li class="art" id={`a${x.id}`}>
+                          <div class="art__body">
+                            <p class="art__cats">
+                              {x.categories.slice(0, 3).map((k) => (
+                                <a href={listHref(`topic/${k}`)}>{catTitle(k)}</a>
+                              ))}
+                              {x.series && <a href={listHref(`series/${x.series.key}`)} class="art__series">{pick(SERIES[x.series.key].title)} · {a.part(n(x.series.index + 1), n(x.series.total))}</a>}
+                            </p>
+                            <h4 class="art__title serif" lang="fa" dir="rtl">
+                              <a href={href('fa', `articles/${x.id}`)}>{x.title}</a>
+                            </h4>
+                            {x.excerpt && <p class="art__excerpt" lang="fa" dir="rtl">{x.excerpt}</p>}
+                            <p class="meta">
+                              <time datetime={x.date}>{date(locale, x.date)}</time>
+                              <span>{s.minutes(n(x.minutes))}</span>
+                            </p>
+                          </div>
+                          {x.image && (
+                            <a class="art__thumb frame" href={href('fa', `articles/${x.id}`)} tabindex="-1" aria-hidden="true">
+                              <img src={x.image.src} alt="" loading="lazy" decoding="async" width={x.image.width} height={x.image.height} />
+                            </a>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </Base>
+  ) : (
+    <Base
+      locale={locale}
+      path={`articles/${slug}`}
+      title={props.item.title}
+      description={description}
+      switchPath="articles"
+      alternates={false}
+      canonicalLocale="fa"
+      image={props.item.image?.src}
+      imageAlt={props.item.title}
+      ogType="article"
+      published={props.item.date}
+      modified={props.item.modified}
+      crumbs={crumbs}
+      jsonLd={jsonLd}
+    >
+      <div class="wrap article-wrap">
+        <article class="article" lang="fa" dir="rtl">
+          <header class="article__head">
+            <p class="crumb meta">
+              <a href={listHref()}>{s.sections.articles.title}</a>
+              {series ? (
+                <a href={listHref(`series/${series.key}`)}>{pick(series.title)}</a>
+              ) : (
+                <a href={listHref(`topic/${props.item.categories[0]}`)}>{catTitle(props.item.categories[0])}</a>
+              )}
+            </p>
+            <h1 class="article__title">{props.item.title}</h1>
+            <p class="meta article__meta">
+              <time datetime={props.item.date}>{date('fa', props.item.date)}</time>
+              <span>{s.minutes(n(props.item.minutes))}</span>
+              <span>{a.words(n(props.item.words))}</span>
+              {series && <span>{a.part(n(props.item.series!.index + 1), n(props.item.series!.total))}</span>}
+            </p>
+            <ul class="chips article__cats">
+              {props.item.categories.map((k) => (
+                <li>
+                  <a class="chip" href={listHref(`topic/${k}`)}>
+                    {catTitle(k)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </header>
+
+          {props.item.image && (
+            <figure class="article__figure frame">
+              <img src={props.item.image.src} alt="" width={props.item.image.width} height={props.item.image.height} decoding="async" />
+            </figure>
+          )}
+
+          <div class="article__grid">
+            {showToc && (
+              <nav class="toc" aria-label={a.contents}>
+                <p class="eyebrow">{a.contents}</p>
+                <ol>
+                  {props.item.headings.map((h) => (
+                    <li>
+                      <a href={`#${h.id}`}>{h.text}</a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            )}
+            <div class="prose article__body" lang="fa" dir="rtl" set:html={props.item.html} />
+          </div>
+
+          {series && (
+            <aside class="series-box" aria-label={a.series}>
+              <p class="eyebrow">{a.series}</p>
+              <p class="series-box__title">
+                <a href={listHref(`series/${series.key}`)}>{pick(series.title)}</a>
+              </p>
+              <ol>
+                {series.parts.map((p) => (
+                  <li>
+                    {p.id === props.item.id ? (
+                      <span aria-current="page">{p.title}</span>
+                    ) : (
+                      <a href={href('fa', `articles/${p.id}`)}>{p.title}</a>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </aside>
+          )}
+
+          <footer class="article__foot">
+            {props.item.tags.length > 0 && (
+              <ul class="chips">
+                {props.item.tags.map((tag) => (
+                  <li>
+                    <a class="chip" href={`${href(locale, 'search')}?q=${encodeURIComponent(tag)}&type=writings`}>
+                      #{tag}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p class="btn-row">
+              <a class="btn" href={props.item.source} rel="noopener" target="_blank">
+                <Icon name="external" /> {a.original}
+              </a>
+              <a class="btn" href={listHref()}>
+                <Icon name="book" /> {a.back}
+              </a>
+            </p>
+          </footer>
+        </article>
+
+        {more.length > 0 && (
+          <section class="related" aria-labelledby="related-h">
+            <div class="section-title">
+              <h2 id="related-h">{a.related}</h2>
+            </div>
+            <ul>
+              {more.map((x) => (
+                <li>
+                  <a href={href('fa', `articles/${x.id}`)}>
+                    <span class="eyebrow">{catTitle(x.categories[0])} · {date('fa', x.date, 'month')}</span>
+                    <span class="related__title" lang="fa" dir="rtl">{x.title}</span>
+                    <span class="related__ex" lang="fa" dir="rtl">{x.excerpt}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <nav class="post-nav" aria-label={s.sections.articles.title}>
+          {near?.newer ? (
+            <a href={href('fa', `articles/${near.newer.id}`)}>
+              <span class="meta">{s.prev}</span>
+              <span class="post-nav__title">{near.newer.title}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {near?.older ? (
+            <a href={href('fa', `articles/${near.older.id}`)} class="post-nav__older">
+              <span class="meta">{s.next}</span>
+              <span class="post-nav__title">{near.older.title}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      </div>
+    </Base>
+  )
+}
+
+<style>
+  .num-plain {
+    font-variant-numeric: tabular-nums;
+  }
+  :global(.flip-back) {
+    transform: scaleX(-1);
+  }
+  :global(:root[dir='rtl'] .flip-back) {
+    transform: none;
+  }
+
+  /* ---------- List ---------- */
+  .arts-layout {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 62rem) {
+    .arts-layout {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+    .arts-side {
+      position: sticky;
+      inset-block-start: var(--space-5);
+      align-self: start;
+      max-height: calc(100vh - 2 * var(--space-5));
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .arts-side .chips {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+  :global(.arts-side__search) {
+    margin-block-end: var(--space-5);
+  }
+  .arts-side .eyebrow {
+    margin-block: var(--space-5) var(--space-3);
+  }
+  .arts-side ul {
+    list-style: none;
+    padding: 0;
+  }
+  .side-series {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .side-series a {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    align-items: baseline;
+    padding-block: var(--space-1);
+    color: var(--ink-2);
+    text-decoration: none;
+    font-size: var(--step--1);
+  }
+  .side-series a:hover,
+  .side-series a[aria-current='page'] {
+    color: var(--accent);
+  }
+  .arts-main {
+    min-width: 0;
+  }
+
+  .series-cards {
+    margin-block-end: var(--space-7);
+  }
+  .series-cards ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  }
+  .series-cards a {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    height: 100%;
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    background: var(--paper);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .series-cards a:hover {
+    border-color: var(--accent);
+    background: var(--accent-wash);
+  }
+  .series-card__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .series-card__sum {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.7;
+  }
+  .series-card__first {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    font-family: var(--font-persian);
+    border-block-start: 1px solid var(--rule);
+    padding-block-start: var(--space-2);
+    margin-block-start: auto;
+  }
+
+  .year + .year {
+    margin-block-start: var(--space-6);
+  }
+  .year__label {
+    font-family: var(--font-sans);
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-block-end: var(--space-2);
+  }
+  .arts .art {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-5);
+    padding-block: var(--space-5);
+  }
+  .arts--series .art {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  }
+  .art__no {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    color: var(--ink-3);
+    line-height: 1.2;
+  }
+  .art__body {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    min-width: 0;
+  }
+  .art__cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.9rem;
+    font-size: 0.8125rem;
+  }
+  .art__cats a {
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+  .art__cats a:hover {
+    color: var(--accent);
+  }
+  .art__cats .art__series {
+    color: var(--accent);
+  }
+  .art__title {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    font-weight: 600;
+    text-align: start;
+  }
+  :root[dir='ltr'] .art__title,
+  :root[dir='ltr'] .art__excerpt {
+    text-align: right;
+  }
+  .art__title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .art__title a:hover {
+    color: var(--accent);
+  }
+  .art__excerpt {
+    color: var(--ink-2);
+    line-height: 1.95;
+    font-size: 0.97rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .art__thumb {
+    width: 9rem;
+    aspect-ratio: 4 / 3;
+    align-self: start;
+  }
+  @media (max-width: 40rem) {
+    .art__thumb {
+      width: 5.5rem;
+    }
+    .arts--series .art {
+      grid-template-columns: 1.75rem minmax(0, 1fr);
+    }
+    .arts--series .art__thumb {
+      display: none;
+    }
+  }
+
+  /* ---------- Article ---------- */
+  .article-wrap {
+    max-width: 50rem;
+  }
+  .article__head {
+    display: grid;
+    gap: var(--space-3);
+    margin-block-end: var(--space-6);
+  }
+  .crumb a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .article__title {
+    font-family: var(--font-naskh);
+    font-size: var(--step-4);
+    line-height: 1.5;
+    font-weight: 700;
+  }
+  .article__cats {
+    list-style: none;
+    padding: 0;
+  }
+  .article__figure {
+    margin-block-end: var(--space-6);
+    display: grid;
+    place-items: center;
+  }
+  .article__figure img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 30rem;
+    object-fit: contain;
+  }
+  .article__grid {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .toc {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: var(--space-4) var(--space-5);
+    background: var(--paper-2);
+  }
+  .toc .eyebrow {
+    margin-block-end: var(--space-2);
+  }
+  .toc ol,
+  .series-box ol {
+    list-style-type: persian;
+  }
+  .toc ol {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--step--1);
+    line-height: 1.8;
+  }
+  .toc a {
+    color: var(--ink-2);
+    text-decoration: none;
+  }
+  .toc a:hover {
+    color: var(--accent);
+  }
+
+  .article__body {
+    font-size: 1.125rem;
+    line-height: 2.15;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+  .article__body :global(p + p),
+  .article__body :global(* + p),
+  .article__body :global(p + *) {
+    margin-block-start: 1.1em;
+  }
+  .article__body :global(h3) {
+    font-family: var(--font-naskh);
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-block: 2em 0.6em;
+    scroll-margin-block-start: var(--space-6);
+    text-align: start;
+  }
+  .article__body :global(h3:first-child) {
+    margin-block-start: 0;
+  }
+  .article__body :global(img) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+    border-radius: var(--radius);
+  }
+  .article__body :global(hr) {
+    border: 0;
+    border-block-start: 1px solid var(--rule);
+    margin-block: 2em;
+  }
+  .article__body :global(ul),
+  .article__body :global(ol) {
+    padding-inline-start: 1.5em;
+  }
+  .article__body :global(strong) {
+    font-weight: 700;
+  }
+
+  .series-box {
+    margin-block-start: var(--space-7);
+    padding: var(--space-5);
+    border-inline-start: 3px solid var(--accent);
+    background: var(--accent-wash);
+    border-radius: var(--radius);
+  }
+  .series-box__title {
+    font-family: var(--font-naskh);
+    font-size: var(--step-1);
+    font-weight: 700;
+    margin-block: var(--space-1) var(--space-3);
+  }
+  .series-box__title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .series-box ol {
+    margin: 0;
+    padding-inline-start: 1.5rem;
+    display: grid;
+    gap: var(--space-1);
+    line-height: 1.8;
+  }
+  .series-box a {
+    color: var(--accent-ink);
+    text-decoration: none;
+  }
+  .series-box a:hover {
+    text-decoration: underline;
+  }
+  .series-box [aria-current] {
+    font-weight: 700;
+  }
+
+  .article__foot {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-start: var(--space-7);
+    padding-block-start: var(--space-5);
+    border-block-start: 1px solid var(--rule);
+  }
+  .article__foot ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .related {
+    margin-block-start: var(--space-8);
+  }
+  .related ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  }
+  .related a {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    height: 100%;
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    color: inherit;
+    text-decoration: none;
+  }
+  .related a:hover {
+    border-color: var(--accent);
+  }
+  .related__title {
+    font-family: var(--font-naskh);
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+  .related__ex {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    line-height: 1.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+    margin-block-start: var(--space-7);
+    border-block-start: 1px solid var(--rule);
+    padding-block-start: var(--space-5);
+  }
+  .post-nav a {
+    display: grid;
+    gap: var(--space-1);
+    text-decoration: none;
+    color: inherit;
+  }
+  .post-nav a:hover .post-nav__title {
+    color: var(--accent);
+  }
+  .post-nav__older {
+    text-align: end;
+  }
+  .post-nav__title {
+    font-weight: 600;
+    line-height: 1.7;
+  }
+</style>
