@@ -1,0 +1,1745 @@
+/* ==========================================================================
+   Kalam — a reading-first system.
+   Paper, ink, one accent (lapis). Hairlines instead of boxes.
+   All spacing uses logical properties so the same CSS serves LTR and RTL.
+   ========================================================================== */
+
+:root {
+  --paper: #f7f3ec;
+  --paper-2: #efe9de;
+  --paper-3: #e6dfd1;
+  --ink: #1d1a15;
+  --ink-2: #4b463d;
+  --ink-3: #6f695d;
+  --rule: #d8cfbf;
+  --rule-strong: #b9ae99;
+  --accent: #1d4f91;
+  --accent-ink: #163d70;
+  --accent-wash: #e3e9f1;
+  --focus: #1d4f91;
+  --fill-empty: #e6dfd1;
+  --brand-tiktok: #111111;
+
+  --font-serif: 'Newsreader Variable', 'Noto Naskh Arabic Variable', Georgia, serif;
+  --font-sans: 'IBM Plex Sans', 'Vazirmatn Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-persian: 'Vazirmatn Variable', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-naskh: 'Noto Naskh Arabic Variable', 'Vazirmatn Variable', serif;
+  --font-quran: 'Amiri Quran', 'Noto Naskh Arabic Variable', serif;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5625rem;
+  --step-3: clamp(1.75rem, 1.4rem + 1.6vw, 2.375rem);
+  --step-4: clamp(2.25rem, 1.6rem + 3vw, 3.5rem);
+
+  --measure: 40rem;
+  --wide: 74rem;
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --radius: 2px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #14130f;
+    --paper-2: #1c1a15;
+    --paper-3: #26231d;
+    --ink: #ece6d9;
+    --ink-2: #bfb7a7;
+    --ink-3: #958d7e;
+    --rule: #34302a;
+    --rule-strong: #4c463c;
+    --accent: #93b6e6;
+    --accent-ink: #b5cdf0;
+    --accent-wash: #1d2532;
+    --focus: #93b6e6;
+    --fill-empty: #2a2721;
+    --brand-tiktok: #ece6d9;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --paper: #14130f;
+  --paper-2: #1c1a15;
+  --paper-3: #26231d;
+  --ink: #ece6d9;
+  --ink-2: #bfb7a7;
+  --ink-3: #958d7e;
+  --rule: #34302a;
+  --rule-strong: #4c463c;
+  --accent: #93b6e6;
+  --accent-ink: #b5cdf0;
+  --accent-wash: #1d2532;
+  --focus: #93b6e6;
+  --fill-empty: #2a2721;
+  --brand-tiktok: #ece6d9;
+  color-scheme: dark;
+}
+
+/* RTL locales read in Persian/Arabic faces throughout. */
+:root[lang='fa'] {
+  --font-serif: 'Noto Naskh Arabic Variable', 'Vazirmatn Variable', serif;
+  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+}
+:root[lang='ar'] {
+  --font-serif: 'Noto Naskh Arabic Variable', serif;
+  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+}
+
+/* ---------- Reset ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-block-start: var(--space-6);
+}
+body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+:root[dir='rtl'] body {
+  line-height: 1.85;
+}
+img,
+svg,
+video,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+img {
+  height: auto;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  color: var(--accent);
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--accent-wash);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Content-language islands ---------- */
+/* Persian posts on an English page, Romanian titles on a Persian page… */
+
+[lang='fa'] {
+  font-family: var(--font-persian);
+}
+[lang='ar'] {
+  font-family: var(--font-naskh);
+}
+[lang='en'],
+[lang='ro'] {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+.serif[lang='en'],
+.serif[lang='ro'] {
+  font-family: 'Newsreader Variable', Georgia, serif;
+}
+.serif[lang='fa'],
+.serif[lang='ar'] {
+  font-family: var(--font-naskh);
+}
+.quran-ar {
+  font-family: var(--font-quran);
+  font-size: 1.6em;
+  line-height: 2.25;
+  direction: rtl;
+  text-align: start;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- Layout ---------- */
+
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--wide));
+  margin-inline: auto;
+}
+.measure {
+  max-width: var(--measure);
+}
+.stack > * + * {
+  margin-block-start: var(--space-4);
+}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.skip {
+  position: absolute;
+  inset-inline-start: var(--space-4);
+  inset-block-start: -4rem;
+  background: var(--ink);
+  color: var(--paper);
+  padding: var(--space-2) var(--space-4);
+  z-index: 10;
+}
+.skip:focus {
+  inset-block-start: var(--space-4);
+}
+
+main {
+  padding-block: var(--space-7) var(--space-8);
+}
+
+/* ---------- Type ---------- */
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+:root[dir='rtl'] :is(h1, h2, h3) {
+  letter-spacing: 0;
+  line-height: 1.45;
+  font-weight: 600;
+}
+h1 {
+  font-size: var(--step-4);
+}
+h2 {
+  font-size: var(--step-3);
+}
+h3 {
+  font-size: var(--step-1);
+}
+p {
+  text-wrap: pretty;
+}
+.lede {
+  font-size: var(--step-1);
+  color: var(--ink-2);
+  max-width: 38rem;
+  line-height: 1.55;
+}
+:root[dir='rtl'] .lede {
+  line-height: 1.9;
+}
+.meta {
+  font-size: var(--step--1);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.meta > * + *::before {
+  content: '·';
+  margin-inline: 0.5em;
+  color: var(--rule-strong);
+}
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ---------- Section heading: numbered like a table of contents ---------- */
+
+.chapter {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-5);
+  align-items: baseline;
+  padding-block-end: var(--space-6);
+  margin-block-end: var(--space-6);
+  border-block-end: 1px solid var(--rule);
+}
+.chapter__no {
+  font-family: var(--font-serif);
+  font-size: var(--step-2);
+  color: var(--accent);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.chapter h1 {
+  grid-column: 2;
+}
+.chapter .lede {
+  grid-column: 2;
+}
+.chapter__aside {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-block-start: var(--space-2);
+}
+@media (max-width: 40rem) {
+  .chapter {
+    grid-template-columns: 1fr;
+  }
+  .chapter :is(h1, .lede, .chapter__aside) {
+    grid-column: 1;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--ink);
+  margin-block-end: var(--space-4);
+}
+.section-title h2 {
+  font-size: var(--step-1);
+}
+.section-title a {
+  font-size: var(--step--1);
+  white-space: nowrap;
+}
+
+/* ---------- Links & buttons ---------- */
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  text-decoration: none;
+  color: var(--accent);
+  font-size: var(--step--1);
+  font-weight: 500;
+}
+.link-arrow:hover {
+  text-decoration: underline;
+}
+.link-arrow svg {
+  width: 0.85em;
+  height: 0.85em;
+  flex: none;
+}
+:root[dir='rtl'] .flip {
+  transform: scaleX(-1);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.45em 0.95em;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  color: var(--ink);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.btn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--paper-2);
+}
+.btn--primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.btn--primary:hover {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: var(--paper);
+}
+.btn svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding: 0 0.45em;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.chip {
+  font-size: var(--step--1);
+  padding: 0.2em 0.75em;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+.chip[aria-current='page'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.chip .num {
+  color: var(--ink-3);
+  margin-inline-start: 0.35em;
+}
+.chip[aria-current='page'] .num {
+  color: var(--paper-3);
+}
+
+/* ---------- Rows: the default list form (no cards) ---------- */
+
+.rows {
+  list-style: none;
+  padding: 0;
+}
+.rows > li {
+  border-block-end: 1px solid var(--rule);
+}
+.rows > li:first-child {
+  border-block-start: 1px solid var(--rule);
+}
+
+/* ---------- Media frames ---------- */
+
+.frame {
+  position: relative;
+  background: var(--paper-3);
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.frame--16x9 {
+  aspect-ratio: 16 / 9;
+}
+.frame--9x16 {
+  aspect-ratio: 9 / 16;
+}
+.frame--1x1 {
+  aspect-ratio: 1;
+}
+.frame--4x5 {
+  aspect-ratio: 4 / 5;
+}
+.frame__badge {
+  position: absolute;
+  inset-block-end: var(--space-2);
+  inset-inline-end: var(--space-2);
+  background: rgb(20 19 15 / 0.82);
+  color: #f7f3ec;
+  font-size: 0.75rem;
+  padding: 0.05em 0.45em;
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.play-btn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #fff;
+}
+.play-btn span {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: rgb(20 19 15 / 0.72);
+  transition: background 0.15s;
+}
+.play-btn:hover span {
+  background: var(--accent);
+}
+.play-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-inline-start: 0.15rem;
+}
+
+/* Post body from Telegram */
+.prose {
+  font-size: var(--step-0);
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+.prose[lang='fa'],
+.prose[lang='ar'] {
+  font-size: 1.0625rem;
+  line-height: 2;
+}
+.prose a {
+  color: var(--accent);
+}
+.prose blockquote {
+  border-inline-start: 2px solid var(--rule-strong);
+  padding-inline-start: var(--space-4);
+  color: var(--ink-2);
+}
+.prose .tg-spoiler {
+  background: var(--paper-3);
+  color: transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.prose .tg-spoiler:hover,
+.prose .tg-spoiler:focus {
+  color: inherit;
+}
+
+/* ---------- Pagination ---------- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-start: var(--space-6);
+  font-size: var(--step--1);
+}
+.pager a {
+  text-decoration: none;
+}
+.pager .muted {
+  color: var(--ink-3);
+}
+
+/* ---------- Empty state ---------- */
+
+.empty {
+  padding: var(--space-6);
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+}
+
+/* Short RTL titles inside LTR layouts (and vice versa) line up with their
+   column instead of floating to the far edge. */
+.align-start[dir='auto'],
+.align-start[dir='rtl'],
+.align-start[dir='ltr'] {
+  text-align: start;
+}
+:root[dir='ltr'] .align-start {
+  text-align: left;
+}
+:root[dir='rtl'] .align-start {
+  text-align: right;
+}
+
+/* ==========================================================================
+   Mixed direction
+   Content keeps its own direction (correct punctuation, numbers and
+   word order) but lines up with the page's start edge, so a Persian title on
+   an English page and a Romanian title on a Persian page share one column.
+   ========================================================================== */
+
+:root {
+  --start: left;
+  --end: right;
+}
+:root[dir='rtl'] {
+  --start: right;
+  --end: left;
+}
+.x {
+  unicode-bidi: isolate;
+  text-align: var(--start);
+}
+/* Optical balance: Arabic-script glyphs look smaller than Latin ones at the
+   same size, and need more leading. */
+:root[dir='ltr'] .x:is([lang='fa'], [lang='ar']) {
+  font-size: 1.06em;
+  line-height: 1.85;
+}
+:root[dir='rtl'] .x:is([lang='en'], [lang='ro']) {
+  font-size: 0.96em;
+  line-height: 1.55;
+}
+bdi,
+.handle {
+  unicode-bidi: isolate;
+}
+.handle {
+  direction: ltr;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+.clamp-2,
+.clamp-3,
+.clamp-4 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.clamp-2 {
+  -webkit-line-clamp: 2;
+}
+.clamp-3 {
+  -webkit-line-clamp: 3;
+}
+.clamp-4 {
+  -webkit-line-clamp: 4;
+}
+
+/* Small source label: brand glyph + platform name */
+.src {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  font-weight: 500;
+  --icon-cut: var(--paper);
+}
+.src svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--brand, var(--ink-2));
+}
+:root[data-theme='dark'] .src.is-tiktok svg {
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .src.is-tiktok svg {
+    color: var(--ink);
+  }
+}
+
+/* Live dot */
+.live {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #3f8f5a;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #3f8f5a 22%, transparent);
+  flex: none;
+}
+
+/* Section heading for home blocks: a label and a rule */
+.block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-block-end: var(--space-5);
+}
+.block-head h2 {
+  font-size: var(--step-2);
+}
+.block-head .more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--step--1);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.block-head .more:hover {
+  text-decoration: underline;
+}
+.block-head .more svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+/* ==========================================================================
+   Kalam — a reading-first system.
+   Paper, ink, one accent (lapis). Hairlines instead of boxes.
+   All spacing uses logical properties so the same CSS serves LTR and RTL.
+   ========================================================================== */
+
+:root {
+  --paper: #f7f3ec;
+  --paper-2: #efe9de;
+  --paper-3: #e6dfd1;
+  --ink: #1d1a15;
+  --ink-2: #4b463d;
+  --ink-3: #6f695d;
+  --rule: #d8cfbf;
+  --rule-strong: #b9ae99;
+  --accent: #1d4f91;
+  --accent-ink: #163d70;
+  --accent-wash: #e3e9f1;
+  --focus: #1d4f91;
+  --fill-empty: #e6dfd1;
+
+  --font-serif: 'Newsreader Variable', 'Noto Naskh Arabic Variable', Georgia, serif;
+  --font-sans: 'IBM Plex Sans', 'Vazirmatn Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-persian: 'Vazirmatn Variable', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-naskh: 'Noto Naskh Arabic Variable', 'Vazirmatn Variable', serif;
+  --font-quran: 'Amiri Quran', 'Noto Naskh Arabic Variable', serif;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5625rem;
+  --step-3: clamp(1.75rem, 1.4rem + 1.6vw, 2.375rem);
+  --step-4: clamp(2.25rem, 1.6rem + 3vw, 3.5rem);
+
+  --measure: 40rem;
+  --wide: 74rem;
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --radius: 2px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #14130f;
+    --paper-2: #1c1a15;
+    --paper-3: #26231d;
+    --ink: #ece6d9;
+    --ink-2: #bfb7a7;
+    --ink-3: #958d7e;
+    --rule: #34302a;
+    --rule-strong: #4c463c;
+    --accent: #93b6e6;
+    --accent-ink: #b5cdf0;
+    --accent-wash: #1d2532;
+    --focus: #93b6e6;
+    --fill-empty: #2a2721;
+    --brand-tiktok: #ece6d9;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --paper: #14130f;
+  --paper-2: #1c1a15;
+  --paper-3: #26231d;
+  --ink: #ece6d9;
+  --ink-2: #bfb7a7;
+  --ink-3: #958d7e;
+  --rule: #34302a;
+  --rule-strong: #4c463c;
+  --accent: #93b6e6;
+  --accent-ink: #b5cdf0;
+  --accent-wash: #1d2532;
+  --focus: #93b6e6;
+  --fill-empty: #2a2721;
+  --brand-tiktok: #ece6d9;
+  color-scheme: dark;
+}
+
+/* RTL locales read in Persian/Arabic faces throughout. */
+:root[lang='fa'] {
+  --font-serif: 'Noto Naskh Arabic Variable', 'Vazirmatn Variable', serif;
+  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+}
+:root[lang='ar'] {
+  --font-serif: 'Noto Naskh Arabic Variable', serif;
+  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+}
+
+/* ---------- Reset ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-block-start: var(--space-6);
+}
+body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+:root[dir='rtl'] body {
+  line-height: 1.85;
+}
+img,
+svg,
+video,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+img {
+  height: auto;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  color: var(--accent);
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--accent-wash);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Content-language islands ---------- */
+/* Persian posts on an English page, Romanian titles on a Persian page… */
+
+[lang='fa'] {
+  font-family: var(--font-persian);
+}
+[lang='ar'] {
+  font-family: var(--font-naskh);
+}
+[lang='en'],
+[lang='ro'] {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+.serif[lang='en'],
+.serif[lang='ro'] {
+  font-family: 'Newsreader Variable', Georgia, serif;
+}
+.serif[lang='fa'],
+.serif[lang='ar'] {
+  font-family: var(--font-naskh);
+}
+.quran-ar {
+  font-family: var(--font-quran);
+  font-size: 1.6em;
+  line-height: 2.25;
+  direction: rtl;
+  text-align: start;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- Layout ---------- */
+
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--wide));
+  margin-inline: auto;
+}
+.measure {
+  max-width: var(--measure);
+}
+.stack > * + * {
+  margin-block-start: var(--space-4);
+}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.skip {
+  position: absolute;
+  inset-inline-start: var(--space-4);
+  inset-block-start: -4rem;
+  background: var(--ink);
+  color: var(--paper);
+  padding: var(--space-2) var(--space-4);
+  z-index: 10;
+}
+.skip:focus {
+  inset-block-start: var(--space-4);
+}
+
+main {
+  padding-block: var(--space-7) var(--space-8);
+}
+
+/* ---------- Type ---------- */
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+:root[dir='rtl'] :is(h1, h2, h3) {
+  letter-spacing: 0;
+  line-height: 1.45;
+  font-weight: 600;
+}
+h1 {
+  font-size: var(--step-4);
+}
+h2 {
+  font-size: var(--step-3);
+}
+h3 {
+  font-size: var(--step-1);
+}
+p {
+  text-wrap: pretty;
+}
+.lede {
+  font-size: var(--step-1);
+  color: var(--ink-2);
+  max-width: 38rem;
+  line-height: 1.55;
+}
+:root[dir='rtl'] .lede {
+  line-height: 1.9;
+}
+.meta {
+  font-size: var(--step--1);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.meta > * + *::before {
+  content: '·';
+  margin-inline: 0.5em;
+  color: var(--rule-strong);
+}
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ---------- Section heading: numbered like a table of contents ---------- */
+
+.chapter {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-5);
+  align-items: baseline;
+  padding-block-end: var(--space-6);
+  margin-block-end: var(--space-6);
+  border-block-end: 1px solid var(--rule);
+}
+.chapter__no {
+  font-family: var(--font-serif);
+  font-size: var(--step-2);
+  color: var(--accent);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.chapter h1 {
+  grid-column: 2;
+}
+.chapter .lede {
+  grid-column: 2;
+}
+.chapter__aside {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-block-start: var(--space-2);
+}
+@media (max-width: 40rem) {
+  .chapter {
+    grid-template-columns: 1fr;
+  }
+  .chapter :is(h1, .lede, .chapter__aside) {
+    grid-column: 1;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--ink);
+  margin-block-end: var(--space-4);
+}
+.section-title h2 {
+  font-size: var(--step-1);
+}
+.section-title a {
+  font-size: var(--step--1);
+  white-space: nowrap;
+}
+
+/* ---------- Links & buttons ---------- */
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  text-decoration: none;
+  color: var(--accent);
+  font-size: var(--step--1);
+  font-weight: 500;
+}
+.link-arrow:hover {
+  text-decoration: underline;
+}
+.link-arrow svg {
+  width: 0.85em;
+  height: 0.85em;
+  flex: none;
+}
+:root[dir='rtl'] .flip {
+  transform: scaleX(-1);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.45em 0.95em;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  color: var(--ink);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.btn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: var(--paper-2);
+}
+.btn--primary {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.btn--primary:hover {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: var(--paper);
+}
+.btn svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding: 0 0.45em;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.chip {
+  font-size: var(--step--1);
+  padding: 0.2em 0.75em;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+.chip[aria-current='page'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.chip .num {
+  color: var(--ink-3);
+  margin-inline-start: 0.35em;
+}
+.chip[aria-current='page'] .num {
+  color: var(--paper-3);
+}
+
+/* ---------- Rows: the default list form (no cards) ---------- */
+
+.rows {
+  list-style: none;
+  padding: 0;
+}
+.rows > li {
+  border-block-end: 1px solid var(--rule);
+}
+.rows > li:first-child {
+  border-block-start: 1px solid var(--rule);
+}
+
+/* ---------- Media frames ---------- */
+
+.frame {
+  position: relative;
+  background: var(--paper-3);
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.frame--16x9 {
+  aspect-ratio: 16 / 9;
+}
+.frame--9x16 {
+  aspect-ratio: 9 / 16;
+}
+.frame--1x1 {
+  aspect-ratio: 1;
+}
+.frame--4x5 {
+  aspect-ratio: 4 / 5;
+}
+.frame__badge {
+  position: absolute;
+  inset-block-end: var(--space-2);
+  inset-inline-end: var(--space-2);
+  background: rgb(20 19 15 / 0.82);
+  color: #f7f3ec;
+  font-size: 0.75rem;
+  padding: 0.05em 0.45em;
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.play-btn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #fff;
+}
+.play-btn span {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: rgb(20 19 15 / 0.72);
+  transition: background 0.15s;
+}
+.play-btn:hover span {
+  background: var(--accent);
+}
+.play-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-inline-start: 0.15rem;
+}
+
+/* Post body from Telegram */
+.prose {
+  font-size: var(--step-0);
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+.prose[lang='fa'],
+.prose[lang='ar'] {
+  font-size: 1.0625rem;
+  line-height: 2;
+}
+.prose a {
+  color: var(--accent);
+}
+.prose blockquote {
+  border-inline-start: 2px solid var(--rule-strong);
+  padding-inline-start: var(--space-4);
+  color: var(--ink-2);
+}
+.prose .tg-spoiler {
+  background: var(--paper-3);
+  color: transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.prose .tg-spoiler:hover,
+.prose .tg-spoiler:focus {
+  color: inherit;
+}
+
+/* ---------- Pagination ---------- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-start: var(--space-6);
+  font-size: var(--step--1);
+}
+.pager a {
+  text-decoration: none;
+}
+.pager .muted {
+  color: var(--ink-3);
+}
+
+/* ---------- Empty state ---------- */
+
+.empty {
+  padding: var(--space-6);
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+}
+
+/* Short RTL titles inside LTR layouts (and vice versa) line up with their
+   column instead of floating to the far edge. */
+.align-start[dir='auto'],
+.align-start[dir='rtl'],
+.align-start[dir='ltr'] {
+  text-align: start;
+}
+:root[dir='ltr'] .align-start {
+  text-align: left;
+}
+:root[dir='rtl'] .align-start {
+  text-align: right;
+}
+
+/* ==========================================================================
+   Mixed direction
+   Content keeps its own direction (correct punctuation, numbers and
+   word order) but lines up with the page's start edge, so a Persian title on
+   an English page and a Romanian title on a Persian page share one column.
+   ========================================================================== */
+
+:root {
+  --start: left;
+  --end: right;
+}
+:root[dir='rtl'] {
+  --start: right;
+  --end: left;
+}
+.x {
+  unicode-bidi: isolate;
+  text-align: var(--start);
+}
+/* Optical balance: Arabic-script glyphs look smaller than Latin ones at the
+   same size, and need more leading. */
+:root[dir='ltr'] .x:is([lang='fa'], [lang='ar']) {
+  font-size: 1.06em;
+  line-height: 1.85;
+}
+:root[dir='rtl'] .x:is([lang='en'], [lang='ro']) {
+  font-size: 0.96em;
+  line-height: 1.55;
+}
+bdi,
+.handle {
+  unicode-bidi: isolate;
+}
+.handle {
+  direction: ltr;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+.clamp-2,
+.clamp-3,
+.clamp-4 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.clamp-2 {
+  -webkit-line-clamp: 2;
+}
+.clamp-3 {
+  -webkit-line-clamp: 3;
+}
+.clamp-4 {
+  -webkit-line-clamp: 4;
+}
+
+/* Small source label: brand glyph + platform name */
+.src {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  font-weight: 500;
+  --icon-cut: var(--paper);
+}
+.src svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--brand, var(--ink-2));
+}
+:root[data-theme='dark'] .src.is-tiktok svg {
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .src.is-tiktok svg {
+    color: var(--ink);
+  }
+}
+
+/* Live dot */
+.live {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #3f8f5a;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #3f8f5a 22%, transparent);
+  flex: none;
+}
+
+/* Section heading for home blocks: a label and a rule */
+.block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-block-end: var(--space-5);
+}
+.block-head h2 {
+  font-size: var(--step-2);
+}
+.block-head .more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--step--1);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.block-head .more:hover {
+  text-decoration: underline;
+}
+.block-head .more svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ---------- Day-grouped feeds (home, notes) ---------- */
+.days {
+  list-style: none;
+  padding: 0;
+}
+.day {
+  display: grid;
+  gap: 0 var(--space-6);
+  border-block-start: 1px solid var(--ink);
+}
+.day__head {
+  padding-block: var(--space-4) var(--space-2);
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+:root[dir='rtl'] .day__head {
+  font-family: var(--font-persian);
+  font-weight: 600;
+  font-size: 1rem;
+}
+@media (min-width: 56rem) {
+  .day {
+    grid-template-columns: 11rem minmax(0, 1fr);
+  }
+  .day__head {
+    position: sticky;
+    inset-block-start: var(--space-4);
+    align-self: start;
+  }
+}
+.day__entries > .card:last-child {
+  border-block-end: 0;
+}
+
+/* ---------- In-browser translation (src/scripts/translate.ts) ---------- */
+
+/* The first-time question: a centred popup. */
+.tr-pop {
+  /* Pinned to the centre explicitly; the reset's margin: 0 would undo it. */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(100% - 2rem, 28rem);
+  height: fit-content;
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 24px 70px -12px rgb(0 0 0 / 0.35);
+  font-family: var(--font-sans);
+  text-align: center;
+}
+.tr-pop[open] {
+  animation: tr-pop-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.05);
+}
+.tr-pop::backdrop {
+  background: rgb(20 19 15 / 0.4);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: tr-fade 0.3s ease-out;
+}
+.tr-pop.is-leaving::backdrop {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tr-pop__close {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline-end: var(--space-3);
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.tr-pop__close:hover {
+  background: var(--paper-2);
+  color: var(--ink);
+}
+.tr-pop__close svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.tr-pop__body {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-6) var(--space-5);
+  background: radial-gradient(120% 70% at 50% 0%, var(--accent-wash), transparent 70%);
+}
+.tr-pop__icon {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-block-end: var(--space-1);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--accent);
+  box-shadow:
+    0 0 0 6px var(--accent-wash),
+    0 6px 16px -6px rgb(0 0 0 / 0.25);
+}
+.tr-pop__icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.tr-pop__title {
+  font-family: var(--font-serif);
+  font-size: var(--step-2);
+  font-weight: 600;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+.tr-pop__lang {
+  color: var(--accent);
+  white-space: nowrap;
+}
+.tr-pop__ask {
+  color: var(--ink-2);
+  font-size: var(--step-0);
+}
+.tr-pop__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  width: 100%;
+  margin-block-start: var(--space-3);
+}
+.tr-pop__actions .btn {
+  justify-content: center;
+  min-height: 2.9rem;
+  border-radius: 8px;
+  font-size: var(--step-0);
+}
+.tr-pop__fine {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-5) var(--space-4);
+  border-block-start: 1px solid var(--rule);
+  background: var(--paper-2);
+  color: var(--ink-3);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  text-align: start;
+}
+.tr-pop__info {
+  display: inline-flex;
+  flex: none;
+  margin-block-start: 0.1em;
+}
+.tr-pop__info svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* After the choice: a small button in the corner that reopens it. */
+.tr-launch {
+  position: fixed;
+  z-index: 50;
+  inset-block-end: var(--space-4);
+  inset-inline-end: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  min-height: 2.75rem;
+  padding: 0.4em 1em 0.4em 0.8em;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink-2);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.14);
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.tr-launch[hidden] {
+  display: none;
+}
+.tr-launch:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.tr-launch[data-state='on'],
+.tr-launch[data-state='working'] {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+}
+.tr-launch[data-state='error'] {
+  border-style: dashed;
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+.tr-launch__icon {
+  display: inline-flex;
+}
+.tr-launch__icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.tr-launch__spin {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--rule);
+  border-block-start-color: var(--accent);
+  border-radius: 50%;
+  animation: tr-spin 0.8s linear infinite;
+}
+@media (max-width: 34rem) {
+  .tr-pop__body {
+    padding: var(--space-7) var(--space-4) var(--space-4);
+  }
+  .tr-pop__title {
+    font-size: var(--step-1);
+  }
+  .tr-pop__actions {
+    grid-template-columns: 1fr;
+  }
+  .tr-pop__fine {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* Blocks being translated pulse gently; translated posts carry a quiet mark. */
+[data-tr-state='pending'] {
+  animation: tr-pulse 1.2s ease-in-out infinite;
+}
+.note__body[data-tr-state='done'] {
+  border-inline-start: 2px solid var(--accent-wash);
+  padding-inline-start: var(--space-3);
+}
+@keyframes tr-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.97);
+  }
+}
+@keyframes tr-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes tr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes tr-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-pop[open],
+  .tr-pop::backdrop,
+  [data-tr-state='pending'] {
+    animation: none;
+  }
+  [data-tr-state='pending'] {
+    opacity: 0.6;
+  }
+  .tr-launch__spin {
+    animation-duration: 2.4s;
+  }
+}
+@media print {
+  .tr-launch {
+    display: none;
+  }
+}

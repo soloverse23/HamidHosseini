@@ -1,0 +1,47 @@
+---
+import { LOCALES } from '../i18n/locales';
+import { STRINGS } from '../i18n/strings';
+import Base from '../layouts/Base.astro';
+import { href } from '../lib/paths';
+// One static 404 for every locale; the short script below picks the
+// visitor's language from the URL.
+const s = STRINGS.en;
+---
+
+<Base locale="en" path="" title={s.notFound.title} noindex>
+  <div class="wrap nf">
+    {
+      LOCALES.map((l) => (
+        <section lang={l} dir={l === 'fa' || l === 'ar' ? 'rtl' : 'ltr'} data-nf={l} hidden={l !== 'en'}>
+          <h1>{STRINGS[l].notFound.title}</h1>
+          <p class="lede">{STRINGS[l].notFound.text}</p>
+          <p>
+            <a class="btn btn--primary" href={href(l)}>
+              {STRINGS[l].nav.home}
+            </a>
+          </p>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<script is:inline>
+  (function () {
+    var l = location.pathname.split('/')[1];
+    var el = document.querySelector('[data-nf="' + l + '"]');
+    if (!el) return;
+    document.querySelectorAll('[data-nf]').forEach(function (s) {
+      s.hidden = s !== el;
+    });
+  })();
+</script>
+
+<style>
+  .nf section {
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-7);
+    max-width: 36rem;
+  }
+</style>

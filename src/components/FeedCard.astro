@@ -1,0 +1,496 @@
+---
+// One entry of the combined feed. Chrome (source, time, links) follows the
+// page direction; the content block keeps its own language and direction
+// and lines up with the page's start edge (see `.x` in global.css).
+import { LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { ui } from '../i18n/ui';
+import { surahs } from '../lib/data';
+import type { FeedItem } from '../lib/feed-types';
+import type { FeedEntry } from '../lib/feed';
+import { compact, duration, num } from '../lib/format';
+import { href } from '../lib/paths';
+import { excerpt, firstLine } from '../lib/text';
+import { topicsOf } from '../lib/topics';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  entry: FeedEntry;
+  /** Inside the timeline the time sits on the rail, not in the card */
+  bare?: boolean;
+}
+const { locale, entry, bare = false } = Astro.props;
+const s = t(locale);
+const u = ui(locale);
+
+const BRAND = { telegram: '#229ED9', youtube: '#E62117', tiktok: 'var(--brand-tiktok)', instagram: '#D62976' } as const;
+const LABEL = { telegram: 'Telegram', youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram' } as const;
+const time = (iso: string) =>
+  new Intl.DateTimeFormat(LOCALE_META[locale].intl, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Asia/Tehran',
+  }).format(new Date(iso));
+const dirOf = (lang?: string) => (lang === 'fa' || lang === 'ar' ? 'rtl' : 'ltr');
+// Opt-in for in-browser translation (src/scripts/translate.ts); never the Quran translation.
+const tr = (i: FeedItem) => (i.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' });
+const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
+const titleOf = (i: FeedItem) => {
+  const doc = i.media.find((m) => m.title)?.title;
+  return firstLine(strip(i.text), 140) || doc || '';
+};
+const bodyOf = (i: FeedItem) => {
+  const rest = i.text.slice(i.text.indexOf('\n') + 1);
+  return rest === i.text ? '' : excerpt(strip(rest), 320);
+};
+const surahName = (n: number) => {
+  const m = surahs[n - 1];
+  return locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit;
+};
+const companionLabel = (c: FeedItem) =>
+  (c.tags ?? []).includes('#پادکست') || c.kind === 'audio'
+    ? u.podcast
+    : (c.tags ?? []).includes('#کلیپ_آموزشی')
+      ? u.clip
+      : u.post;
+---
+
+{
+  entry.kind === 'note' &&
+    (() => {
+      const i = entry.item;
+      const media = i.media.find((m) => m.src && (m.kind === 'image' || m.kind === 'video'));
+      const doc = i.media.find((m) => m.kind === 'audio' || m.kind === 'document');
+      const topic = topicsOf(i)[0];
+      const link = href('fa', `notes/${i.id}`);
+      const body = bodyOf(i);
+      return (
+        <article class="card card--note" data-kind="note">
+          <div class="card__meta">
+            <span class="src is-telegram" style={`--brand:${BRAND.telegram}`}>
+              <Icon name="telegram" /> {LABEL.telegram}
+            </span>
+            {!bare && <time datetime={i.date}>{time(i.date)}</time>}
+            {i.views ? <span>{s.views(compact(locale, i.views))}</span> : null}
+            {topic && (
+              <a class="card__topic" href={href(locale, `notes/topic/${topic}`)}>
+                {s.topics[topic]}
+              </a>
+            )}
+          </div>
+          <div class:list={['card__main', { 'has-media': !!media }]}>
+            <div class="card__text">
+              <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
+                <a href={link}>{titleOf(i)}</a>
+              </h3>
+              {body && (
+                <p class="card__body x clamp-3" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
+                  {body}
+                </p>
+              )}
+              {doc && (
+                <p class="card__doc">
+                  <Icon name={doc.kind === 'audio' ? 'audio' : 'file'} />
+                  <span class="x" dir="auto">{doc.title ?? (doc.kind === 'audio' ? s.notes.audio : s.notes.document)}</span>
+                  {doc.subtitle && <span class="card__doc-sub x" dir="auto">{doc.subtitle}</span>}
+                </p>
+              )}
+            </div>
+            {media && (
+              <a class="card__thumb frame" href={link} tabindex="-1" aria-hidden="true">
+                <img src={media.src} alt="" width={media.width} height={media.height} loading="lazy" decoding="async" />
+                {media.kind === 'video' && (
+                  <span class="card__play">
+                    <Icon name="play" />
+                  </span>
+                )}
+                {media.duration ? <span class="frame__badge">{duration(media.duration)}</span> : null}
+              </a>
+            )}
+          </div>
+          <div class="card__links">
+            <a class="card__go" href={link}>
+              {s.readMore}
+              <Icon name="arrow" class="flip" />
+            </a>
+            {entry.verses && (
+              <a href={href(locale, `quran/${entry.verses.surah}#a${entry.verses.from}`)} class="card__chip">
+                <Icon name="book" />
+                <span>{surahName(entry.verses.surah)}</span>
+                <bdi dir="ltr">
+                  {`${num(locale, entry.verses.surah)}:${num(locale, entry.verses.from)}${
+                    entry.verses.to !== entry.verses.from ? `–${num(locale, entry.verses.to)}` : ''
+                  }`}
+                </bdi>
+              </a>
+            )}
+            <a href={i.url} rel="noopener" target="_blank" class="card__ext">
+              Telegram <Icon name="external" />
+            </a>
+          </div>
+        </article>
+      );
+    })()
+}
+
+{
+  entry.kind === 'video' &&
+    (() => {
+      const i = entry.item;
+      const m = i.media[0];
+      const internal = i.episode ? href(locale, `videos#ep-${i.episode}`) : i.url;
+      const lang = i.channel === 'fa' ? s.videos.persian : s.videos.romanian;
+      const title = (i.title ?? '').replace(/^\s*[\d۰-۹]+\s*[-–.]\s*/, '');
+      return (
+        <article class="card card--video" data-kind="video">
+          <div class="card__meta">
+            <span class="src is-youtube" style={`--brand:${BRAND.youtube}`}>
+              <Icon name="youtube" /> {LABEL.youtube}
+            </span>
+            {!bare && <time datetime={i.date}>{time(i.date)}</time>}
+            <span>{lang}</span>
+            {i.views ? <span>{s.views(compact(locale, i.views))}</span> : null}
+          </div>
+          <div class="card__main card__main--video">
+            <a class="card__thumb card__thumb--wide frame" href={internal}>
+              <img src={m?.src} alt="" width="480" height="360" loading="lazy" decoding="async" />
+              <span class="card__play">
+                <Icon name="play" />
+              </span>
+              {m?.duration ? <span class="frame__badge">{duration(m.duration)}</span> : null}
+            </a>
+            <div class="card__text">
+              {i.episode && <p class="card__kicker">{s.sections.videos.title} · {s.episode(num(locale, i.episode))}</p>}
+              <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
+                <a href={internal}>{title}</a>
+              </h3>
+              {entry.companions.length > 0 && (
+                <p class="card__companions">
+                  <span class="src is-telegram" style={`--brand:${BRAND.telegram}`}>
+                    <Icon name="telegram" /> {u.alsoOnTelegram}
+                  </span>
+                  {entry.companions.map((c) => (
+                    <a class="card__chip" href={href('fa', `notes/${c.id}`)}>
+                      {companionLabel(c)}
+                    </a>
+                  ))}
+                </p>
+              )}
+            </div>
+          </div>
+          <div class="card__links">
+            <a class="card__go" href={internal}>
+              {s.videos.play}
+              <Icon name="arrow" class="flip" />
+            </a>
+            <a href={i.url} rel="noopener" target="_blank" class="card__ext">
+              YouTube <Icon name="external" />
+            </a>
+          </div>
+        </article>
+      );
+    })()
+}
+
+{
+  entry.kind === 'shorts' && (
+    <article class="card card--shorts" data-kind="shorts">
+      <div class="card__meta">
+        {[...new Set(entry.items.map((i) => i.source))].map((src) => (
+          <span class={`src is-${src}`} style={`--brand:${BRAND[src]}`}>
+            <Icon name={src} /> {LABEL[src]}
+          </span>
+        ))}
+        {!bare && <time datetime={entry.items[0].date}>{time(entry.items[0].date)}</time>}
+        <span>{entry.items.length === 1 ? u.shortOne : u.shortsCount(num(locale, entry.items.length))}</span>
+        <a class="card__more" href={href(locale, entry.items[0].source === 'tiktok' ? 'tiktok' : 'videos#shorts')}>
+          {u.allShorts}
+          <Icon name="arrow" class="flip" />
+        </a>
+      </div>
+      <ul class="strip">
+        {entry.items.slice(0, 6).map((i) => (
+          <li>
+            <a class="frame frame--9x16" href={i.url} rel="noopener" target="_blank" title={i.text || i.title}>
+              <img src={i.media[0]?.src} alt="" loading="lazy" decoding="async" />
+              <span class="card__play card__play--sm">
+                <Icon name="play" />
+              </span>
+              {i.views ? <span class="frame__badge">{compact(locale, i.views)}</span> : null}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </article>
+  )
+}
+
+{
+  entry.kind === 'photo' && (
+    <article class="card card--note" data-kind="photo">
+      <div class="card__meta">
+        <span class="src is-instagram" style={`--brand:${BRAND.instagram}`}>
+          <Icon name="instagram" /> {LABEL.instagram}
+        </span>
+        {!bare && <time datetime={entry.item.date}>{time(entry.item.date)}</time>}
+      </div>
+      <div class="card__main has-media">
+        <p class="card__body x clamp-4" lang={entry.item.lang} dir={dirOf(entry.item.lang)} {...tr(entry.item)}>
+          {excerpt(entry.item.text, 280)}
+        </p>
+        {entry.item.media[0]?.src && (
+          <a class="card__thumb frame" href={entry.item.url} rel="noopener" target="_blank">
+            <img src={entry.item.media[0].src} alt="" loading="lazy" decoding="async" />
+          </a>
+        )}
+      </div>
+      <div class="card__links">
+        <a href={entry.item.url} rel="noopener" target="_blank" class="card__go">
+          {s.openOn('Instagram')} <Icon name="external" />
+        </a>
+      </div>
+    </article>
+  )
+}
+
+<style>
+  .card {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    border-block-end: 1px solid var(--rule);
+  }
+  .card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .card__topic {
+    color: var(--ink-3);
+    text-decoration: none;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0 0.55rem;
+    line-height: 1.6;
+  }
+  .card__topic:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .card__main {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .card__main.has-media {
+    grid-template-columns: minmax(0, 1fr) 9.5rem;
+    align-items: start;
+  }
+  .card__main--video {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .card__text {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    max-width: 46rem;
+  }
+  .card__kicker {
+    font-size: 0.8125rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .card__title {
+    font-family: var(--font-sans);
+    font-size: 1.1875rem;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+  .card__title[lang='fa'],
+  .card__title[lang='ar'] {
+    font-family: var(--font-persian);
+    font-weight: 700;
+  }
+  .card__title a {
+    text-decoration: none;
+  }
+  .card__title a:hover {
+    color: var(--accent);
+  }
+  .card__body {
+    color: var(--ink-2);
+    line-height: 1.8;
+  }
+  .card__doc {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    width: fit-content;
+    max-width: 100%;
+    padding: var(--space-2) var(--space-3);
+    background: var(--paper-2);
+    border-radius: var(--radius);
+    font-size: var(--step--1);
+  }
+  .card__doc :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    color: var(--accent);
+    flex: none;
+  }
+  .card__doc-sub {
+    color: var(--ink-3);
+  }
+
+  .card__thumb {
+    aspect-ratio: 4 / 3;
+    display: block;
+  }
+  .card__thumb--wide {
+    aspect-ratio: 16 / 9;
+  }
+  .card__play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgb(20 19 15 / 0.7);
+    color: #fff;
+    transition: background 0.15s;
+  }
+  .card__play--sm {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+  .card__play :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-inline-start: 2px;
+  }
+  .card__thumb:hover .card__play,
+  .strip a:hover .card__play {
+    background: var(--accent);
+  }
+
+  .card__links,
+  .card__companions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    font-size: var(--step--1);
+  }
+  .card__companions {
+    gap: var(--space-2);
+  }
+  .card__go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .card__go:hover {
+    text-decoration: underline;
+  }
+  .card__go :global(svg),
+  .card__ext :global(svg),
+  .card__chip :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  .card__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.1rem 0.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    color: var(--ink-2);
+    text-decoration: none;
+    font-size: 0.8125rem;
+  }
+  .card__chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .card__ext {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--ink-3);
+    text-decoration: none;
+    margin-inline-start: auto;
+    font-size: 0.8125rem;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+  .card__ext:hover {
+    color: var(--ink);
+  }
+
+  .card--shorts {
+    padding-block: var(--space-4);
+  }
+  .card__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline-start: auto;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .card__more:hover {
+    text-decoration: underline;
+  }
+  .card__more :global(svg) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+  .strip {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .strip li {
+    width: 5.25rem;
+  }
+  .strip .frame {
+    display: block;
+  }
+  .strip .frame__badge {
+    font-size: 0.6875rem;
+  }
+
+  @media (max-width: 40rem) {
+    .card__main.has-media {
+      grid-template-columns: minmax(0, 1fr) 6rem;
+      gap: var(--space-3);
+    }
+    .card__main--video {
+      grid-template-columns: 1fr;
+    }
+    .card__title {
+      font-size: 1.0625rem;
+    }
+    .strip li {
+      width: 4.5rem;
+    }
+  }
+</style>

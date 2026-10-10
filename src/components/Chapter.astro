@@ -1,0 +1,21 @@
+---
+import type { Locale } from '../i18n/locales';
+import { num } from '../lib/format';
+
+interface Props {
+  locale: Locale;
+  no?: number;
+  title: string;
+  lede?: string;
+}
+const { locale, no, title, lede } = Astro.props;
+---
+
+<header class="chapter">
+  <span class="chapter__no" aria-hidden="true">
+    {no !== undefined && num(locale, no).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0')}
+  </span>
+  <h1>{title}</h1>
+  {lede && <p class="lede">{lede}</p>}
+  {Astro.slots.has('default') && <div class="chapter__aside"><slot /></div>}
+</header>

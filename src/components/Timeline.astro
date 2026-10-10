@@ -1,0 +1,220 @@
+---
+// A vertical timeline: one rail, a node for each day, and a dot for each
+// post coloured by its source. Used on the home page for the first ten days
+// and by /[lang]/timeline/N/ fragments that "load more" appends.
+import { LOCALE_META, type Locale } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+import type { FeedDay, FeedEntry } from '../lib/feed';
+import { date, num } from '../lib/format';
+import FeedCard from './FeedCard.astro';
+
+interface Props {
+  locale: Locale;
+  days: FeedDay[];
+}
+const { locale, days } = Astro.props;
+const u = ui(locale);
+
+const BRAND = { telegram: '#229ED9', youtube: '#E62117', tiktok: 'var(--brand-tiktok)', instagram: '#D62976' } as const;
+const first = (e: FeedEntry) => (e.kind === 'shorts' ? e.items[0] : e.item);
+const time = (iso: string) =>
+  new Intl.DateTimeFormat(LOCALE_META[locale].intl, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'Asia/Tehran',
+  }).format(new Date(iso));
+const weekday = (iso: string) =>
+  new Intl.DateTimeFormat(LOCALE_META[locale].intl, { weekday: 'long', timeZone: 'Asia/Tehran' }).format(new Date(iso));
+---
+
+{
+  days.map((d) => (
+    <li class="tl-day" data-day={d.key}>
+      <div class="tl-day__head">
+        <span class="tl-node" aria-hidden="true" />
+        <h3 class="tl-day__date">
+          <time datetime={d.key} data-day={d.key}>
+            {date(locale, d.date)}
+          </time>
+        </h3>
+        <span class="tl-day__meta">
+          {`${weekday(d.date)} · ${u.countPosts(num(locale, d.entries.length), d.entries.length === 1)}`}
+        </span>
+      </div>
+      <ol class="tl-entries">
+        {d.entries.map((e) => {
+          const item = first(e);
+          return (
+            <li class="tl-entry" data-kind={e.kind} style={`--brand:${BRAND[item.source]}`}>
+              <time class="tl-time" datetime={item.date}>
+                {time(item.date)}
+              </time>
+              <span class="tl-dot" aria-hidden="true" />
+              <div class="tl-card">
+                <FeedCard locale={locale} entry={e} bare />
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </li>
+  ))
+}
+
+<style is:global>
+  /* Columns: time | rail | content. The rail is drawn by every row, so it
+     stays continuous however many days are appended. */
+  .tl {
+    --tl-time: 3.25rem;
+    --tl-rail: 1.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .tl-day {
+    display: grid;
+  }
+  .tl-day__head,
+  .tl-entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--tl-time) var(--tl-rail) minmax(0, 1fr);
+    column-gap: var(--space-4);
+  }
+  .tl-day__head::before,
+  .tl-entry::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--tl-time) + var(--space-4) + var(--tl-rail) / 2);
+    width: 1px;
+    background: var(--rule-strong);
+  }
+  .tl-day:first-child .tl-day__head::before {
+    inset-block-start: 50%;
+  }
+
+  /* Day node: a ring on the rail, the date beside it. */
+  .tl-day__head {
+    align-items: center;
+    padding-block: var(--space-6) var(--space-3);
+  }
+  .tl-node {
+    grid-column: 2;
+    justify-self: center;
+    position: relative;
+    z-index: 1;
+    width: 0.95rem;
+    height: 0.95rem;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+  }
+  .tl-day__date {
+    grid-column: 3;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.3;
+    display: inline;
+  }
+  :root[dir='rtl'] .tl-day__date {
+    font-family: var(--font-persian);
+    font-weight: 700;
+    font-size: 1.125rem;
+  }
+  .tl-day__meta {
+    grid-column: 3;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  /* Entry: time on the start side, a dot in the source colour. */
+  .tl-entries {
+    list-style: none;
+    padding: 0;
+  }
+  .tl-time {
+    grid-column: 1;
+    justify-self: end;
+    padding-block-start: calc(var(--space-5) - 0.05rem);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-dot {
+    grid-column: 2;
+    justify-self: center;
+    position: relative;
+    z-index: 1;
+    margin-block-start: calc(var(--space-5) + 0.3rem);
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--brand);
+    box-shadow: 0 0 0 4px var(--paper);
+  }
+  .tl-card {
+    grid-column: 3;
+    min-width: 0;
+  }
+  .tl-card .card {
+    border-block-end: 1px solid var(--rule);
+  }
+  .tl-entry:last-child .tl-card .card {
+    border-block-end: 0;
+  }
+  .tl-entry:hover .tl-dot {
+    transform: scale(1.35);
+  }
+  .tl-dot {
+    transition: transform 0.2s ease;
+  }
+
+  /* Freshly loaded days ease in, one after another. */
+  .tl-day.is-new {
+    animation: tl-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  @keyframes tl-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .tl {
+      --tl-time: 0rem;
+      --tl-rail: 1rem;
+    }
+    .tl-day__head,
+    .tl-entry {
+      column-gap: var(--space-3);
+    }
+    .tl-time {
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: start;
+      padding-block-start: var(--space-4);
+    }
+    .tl-card {
+      grid-row: 2;
+    }
+    .tl-dot {
+      grid-row: 1;
+      margin-block-start: calc(var(--space-4) + 0.3rem);
+    }
+    .tl-card .card {
+      padding-block-start: var(--space-2);
+    }
+    .tl-day__date {
+      font-size: 1.0625rem;
+    }
+  }
+</style>

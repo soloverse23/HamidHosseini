@@ -1,0 +1,64 @@
+---
+// Poster for a Telegram video. Pressing play swaps in Telegram's own post
+// widget, so nothing is loaded from Telegram until the reader asks for it.
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { duration as fmt } from '../lib/format';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  post: string;
+  poster?: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+  full?: boolean;
+}
+const { locale, post, poster, width, height, duration, full } = Astro.props;
+const s = t(locale);
+const ratio = width && height ? `${width} / ${height}` : '16 / 9';
+---
+
+<div class="tg-player" data-post={`hamidhossaini/${post}`} style={`--ratio:${ratio}`} data-full={full ? '' : undefined}>
+  <div class="frame tg-player__poster">
+    {poster && <img src={poster} width={width} height={height} alt="" loading="lazy" decoding="async" />}
+    <button class="play-btn" type="button" aria-label={s.notes.play}>
+      <span><Icon name="play" /></span>
+    </button>
+    {duration ? <span class="frame__badge">{fmt(duration)}</span> : null}
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.tg-player').forEach((box) => {
+    box.querySelector('button')?.addEventListener('click', () => {
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://telegram.org/js/telegram-widget.js?22';
+      s.dataset.telegramPost = box.dataset.post!;
+      s.dataset.width = '100%';
+      s.dataset.userpic = 'false';
+      if (document.documentElement.dataset.theme === 'dark' || matchMedia('(prefers-color-scheme: dark)').matches)
+        s.dataset.dark = '1';
+      box.replaceChildren(s);
+      box.classList.add('is-live');
+    });
+  });
+</script>
+
+<style>
+  .tg-player {
+    max-width: 30rem;
+  }
+  .tg-player[data-full] {
+    max-width: 40rem;
+  }
+  .tg-player__poster {
+    aspect-ratio: var(--ratio);
+    max-height: 32rem;
+  }
+  .tg-player.is-live {
+    max-width: 34rem;
+  }
+</style>

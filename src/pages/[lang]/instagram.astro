@@ -1,0 +1,133 @@
+---
+import Chapter from '../../components/Chapter.astro';
+import Icon from '../../components/Icon.astro';
+import { type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import Base from '../../layouts/Base.astro';
+import { CHANNEL_URLS, instagram, instagramManualPosts } from '../../lib/data';
+import { compact, date } from '../../lib/format';
+import { localePaths } from '../../lib/paths';
+import { excerpt } from '../../lib/text';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const items = instagram.items;
+const profile = instagram.profiles.main;
+// Manually listed posts that the fetcher hasn't picked up yet.
+const known = new Set(items.map((i) => i.id));
+const manual = instagramManualPosts.filter((u) => !known.has(u.match(/\/(?:p|reel|tv)\/([^/?]+)/)?.[1] ?? ''));
+---
+
+<Base locale={locale} path="instagram" crumbs={[{ name: s.sections.instagram.title, path: 'instagram' }]} title={s.sections.instagram.title} description={s.sections.instagram.lede}>
+  <div class="wrap">
+    <Chapter locale={locale} no={6} title={s.sections.instagram.title} lede={s.sections.instagram.lede}>
+      {profile?.followers && <span class="meta">{s.followers(compact(locale, profile.followers))}</span>}
+      <a class="link-arrow" href={CHANNEL_URLS.instagram} rel="noopener" target="_blank">
+        <Icon name="instagram" /> {s.followOn('Instagram')}
+      </a>
+    </Chapter>
+
+    {
+      items.length > 0 && (
+        <ul class="sheet">
+          {items.map((p) => {
+            const m = p.media[0];
+            return (
+              <li>
+                <a href={p.url} rel="noopener" target="_blank" class="frame frame--4x5">
+                  {m?.src && <img src={m.src} width={m.width} height={m.height} alt="" loading="lazy" decoding="async" />}
+                  {p.kind === 'reel' && (
+                    <span class="frame__badge">
+                      <Icon name="play" />
+                    </span>
+                  )}
+                </a>
+                <p class="cap" lang={p.lang} dir="auto" data-tr>
+                  {excerpt(p.text, 140)}
+                </p>
+                <p class="meta">
+                  <time datetime={p.date}>{date(locale, p.date, 'short')}</time>
+                  {p.likes ? <span>{s.likes(compact(locale, p.likes))}</span> : null}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+
+    {
+      items.length === 0 && (
+        <div class="pending">
+          <p>{s.instagram.pending}</p>
+          <a class="btn btn--primary" href={CHANNEL_URLS.instagram} rel="noopener" target="_blank">
+            <Icon name="instagram" /> {s.openOn('Instagram')}
+          </a>
+        </div>
+      )
+    }
+
+    {
+      manual.length > 0 && (
+        <ul class="embeds">
+          {manual.map((url) => (
+            <li>
+              <blockquote class="instagram-media" data-instgrm-permalink={url} data-instgrm-version="14">
+                <a href={url} rel="noopener" target="_blank">
+                  {s.openOn('Instagram')}
+                </a>
+              </blockquote>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</Base>
+
+{manual.length > 0 && <script is:inline async src="https://www.instagram.com/embed.js" />}
+
+<style>
+  .sheet {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(46%, 14rem), 1fr));
+    gap: var(--space-6) var(--space-4);
+  }
+  .sheet li {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .frame__badge :global(svg) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+  .cap {
+    font-size: var(--step--1);
+    line-height: 1.8;
+    color: var(--ink-2);
+  }
+  .meta {
+    font-size: 0.75rem;
+  }
+  .pending {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    max-width: 36rem;
+    padding: var(--space-6);
+    border: 1px dashed var(--rule-strong);
+    color: var(--ink-2);
+  }
+  .embeds {
+    list-style: none;
+    padding: 0;
+    margin-block-start: var(--space-7);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    gap: var(--space-5);
+  }
+</style>

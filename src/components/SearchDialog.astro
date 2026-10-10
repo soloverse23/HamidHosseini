@@ -1,0 +1,659 @@
+---
+// Quick search, available on every page: ⌘K / Ctrl+K, "/", or the search
+// button in the header. Results update while typing; Enter opens the chosen
+// result, or the full results page when nothing is chosen.
+// Without JavaScript the header button is a plain link to /search/.
+import '../styles/search.css';
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { href } from '../lib/paths';
+import { TYPES } from '../lib/search/client';
+import { searchCtx } from '../lib/search/labels';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const s = t(locale);
+const page = href(locale, 'search');
+---
+
+<dialog
+  id="search-dialog"
+  class="sd search-ui"
+  aria-label={s.search.label}
+  data-ctx={JSON.stringify(searchCtx(locale))}
+  data-page={page}
+  data-see-all={s.search.seeAll('{n}')}
+  data-none={s.search.none('{q}')}
+  data-none-hint={s.search.noneHint}
+  data-loading={s.search.loading}
+  data-unavailable={s.search.unavailable}
+  data-go-to={s.search.goTo}
+  data-did-you-mean={s.search.didYouMean}
+>
+  <form class="sd__bar" role="search" action={page} method="get">
+    <Icon name="search" class="sd__icon" />
+    <input
+      class="sd__input"
+      type="search"
+      name="q"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      enterkeyhint="search"
+      placeholder={s.search.placeholder}
+      aria-label={s.search.label}
+      role="combobox"
+      aria-autocomplete="list"
+      aria-expanded="false"
+      aria-controls="sd-list"
+    />
+    <input type="hidden" name="type" disabled />
+    <button class="sd__close" type="button" data-close aria-label={s.search.close}>
+      <span class="kbd sd__esc">Esc</span>
+      <svg class="sd__x" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+    </button>
+  </form>
+
+  <div class="sd__tabs" role="group" aria-label={s.search.title}>
+    <button type="button" class="sd__tab" data-type="" aria-pressed="true">{s.search.all}<span class="num"></span></button>
+    {
+      TYPES.map((k) => (
+        <button type="button" class="sd__tab" data-type={k} aria-pressed="false">
+          {s.search.types[k]}
+          <span class="num" />
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="sd__body">
+    <p class="sd__status" role="status" aria-live="polite"></p>
+    <ul id="sd-list" class="sd__list" role="listbox" aria-label={s.search.title}></ul>
+
+    <div class="sd__idle">
+      <section class="sd__recent" hidden>
+        <header>
+          <h2 class="sd__h">{s.search.recent}</h2>
+          <button type="button" class="sd__clear" data-forget>{s.search.clear}</button>
+        </header>
+        <ul class="sd__chips"></ul>
+      </section>
+      <section>
+        <h2 class="sd__h">{s.search.try}</h2>
+        <ul class="sd__chips">
+          {s.search.examples.map((x) => <li><button type="button" class="chip" data-q={x} dir="auto">{x}</button></li>)}
+        </ul>
+      </section>
+      <section>
+        <h2 class="sd__h">{s.search.tips}</h2>
+        <ul class="sd__tips">{s.search.tipList.map((x) => <li>{x}</li>)}</ul>
+      </section>
+    </div>
+  </div>
+
+  <footer class="sd__foot">
+    <span class="sd__keys" aria-hidden="true">
+      <span><span class="kbd">↑</span><span class="kbd">↓</span> {s.search.navigate}</span>
+      <span><span class="kbd">↵</span> {s.search.choose}</span>
+      <span><span class="kbd">Esc</span> {s.search.close}</span>
+    </span>
+    <a class="sd__all link-arrow" href={page} hidden></a>
+  </footer>
+</dialog>
+
+<script>
+  import {
+    forget,
+    hitHtml,
+    pagefind,
+    parseRef,
+    recent,
+    refHtml,
+    remember,
+    search,
+    suggestHtml,
+    termsOf,
+    toHit,
+    type Ctx,
+    type SearchType,
+  } from '../lib/search/client';
+
+  const dlg = document.querySelector<HTMLDialogElement>('#search-dialog');
+  if (dlg) {
+    const ctx: Ctx = JSON.parse(dlg.dataset.ctx!);
+    const d = dlg.dataset;
+    const form = dlg.querySelector<HTMLFormElement>('.sd__bar')!;
+    const input = dlg.querySelector<HTMLInputElement>('.sd__input')!;
+    const typeField = dlg.querySelector<HTMLInputElement>('input[name=type]')!;
+    const list = dlg.querySelector<HTMLUListElement>('#sd-list')!;
+    const status = dlg.querySelector<HTMLElement>('.sd__status')!;
+    const idle = dlg.querySelector<HTMLElement>('.sd__idle')!;
+    const recentBox = dlg.querySelector<HTMLElement>('.sd__recent')!;
+    const all = dlg.querySelector<HTMLAnchorElement>('.sd__all')!;
+    const tabs = [...dlg.querySelectorAll<HTMLButtonElement>('.sd__tab')];
+    const fmt = new Intl.NumberFormat(ctx.intl);
+    const LIMIT = 8;
+
+    let type: SearchType | undefined;
+    let seq = 0;
+    let active = -1;
+    let timer: number | undefined;
+
+    const options = () => [...list.querySelectorAll<HTMLElement>('[role=option]')];
+    const pageUrl = (q: string) => {
+      const p = new URLSearchParams({ q });
+      if (type) p.set('type', type);
+      return `${d.page}?${p}`;
+    };
+
+    function setActive(i: number) {
+      const opts = options();
+      active = opts.length ? (i + opts.length) % opts.length : -1;
+      opts.forEach((o, j) => o.setAttribute('aria-selected', String(j === active)));
+      const cur = opts[active];
+      if (cur) {
+        input.setAttribute('aria-activedescendant', cur.id);
+        cur.scrollIntoView({ block: 'nearest' });
+      } else input.removeAttribute('aria-activedescendant');
+    }
+
+    function showIdle() {
+      const items = recent();
+      recentBox.hidden = !items.length;
+      recentBox.querySelector('ul')!.innerHTML = items
+        .map((x) => `<li><button type="button" class="chip" dir="auto" data-q="${x.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)}">${x.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)}</button></li>`)
+        .join('');
+      idle.hidden = false;
+      list.innerHTML = '';
+      status.textContent = '';
+      all.hidden = true;
+      tabs.forEach((t) => (t.querySelector('.num')!.textContent = ''));
+      input.setAttribute('aria-expanded', 'false');
+      active = -1;
+    }
+
+    async function run() {
+      const raw = input.value;
+      const q = raw.trim();
+      const mine = ++seq;
+      if (!q) return showIdle();
+      idle.hidden = true;
+      dlg!.classList.add('is-busy');
+      try {
+        const ref = parseRef(q);
+        const found = await search(q, { type });
+        const data = await Promise.all(found.results.slice(0, LIMIT).map((r) => r.data()));
+        if (mine !== seq) return;
+        const terms = termsOf(q);
+        let html = ref ? refHtml(ref, ctx, d.goTo!, 'sd-o-ref') : '';
+        html += data
+          .filter((x) => !(ref && x.meta.kind === 'surah' && Number(x.meta.s) === ref.s))
+          .map((x, i) => hitHtml(toHit(x, terms, ctx, false), { id: `sd-o-${i}`, full: false }))
+          .join('');
+        list.innerHTML = html;
+        const n = found.results.length;
+        status.innerHTML =
+          n || ref
+            ? ''
+            : `<strong>${d.none!.replace('{q}', q.replace(/[&<>]/g, ''))}</strong>` +
+              (found.suggestion ? suggestHtml(found.suggestion, d.didYouMean!) : `<span>${d.noneHint}</span>`);
+        status.classList.toggle('is-empty', !n && !ref);
+        tabs.forEach((t) => {
+          const k = t.dataset.type as SearchType | '';
+          const c = k ? found.counts[k] : found.total;
+          t.querySelector('.num')!.textContent = c ? fmt.format(c) : '';
+          t.classList.toggle('is-zero', !!k && !c);
+        });
+        all.hidden = n <= LIMIT;
+        all.href = pageUrl(q);
+        all.textContent = d.seeAll!.replace('{n}', fmt.format(n)) + ' →';
+        input.setAttribute('aria-expanded', String(!!(n || ref)));
+        setActive(n || ref ? 0 : -1);
+      } catch {
+        if (mine !== seq) return;
+        list.innerHTML = '';
+        status.textContent = d.unavailable!;
+      } finally {
+        if (mine === seq) dlg!.classList.remove('is-busy');
+      }
+    }
+
+    function open(q?: string) {
+      // On the results page, the page's own field is the search.
+      const own = document.querySelector<HTMLInputElement>('[data-search-page] input[name=q]');
+      if (own) {
+        own.focus();
+        own.select();
+        return;
+      }
+      if (!dlg!.open) dlg!.showModal();
+      if (q !== undefined) input.value = q;
+      input.focus();
+      input.select();
+      pagefind().catch(() => {});
+      if (input.value.trim()) run();
+      else showIdle();
+    }
+
+    function go(el: HTMLElement | undefined) {
+      const a = el?.querySelector<HTMLAnchorElement>('a');
+      remember(input.value);
+      if (a) {
+        if (a.target === '_blank') window.open(a.href, '_blank', 'noopener');
+        else location.href = a.href;
+        if (a.target !== '_blank') dlg!.close();
+      } else if (input.value.trim()) location.href = pageUrl(input.value.trim());
+    }
+
+    document.addEventListener('click', (e) => {
+      const trigger = (e.target as Element).closest?.('[data-search-open]');
+      if (!trigger || (e as MouseEvent).metaKey || (e as MouseEvent).ctrlKey) return;
+      e.preventDefault();
+      open();
+    });
+    document.addEventListener('keydown', (e) => {
+      const typing = (e.target as Element).closest?.('input, textarea, select, [contenteditable=""], [contenteditable=true]');
+      if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        if (dlg!.open) dlg!.close();
+        else open();
+      } else if (e.key === '/' && !typing && !dlg!.open && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        open();
+      }
+    });
+
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = window.setTimeout(run, 110);
+    });
+    input.addEventListener('keydown', (e) => {
+      // A search field would swallow the first Escape to clear itself.
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        dlg.close();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActive(active + 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActive(active - 1);
+      } else if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        if (e.metaKey || e.ctrlKey || active < 0) {
+          remember(input.value);
+          if (input.value.trim()) location.href = pageUrl(input.value.trim());
+        } else go(options()[active]);
+      }
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      remember(input.value);
+      if (input.value.trim()) location.href = pageUrl(input.value.trim());
+    });
+
+    tabs.forEach((t) =>
+      t.addEventListener('click', () => {
+        type = (t.dataset.type || undefined) as SearchType | undefined;
+        typeField.disabled = !type;
+        typeField.value = type ?? '';
+        tabs.forEach((x) => x.setAttribute('aria-pressed', String(x === t)));
+        input.focus();
+        run();
+      }),
+    );
+
+    list.addEventListener('mousemove', (e) => {
+      const o = (e.target as Element).closest<HTMLElement>('[role=option]');
+      if (o) {
+        const i = options().indexOf(o);
+        if (i !== active) setActive(i);
+      }
+    });
+    list.addEventListener('click', (e) => {
+      if ((e.target as Element).closest('a')) remember(input.value);
+    });
+
+    status.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-q]');
+      if (!b) return;
+      input.value = b.dataset.q!;
+      input.focus();
+      run();
+    });
+    idle.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-q], [data-forget]');
+      if (!b) return;
+      if (b.dataset.forget !== undefined) {
+        forget();
+        showIdle();
+        input.focus();
+        return;
+      }
+      input.value = b.dataset.q!;
+      input.focus();
+      run();
+    });
+
+    dlg.querySelector('[data-close]')!.addEventListener('click', () => dlg.close());
+    // Click on the backdrop closes.
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) dlg.close();
+    });
+
+    // Show ⌘ on Apple keyboards.
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    document.querySelectorAll('[data-mod-key]').forEach((el) => (el.textContent = mac ? '⌘' : 'Ctrl'));
+  }
+</script>
+
+<style>
+  .sd {
+    width: min(42rem, 100% - 2rem);
+    max-height: min(42rem, 100dvh - 6rem);
+    margin: 9vh auto auto;
+    padding: 0;
+    border: 1px solid var(--rule-strong);
+    border-radius: 10px;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 30px 80px -30px rgb(0 0 0 / 0.45);
+    overflow: hidden;
+  }
+  .sd[open] {
+    display: flex;
+    flex-direction: column;
+    animation: sd-in 0.16s ease-out;
+  }
+  .sd::backdrop {
+    background: rgb(20 19 15 / 0.38);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
+  @keyframes sd-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.985);
+    }
+  }
+
+  .sd__bar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-block-end: 1px solid var(--rule);
+  }
+  .sd__bar :global(.sd__icon) {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--ink-3);
+    flex: none;
+  }
+  .sd.is-busy .sd__bar :global(.sd__icon) {
+    color: var(--accent);
+    animation: sd-pulse 0.9s ease-in-out infinite;
+  }
+  @keyframes sd-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  .sd__input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2) 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: 1.1875rem;
+    outline: none;
+  }
+  .sd__input::placeholder {
+    color: var(--ink-3);
+  }
+  .sd__input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .sd__close {
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .sd__x {
+    display: none;
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .sd__tabs {
+    flex: none;
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border-block-end: 1px solid var(--rule);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .sd__tab {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35em;
+    padding: 0.25em 0.7em;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sd__tab:hover {
+    border-color: var(--rule-strong);
+    color: var(--ink);
+  }
+  .sd__tab[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .sd__tab .num {
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  .sd__tab .num:empty {
+    display: none;
+  }
+  .sd__tab[aria-pressed='true'] .num {
+    color: var(--paper-3);
+  }
+  .sd__tab.is-zero {
+    opacity: 0.5;
+  }
+
+  .sd__body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-2);
+  }
+  .sd__list {
+    padding: 0;
+    display: grid;
+    gap: 1px;
+  }
+  .sd__list :global(.hit__link) {
+    border-radius: 6px;
+    padding-block: var(--space-3);
+  }
+  .sd__list :global(.hit[aria-selected='true'] .hit__link) {
+    background: var(--paper-2);
+  }
+  .sd__list :global(.hit[aria-selected='true'] .hit__link)::before {
+    content: '';
+    position: absolute;
+    inset-block: var(--space-3);
+    inset-inline-start: 0;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .sd__list :global(.hit--jump[aria-selected='true'] .hit__link) {
+    background: var(--accent-wash);
+  }
+  .sd__list :global(.hit__ar) {
+    font-size: 1.15rem;
+    line-height: 1.9;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .sd__list :global(.hit--ayah .hit__title) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: var(--step--1);
+  }
+
+  .sd__status:empty {
+    display: none;
+  }
+  .sd__status {
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+  .sd__status :global(strong) {
+    display: block;
+    color: var(--ink);
+    font-weight: 500;
+    font-size: var(--step-0);
+    margin-block-end: var(--space-1);
+  }
+
+  .sd__idle {
+    display: grid;
+    gap: var(--space-5);
+    padding: var(--space-3) var(--space-3) var(--space-4);
+  }
+  .sd__idle header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .sd__h {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--space-2);
+  }
+  :root[dir='rtl'] .sd__h {
+    letter-spacing: 0;
+    font-size: 0.75rem;
+  }
+  .sd__clear {
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .sd__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: 0;
+    list-style: none;
+  }
+  .sd__chips .chip,
+  .sd__chips :global(.chip) {
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .sd__tips {
+    padding-inline-start: 1.1em;
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--step--1);
+    color: var(--ink-2);
+  }
+
+  .sd__foot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    border-block-start: 1px solid var(--rule);
+    background: var(--paper-2);
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  .sd__keys {
+    display: flex;
+    gap: var(--space-4);
+  }
+  .sd__keys > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+  .sd__all {
+    margin-inline-start: auto;
+  }
+
+  @media (max-width: 40rem) {
+    .sd {
+      width: 100%;
+      max-width: none;
+      height: 100dvh;
+      max-height: none;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+    }
+    .sd__keys {
+      display: none;
+    }
+    .sd__foot:has(.sd__all[hidden]) {
+      display: none;
+    }
+    .sd__foot {
+      justify-content: center;
+      padding-block: var(--space-3);
+    }
+  }
+  /* Touch screens have no Esc key: show a close button instead. */
+  @media (hover: none), (max-width: 40rem) {
+    .sd__esc {
+      display: none;
+    }
+    .sd__x {
+      display: block;
+    }
+    .sd__close {
+      width: 2.25rem;
+      height: 2.25rem;
+      margin-inline-end: calc(-1 * var(--space-2));
+    }
+  }
+</style>

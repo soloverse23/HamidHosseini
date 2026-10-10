@@ -1,0 +1,77 @@
+name: Sync content
+
+# Pulls new posts from Telegram, YouTube, TikTok and Instagram, commits the
+# data if anything changed, and lets Vercel redeploy from that commit.
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      full:
+        description: 'Re-read the full history of every source'
+        type: boolean
+        default: false
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install yt-dlp
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o "$HOME/.local/bin/yt-dlp"
+          chmod +x "$HOME/.local/bin/yt-dlp"
+
+      - run: npm ci
+
+      - name: Fetch all sources
+        id: fetch
+        continue-on-error: true
+        env:
+          IG_SESSIONID: ${{ secrets.IG_SESSIONID }}
+        run: npx tsx scripts/fetch/all.ts ${{ inputs.full && '--full' || '' }}
+
+      - name: Commit changes
+        run: |
+          git config user.name "content-sync[bot]"
+          git config user.email "content-sync@users.noreply.github.com"
+          git add src/data public/media
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "content: sync $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi
+
+      - name: Report failures
+        if: steps.fetch.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body="$(cat .fetch-failures.txt 2>/dev/null || echo 'See the workflow log.')
+
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          Cached content is still being served; nothing on the site was removed."
+          gh label create sync-failure --color B60205 --description "Content sync failed" 2>/dev/null || true
+          existing=$(gh issue list --label sync-failure --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "Content sync failing" --label sync-failure --body "$body"
+          fi

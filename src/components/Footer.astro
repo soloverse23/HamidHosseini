@@ -1,0 +1,314 @@
+---
+// A colophon, as at the end of a book: an ornament, the nameplate, the
+// contents again, every channel with its live numbers, and the languages.
+import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { ui } from '../i18n/ui';
+import { lastUpdated } from '../lib/data';
+import { compact, date, num } from '../lib/format';
+import { href } from '../lib/paths';
+import { CHANNELS } from '../lib/social';
+import Icon from './Icon.astro';
+import Mark from './Mark.astro';
+
+interface Props {
+  locale: Locale;
+  path?: string;
+}
+const { locale, path = '' } = Astro.props;
+const s = t(locale);
+const u = ui(locale);
+const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
+const sections = [
+  ['writings', s.nav.writings],
+  ['quran', s.nav.quran],
+  ['notes', s.nav.notes],
+  ['videos', s.nav.videos],
+  ['tiktok', s.nav.tiktok],
+  ['instagram', s.nav.instagram],
+] as const;
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="ornament" aria-hidden="true">
+      <span></span>
+      <Mark size={30} />
+      <span></span>
+    </div>
+
+    <div class="cols">
+      <div class="col col--about">
+        <p class="f-name">{s.name}</p>
+        <p class="f-colophon">{u.colophon}</p>
+        <p class="sync">
+          <span class="sync__dot" aria-hidden="true"></span>
+          <span>{u.synced}</span>
+          <span class="sync__sep" aria-hidden="true">·</span>
+          <span>
+            {u.lastPost}: <time datetime={lastUpdated} data-rel>{date(locale, lastUpdated, 'short')}</time>
+          </span>
+        </p>
+      </div>
+
+      <nav class="col" aria-label={s.contents}>
+        <h2 class="f-head">{s.contents}</h2>
+        <ol class="f-list">
+          {
+            sections.map(([key, label], i) => (
+              <li>
+                <a href={href(locale, key)}>
+                  <span class="f-no num">{pad(i + 1)}</span>
+                  {label}
+                </a>
+              </li>
+            ))
+          }
+          <li>
+            <a href={href(locale, 'about')}>
+              <span class="f-no" aria-hidden="true">·</span>
+              {s.nav.about}
+            </a>
+          </li>
+        </ol>
+      </nav>
+
+      <div class="col col--channels">
+        <h2 class="f-head">{u.channels}</h2>
+        <ul class="f-channels">
+          {
+            CHANNELS.map((c) => (
+              <li>
+                <a href={c.url} rel="me noopener" target="_blank" style={`--brand:${c.brand}`} class={`is-${c.platform}`}>
+                  <Icon name={c.platform} />
+                  <span class="f-ch__body">
+                    <span class="f-ch__label">{c.label}</span>
+                    <bdi class="f-ch__handle" dir="ltr">{c.handle}</bdi>
+                  </span>
+                  {c.followers ? <span class="f-ch__n num">{compact(locale, c.followers)}</span> : null}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="col">
+        <h2 class="f-head">{u.languages}</h2>
+        <ul class="f-list">
+          {
+            LOCALES.map((l) => (
+              <li>
+                <a href={href(l, path)} lang={l} hreflang={l} aria-current={l === locale ? 'true' : undefined} data-set-locale={l}>
+                  {LOCALE_META[l].label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <h2 class="f-head f-head--more">{u.more}</h2>
+        <ul class="f-list">
+          <li><a href={href(locale, 'search')}>{s.nav.search}</a></li>
+          <li><a href="/rss.xml">{u.rss}</a></li>
+          <li><a href={href(locale, 'about#sources')}>{s.footer.source}</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fine">
+      <p>{s.footer.rights}</p>
+      <p>{s.quran.arabicSource}</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-block-start: var(--space-6);
+    background: var(--paper-2);
+    border-block-start: 1px solid var(--rule);
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+  .ornament {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--accent);
+    transform: translateY(-50%);
+  }
+  .ornament span {
+    height: 1px;
+    background: transparent;
+  }
+  .ornament :global(svg) {
+    background: var(--paper-2);
+    padding: 0 var(--space-2);
+    box-sizing: content-box;
+  }
+
+  .cols {
+    display: grid;
+    gap: var(--space-7) var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    padding-block: var(--space-4) var(--space-7);
+  }
+  @media (min-width: 62rem) {
+    .cols {
+      grid-template-columns: 1.5fr 1fr 1.3fr 1fr;
+    }
+  }
+  .col--about {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    max-width: 24rem;
+  }
+  .f-name {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  :root[dir='rtl'] .f-name {
+    font-weight: 700;
+    line-height: 1.6;
+  }
+  .f-colophon {
+    margin-block-start: var(--space-3);
+    line-height: 1.7;
+  }
+  .sync {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-block-start: var(--space-3);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .sync__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #3f8f5a;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #3f8f5a 22%, transparent);
+  }
+  .sync__sep {
+    color: var(--rule-strong);
+  }
+
+  .f-head {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--space-3);
+  }
+  :root[dir='rtl'] .f-head {
+    letter-spacing: 0;
+    font-size: 0.8125rem;
+  }
+  .f-head--more {
+    margin-block-start: var(--space-5);
+  }
+  .f-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 0.15rem;
+  }
+  .f-list a {
+    display: inline-flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    padding-block: 0.15rem;
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .f-list a:hover {
+    color: var(--accent);
+  }
+  .f-list a[aria-current='true'] {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .f-list a[lang='fa'],
+  .f-list a[lang='ar'] {
+    font-family: var(--font-persian);
+  }
+  .f-no {
+    font-family: var(--font-serif);
+    font-size: 0.75rem;
+    color: var(--ink-3);
+    min-width: 1.25rem;
+  }
+
+  .f-channels {
+    list-style: none;
+    padding: 0;
+    display: grid;
+  }
+  .f-channels a {
+    display: grid;
+    grid-template-columns: 1.25rem 1fr auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block: 0.45rem;
+    border-block-end: 1px solid var(--rule);
+    text-decoration: none;
+    color: var(--ink-2);
+    --icon-cut: var(--paper-2);
+  }
+  .f-channels li:first-child a {
+    border-block-start: 1px solid var(--rule);
+  }
+  .f-channels :global(svg) {
+    width: 1.05rem;
+    height: 1.05rem;
+    color: var(--brand);
+  }
+  :global(:root[data-theme='dark']) .f-channels .is-tiktok :global(svg) {
+    color: var(--ink);
+  }
+  .f-channels a:hover {
+    color: var(--ink);
+  }
+  .f-ch__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.5rem;
+    min-width: 0;
+  }
+  .f-ch__label {
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .f-ch__handle {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  .f-ch__n {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  .fine {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-5);
+    padding-block: var(--space-4) var(--space-6);
+    border-block-start: 1px solid var(--rule);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+</style>

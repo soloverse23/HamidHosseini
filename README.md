@@ -1,0 +1,71 @@
+# Seyed Hamid Hosseini: website
+
+A static site (Astro) in English, Romanian, Arabic and Persian. It collects his books and writings, his Quran translation, the Telegram channel, both YouTube channels, TikTok and Instagram. A scheduled GitHub Action keeps it up to date.
+
+## How content arrives
+
+| Source | How it's read | Command |
+|---|---|---|
+| Telegram `@hamidhossaini` | public preview `t.me/s/…` (no bot needed) | `npm run fetch:telegram` (`-- --full` to re-read all) |
+| YouTube (fa + ro channels) | RSS on every run + `yt-dlp` for the full list | `npm run fetch:youtube` |
+| TikTok `@islam.de.ce.si.cum` | `yt-dlp` on the public profile | `npm run fetch:tiktok` |
+| Instagram `@kalam_hamidhosseini` | Instagram API with a session cookie (see below) | `npm run fetch:instagram` |
+| Quran translation (fa) | built from the "ترجمه گروهی قرآن" Telegram posts | `npx tsx scripts/quran/from-telegram.ts` |
+
+`npm run fetch:all` runs everything. Results go to `src/data/feeds/*.json`, and images go to `public/media/` because the platforms' image links expire.
+
+- **Fetchers never delete anything.** If a source fails, the last good data stays on the site.
+- **Counts are written at most once a day.** A change in view counts alone doesn't create a commit, so the site isn't redeployed every 30 minutes.
+- **Quran verses are checked against the Arabic text.** Each verse parsed from a Telegram post is matched against the Tanzil Arabic (`src/data/quran/arabic.json`). A post that quotes another surah can therefore never put a verse in the wrong place.
+
+## Automatic updates
+
+`.github/workflows/sync.yml` runs every 30 minutes. It fetches all sources and commits any changes. Vercel then rebuilds from that commit. If a source fails, the workflow opens a GitHub issue labelled `sync-failure`, or comments on the one already open. To force a full re-read, use **Actions → Sync content → Run workflow → full**.
+
+### Instagram
+
+Instagram stopped serving profiles to anonymous requests in 2025–26, so the fetcher needs the session cookie of a logged-in account:
+
+1. Log in to instagram.com in a browser. A separate account is best; it only needs to follow the profile.
+2. Copy the value of the `sessionid` cookie (DevTools → Application → Cookies).
+3. In GitHub, open the repository and go to **Settings → Secrets and variables → Actions → New secret**. Name it `IG_SESSIONID` and paste the value.
+
+Until the secret is set, the Instagram page shows the profile link. Individual posts can also be listed by hand in `src/data/instagram-manual.json` (`{"posts": ["https://www.instagram.com/p/…/"]}`). They render as Instagram's own embeds.
+
+## Editing content by hand
+
+- **Books, articles, lecture series:** `src/data/writings.ts`. Add a book to `BOOKS`. It takes a title in the original language, optional cover and summary, and links of kind `read`, `ebook`, `pdf` or `buy`. Put covers in `public/media/books/` and PDFs in `public/files/`.
+- **Quran translations in other languages:** add `src/data/quran/<lang>.json` in the same shape as `fa.json`, then show it in `src/pages/[lang]/quran/[surah].astro`.
+- **Biography, press:** the strings `about.*` in `src/i18n/strings.ts`, one block per language.
+- **UI text:** `src/i18n/strings.ts`.
+- **Topics on the Notes page:** `src/lib/topics.ts` maps his hashtags to topics.
+
+## Search
+
+The Astro integration `scripts/search/integration.ts` runs `scripts/search/build-index.ts` after every build. It writes ONE cross-language Pagefind index to `dist/pagefind/`: every Quran verse and surah, every note, video, clip, written work and section page. A reader on any language version therefore finds everything. Text is folded by `src/lib/search/normalize.ts` (vowel marks, Arabic/Persian ی ک, ZWNJ, digits, Latin diacritics). The browser folds queries the same way, so `الرحمن` finds `ٱلرَّحْمَٰنِ`. A word list in `dist/pagefind/vocab/` lets the browser reject unknown words and suggest spellings.
+
+- Quick search: ⌘K / Ctrl+K, `/`, or the button in the header (`src/components/SearchDialog.astro`).
+- Results page: `/<lang>/search/?q=&type=&lang=&sort=`.
+- Verse jumps: `2:255`, `بقره ۲۵۵`, `Baqarah 255`.
+- In `npm run dev` the index is built once at startup (a few seconds) and served at `/pagefind/`. Restart dev to include newly fetched content.
+
+## Develop
+
+```sh
+npm install
+npm run dev            # http://localhost:4321
+npm run build          # static site + search index in dist/
+```
+
+You need `yt-dlp` on your PATH (or at `~/.local/bin/yt-dlp`) for the YouTube and TikTok fetchers.
+
+## Deploy (Vercel)
+
+1. Push this folder to a GitHub repository.
+2. In Vercel, import the repository. Its settings are in `vercel.json`.
+3. Set the environment variable `SITE_URL` to the final domain, e.g. `https://hamidhosseini.com`. It's used for canonical links, the sitemap and social previews.
+4. `middleware.ts` sends `/` to the visitor's language, using a saved choice first, then the browser language, then English.
+
+## Credits
+
+The Arabic Quran text is from the Tanzil Project (Uthmani), used under its licence.

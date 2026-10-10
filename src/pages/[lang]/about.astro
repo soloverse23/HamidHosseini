@@ -1,0 +1,181 @@
+---
+import Chapter from '../../components/Chapter.astro';
+import Icon from '../../components/Icon.astro';
+import { type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import Base from '../../layouts/Base.astro';
+import { CHANNEL_URLS, instagram, notes, telegram, tiktok, youtube } from '../../lib/data';
+import { compact, date, num } from '../../lib/format';
+import { href, localePaths } from '../../lib/paths';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const n = (x: number) => num(locale, x);
+const c = (x?: number) => (x ? compact(locale, x) : '—');
+
+const channels = [
+  { icon: 'telegram', name: telegram.profiles.main?.name ?? 'کلام', handle: '@hamidhossaini', url: CHANNEL_URLS.telegram, lang: 'fa', followers: telegram.profiles.main?.followers, items: notes.length, since: notes.at(-1)?.date, page: 'notes' },
+  { icon: 'youtube', name: youtube.profiles.fa?.name ?? '', handle: '@kalam-hamidhossaini', url: CHANNEL_URLS.youtubeFa, lang: 'fa', followers: youtube.profiles.fa?.followers, items: youtube.items.filter((i) => i.channel === 'fa').length, since: youtube.items.filter((i) => i.channel === 'fa').at(-1)?.date, page: 'videos' },
+  { icon: 'youtube', name: youtube.profiles.ro?.name ?? '', handle: '@Islamdeceșicum', url: CHANNEL_URLS.youtubeRo, lang: 'ro', followers: youtube.profiles.ro?.followers, items: youtube.items.filter((i) => i.channel === 'ro').length, since: youtube.items.filter((i) => i.channel === 'ro').at(-1)?.date, page: 'videos' },
+  { icon: 'tiktok', name: tiktok.profiles.main?.name ?? '', handle: '@islam.de.ce.si.cum', url: CHANNEL_URLS.tiktok, lang: 'ro', followers: tiktok.profiles.main?.followers, items: tiktok.items.length, since: tiktok.items.at(-1)?.date, page: 'tiktok' },
+  { icon: 'instagram', name: instagram.profiles.main?.name ?? '', handle: '@kalam_hamidhosseini', url: CHANNEL_URLS.instagram, lang: 'fa', followers: instagram.profiles.main?.followers, items: instagram.items.length, since: instagram.items.at(-1)?.date, page: 'instagram' },
+] as const;
+
+const sources: Record<Locale, string[]> = {
+  en: [
+    'Telegram posts are read from the channel’s public web page every 30 minutes and kept here in full, including posts deleted from the preview later.',
+    'YouTube videos come from both channels’ public feeds; episodes with the same number are paired across languages.',
+    'TikTok and Instagram are read from the public profiles on the same schedule. Images are stored on this site, so they keep working when the platforms’ links expire.',
+    'The Quran translation is assembled from the “group translation” posts: each verse is checked against the Arabic text before it is shown.',
+  ],
+  ro: [
+    'Postările de pe Telegram sunt citite de pe pagina publică a canalului la fiecare 30 de minute și păstrate aici integral.',
+    'Videoclipurile YouTube provin din fluxurile publice ale ambelor canale; episoadele cu același număr sunt asociate între limbi.',
+    'TikTok și Instagram sunt citite din profilurile publice după același program. Imaginile sunt păstrate pe acest site, astfel încât să funcționeze și după ce linkurile platformelor expiră.',
+    'Traducerea Coranului este alcătuită din postările „traducerii de grup”: fiecare verset este verificat față de textul arab înainte de a fi afișat.',
+  ],
+  ar: [
+    'تُقرأ منشورات تيليغرام من الصفحة العامة للقناة كل 30 دقيقة وتُحفظ هنا كاملة.',
+    'تأتي مقاطع يوتيوب من الخلاصات العامة للقناتين، وتُقرن الحلقات ذات الرقم نفسه بين اللغتين.',
+    'يُقرأ تيك توك وإنستغرام من الملفات العامة بالجدول نفسه، وتُحفظ الصور في هذا الموقع كي تبقى صالحة بعد انتهاء روابط المنصات.',
+    'تُجمع ترجمة القرآن من منشورات «الترجمة الجماعية»، وتُطابق كل آية مع النص العربي قبل عرضها.',
+  ],
+  fa: [
+    'پست‌های تلگرام هر ۳۰ دقیقه از صفحهٔ عمومی کانال خوانده و به‌طور کامل در اینجا نگهداری می‌شوند.',
+    'ویدئوهای یوتیوب از خوراک عمومی هر دو کانال دریافت می‌شوند و قسمت‌های هم‌شماره در دو زبان کنار هم قرار می‌گیرند.',
+    'تیک‌تاک و اینستاگرام با همین برنامه از صفحه‌های عمومی خوانده می‌شوند. تصاویر روی همین سایت ذخیره می‌شوند تا پس از منقضی شدن پیوندهای پلتفرم‌ها هم در دسترس بمانند.',
+    'ترجمهٔ قرآن از پست‌های «ترجمهٔ گروهی» گردآوری می‌شود و هر آیه پیش از نمایش با متن عربی تطبیق داده می‌شود.',
+  ],
+};
+---
+
+<Base locale={locale} path="about" crumbs={[{ name: s.sections.about.title, path: 'about' }]} title={s.sections.about.title}>
+  <div class="wrap about">
+    <Chapter locale={locale} title={s.name} />
+
+    <div class="about__grid">
+      <div class="stack about__text">
+        <p class="lede">{s.about.placeholder}</p>
+        <h2>{s.about.tv}</h2>
+        <p>{s.about.tvText} <a href={href(locale, 'writings#ethics-of-servitude')}>{s.nav.writings} →</a></p>
+      </div>
+
+      <aside class="contact">
+        <h2>{s.about.contact}</h2>
+        <a class="btn" href={CHANNEL_URLS.telegramPersonal} rel="noopener" target="_blank">
+          <Icon name="telegram" /> {s.about.contactTelegram} · @hamidhosseiniii
+        </a>
+      </aside>
+    </div>
+
+    <section class="block" aria-labelledby="channels">
+      <div class="section-title"><h2 id="channels">{s.about.channels}</h2></div>
+      <ul class="rows channels">
+        {
+          channels.map((ch) => (
+            <li>
+              <span class="ch__icon"><Icon name={ch.icon} /></span>
+              <span class="ch__name">
+                <a href={ch.url} rel="me noopener" target="_blank" lang={ch.lang} dir="auto">
+                  {ch.name}
+                </a>
+                <span class="meta">{ch.handle}</span>
+              </span>
+              <span class="ch__num num">{c(ch.followers)}</span>
+              <span class="ch__num num">
+                <a href={href(locale, ch.page)}>{ch.items ? n(ch.items) : '—'}</a>
+              </span>
+              <span class="ch__since meta">{ch.since ? date(locale, ch.since, 'month') : ''}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="block measure" id="sources" aria-labelledby="sources-title">
+      <div class="section-title"><h2 id="sources-title">{s.footer.source}</h2></div>
+      <ul class="sources stack">
+        {sources[locale].map((x) => <li>{x}</li>)}
+      </ul>
+      <p class="meta">{s.quran.arabicSource}</p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .about__grid {
+    display: grid;
+    gap: var(--space-7);
+  }
+  @media (min-width: 56rem) {
+    .about__grid {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    }
+  }
+  .about__text {
+    max-width: var(--measure);
+  }
+  .about__text h2,
+  .contact h2 {
+    font-size: var(--step-1);
+    margin-block-start: var(--space-6);
+  }
+  .about__text a {
+    color: var(--accent);
+  }
+  .contact {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    justify-items: start;
+  }
+  .contact h2 {
+    margin-block-start: 0;
+  }
+  .block {
+    margin-block-start: var(--space-8);
+  }
+  .channels li {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr) 5rem 5rem 8rem;
+    gap: var(--space-4);
+    align-items: center;
+    padding-block: var(--space-3);
+  }
+  .ch__icon :global(svg) {
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--accent);
+  }
+  .ch__name {
+    display: grid;
+  }
+  .ch__name a {
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .ch__num {
+    text-align: end;
+  }
+  .ch__num a {
+    text-decoration: none;
+    color: var(--accent);
+  }
+  .ch__since {
+    text-align: end;
+  }
+  @media (max-width: 40rem) {
+    .channels li {
+      grid-template-columns: 1.5rem minmax(0, 1fr) auto auto;
+    }
+    .ch__since {
+      display: none;
+    }
+  }
+  .sources {
+    padding-inline-start: var(--space-5);
+    color: var(--ink-2);
+    margin-block-end: var(--space-4);
+  }
+</style>

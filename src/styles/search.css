@@ -1,0 +1,221 @@
+/* Search results, shared by the header dialog and the /search/ page.
+   Results are rendered in the browser, so these rules are global. */
+
+.hit {
+  list-style: none;
+}
+.hit__link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  gap: 0 var(--space-4);
+  align-items: start;
+  padding: var(--space-4) var(--space-3);
+  color: var(--ink);
+  text-decoration: none;
+}
+.hit__link:hover {
+  color: var(--ink);
+}
+.hit__link:hover .hit__title {
+  color: var(--accent-ink);
+}
+
+/* Left column: a verse reference, or a typographic mark for the kind of result. */
+.hit__badge {
+  font-family: var(--font-serif);
+  font-size: var(--step--1);
+  line-height: 1.6;
+  color: var(--accent);
+  white-space: nowrap;
+  padding-block-start: 0.1rem;
+}
+.hit__badge::before {
+  display: block;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--ink-3);
+}
+.hit__badge--quran::before {
+  content: '۞';
+  color: var(--accent);
+}
+.hit__badge--notes::before {
+  content: '¶';
+}
+.hit__badge--videos::before {
+  content: '▸';
+}
+.hit__badge--writings::before {
+  content: '§';
+}
+.hit__badge--pages::before {
+  content: '◇';
+}
+
+.hit__main {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.hit__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.hit__eyebrow > span + span::before {
+  content: '·';
+  margin-inline: 0.45em;
+  color: var(--rule-strong);
+}
+.hit__ext {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}
+.hit__ext svg {
+  width: 0.85em;
+  height: 0.85em;
+}
+.hit__title {
+  display: block;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+.hit__title[dir='rtl'],
+.hit__body[dir='rtl'] {
+  font-family: var(--font-persian);
+}
+:root[dir='rtl'] .hit__title {
+  line-height: 1.75;
+}
+.hit__body {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+.hit__body[dir='rtl'] {
+  line-height: 1.9;
+}
+.hit__ar {
+  display: block;
+  font-family: var(--font-quran);
+  font-size: 1.3rem;
+  line-height: 2.1;
+  color: var(--ink);
+  text-align: start;
+}
+.hit--ayah .hit__title {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.hit__thumb {
+  display: block;
+  width: 8rem;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--paper-3);
+}
+.hit__thumb--v {
+  width: 3.6rem;
+  aspect-ratio: 9 / 16;
+}
+.hit__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hit__go {
+  align-self: center;
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+}
+
+.hit mark,
+.search-ui mark {
+  background: var(--accent-wash);
+  color: inherit;
+  border-radius: 2px;
+  box-shadow: inset 0 -0.1em 0 var(--accent);
+  padding-inline: 0.05em;
+}
+
+/* "Go to verse" shortcut */
+.hit--jump .hit__link {
+  align-items: center;
+  background: var(--accent-wash);
+  border-radius: 6px;
+}
+.hit--jump .hit__title {
+  color: var(--accent-ink);
+}
+
+@media (max-width: 34rem) {
+  .hit__link {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0 var(--space-3);
+  }
+  .hit__thumb {
+    grid-column: 2;
+    width: 100%;
+    max-width: 16rem;
+    margin-block-start: var(--space-2);
+  }
+  .hit__thumb--v {
+    width: 4.5rem;
+  }
+  .hit__go {
+    display: none;
+  }
+}
+
+/* Keyboard key */
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5em;
+  padding: 0.05em 0.4em;
+  border: 1px solid var(--rule-strong);
+  border-block-end-width: 2px;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+  background: var(--paper);
+  white-space: nowrap;
+}
+
+/* "Did you mean …?" */
+.suggest {
+  display: inline-block;
+  margin-block-start: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--step-0);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.suggest span {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.suggest:hover span {
+  color: var(--accent-ink);
+}

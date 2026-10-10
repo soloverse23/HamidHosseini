@@ -1,0 +1,733 @@
+---
+// Full search results. Reads ?q=&type=&lang=&sort= so every search is a
+// shareable link; the header dialog's "See all" lands here.
+import '@fontsource/amiri-quran/400.css';
+import '../../styles/search.css';
+import Icon from '../../components/Icon.astro';
+import { LOCALE_META, type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import Base from '../../layouts/Base.astro';
+import { href, localePaths } from '../../lib/paths';
+import { TYPES } from '../../lib/search/client';
+import { searchCtx } from '../../lib/search/labels';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const page = href(locale, 'search');
+const names = new Intl.DisplayNames([LOCALE_META[locale].intl.split('-u-')[0]], { type: 'language' });
+const LANGS = ['fa', 'ar', 'ro', 'en'] as const;
+---
+
+<Base locale={locale} path="search" title={s.search.title} description={s.search.lede} noindex>
+  <div
+    class="wrap sp search-ui"
+    data-search-page
+    data-ctx={JSON.stringify(searchCtx(locale))}
+    data-none={s.search.none('{q}')}
+    data-unavailable={s.search.unavailable}
+    data-go-to={s.search.goTo}
+    data-did-you-mean={s.search.didYouMean}
+  >
+    <header class="sp__head">
+      <h1>{s.search.title}</h1>
+      <p class="lede">{s.search.lede}</p>
+    </header>
+
+    <form class="sp__form" role="search" method="get" action={page}>
+      <div class="sp__field">
+        <Icon name="search" class="sp__icon" />
+        <input
+          id="sp-q"
+          name="q"
+          type="search"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          enterkeyhint="search"
+          placeholder={s.search.placeholder}
+          aria-label={s.search.label}
+        />
+        <button type="button" class="sp__reset" aria-label={s.search.reset} hidden>
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+        <button type="submit" class="sp__submit btn btn--primary">{s.search.open}</button>
+      </div>
+      <input type="hidden" name="type" disabled />
+    </form>
+
+    <div class="sp__controls" hidden>
+      <div class="sp__tabs" role="group" aria-label={s.search.title}>
+        <button type="button" class="chip" data-type="" aria-pressed="true">{s.search.all}<span class="num"></span></button>
+        {
+          TYPES.map((k) => (
+            <button type="button" class="chip" data-type={k} aria-pressed="false">
+              {s.search.types[k]}
+              <span class="num" />
+            </button>
+          ))
+        }
+      </div>
+      <div class="sp__selects">
+        <label class="sp__select">
+          <span class="visually-hidden">{s.language}</span>
+          <select name="lang">
+            <option value="">{s.search.anyLang}</option>
+            {LANGS.map((l) => <option value={l}>{names.of(l)}</option>)}
+          </select>
+        </label>
+        <label class="sp__select">
+          <span class="visually-hidden">{s.search.sort}</span>
+          <select name="sort">
+            <option value="relevance">{s.search.relevance}</option>
+            <option value="newest">{s.search.newest}</option>
+            <option value="oldest">{s.search.oldest}</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <p class="sp__status meta" role="status" aria-live="polite"></p>
+    <div class="sp__empty" hidden>
+      <p class="sp__empty-title"></p>
+      <p class="sp__suggest"></p>
+      <p class="sp__hint">{s.search.noneHint}</p>
+    </div>
+    <ol class="sp__list rows" aria-label={s.search.title}></ol>
+    <div class="sp__skeleton" aria-hidden="true" hidden>
+      {[0, 1, 2, 3].map(() => <div class="sk"><span></span><span></span><span></span></div>)}
+    </div>
+    <p class="sp__more" hidden><button type="button" class="btn">{s.search.more}</button></p>
+
+    <div class="sp__idle">
+      <section class="sp__recent" hidden>
+        <header>
+          <h2 class="sp__h">{s.search.recent}</h2>
+          <button type="button" class="sp__clear" data-forget>{s.search.clear}</button>
+        </header>
+        <ul class="sp__chips"></ul>
+      </section>
+      <section>
+        <h2 class="sp__h">{s.search.try}</h2>
+        <ul class="sp__chips">
+          {s.search.examples.map((x) => <li><a class="chip" href={`${page}?q=${encodeURIComponent(x)}`} data-q={x} dir="auto">{x}</a></li>)}
+        </ul>
+      </section>
+      <section>
+        <h2 class="sp__h">{s.search.tips}</h2>
+        <ul class="sp__tips">{s.search.tipList.map((x) => <li>{x}</li>)}</ul>
+      </section>
+    </div>
+
+    <noscript><p class="empty">JavaScript is required for search.</p></noscript>
+  </div>
+</Base>
+
+<script>
+  import {
+    forget,
+    hitHtml,
+    parseRef,
+    recent,
+    refHtml,
+    remember,
+    search,
+    suggestHtml,
+    termsOf,
+    toHit,
+    type Ctx,
+    type Found,
+    type SearchType,
+    type Sort,
+  } from '../../lib/search/client';
+
+  const root = document.querySelector<HTMLElement>('[data-search-page]');
+  if (root) {
+    const ctx: Ctx = JSON.parse(root.dataset.ctx!);
+    const d = root.dataset;
+    const $ = <T extends Element>(sel: string) => root.querySelector<T>(sel)!;
+    const form = $<HTMLFormElement>('.sp__form');
+    const input = $<HTMLInputElement>('#sp-q');
+    const reset = $<HTMLButtonElement>('.sp__reset');
+    const controls = $<HTMLElement>('.sp__controls');
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('.sp__tabs [data-type]')];
+    const langSel = $<HTMLSelectElement>('select[name=lang]');
+    const sortSel = $<HTMLSelectElement>('select[name=sort]');
+    const status = $<HTMLElement>('.sp__status');
+    const empty = $<HTMLElement>('.sp__empty');
+    const list = $<HTMLOListElement>('.sp__list');
+    const skeleton = $<HTMLElement>('.sp__skeleton');
+    const more = $<HTMLElement>('.sp__more');
+    const idle = $<HTMLElement>('.sp__idle');
+    const recentBox = $<HTMLElement>('.sp__recent');
+    const fmt = new Intl.NumberFormat(ctx.intl);
+    const PAGE = 20;
+
+    let type: SearchType | undefined;
+    let found: Found | undefined;
+    let shown = 0;
+    let seq = 0;
+    let timer: number | undefined;
+    let terms: string[] = [];
+
+    const esc = (x: string) => x.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+
+    function readUrl() {
+      const p = new URLSearchParams(location.search);
+      input.value = p.get('q') ?? '';
+      const t = p.get('type') as SearchType | null;
+      type = t && tabs.some((x) => x.dataset.type === t) ? t : undefined;
+      langSel.value = p.get('lang') ?? '';
+      sortSel.value = p.get('sort') ?? 'relevance';
+      tabs.forEach((x) => x.setAttribute('aria-pressed', String((x.dataset.type || undefined) === type)));
+    }
+
+    function writeUrl(push: boolean) {
+      const p = new URLSearchParams();
+      const q = input.value.trim();
+      if (q) p.set('q', q);
+      if (type) p.set('type', type);
+      if (langSel.value) p.set('lang', langSel.value);
+      if (sortSel.value !== 'relevance') p.set('sort', sortSel.value);
+      const url = `${location.pathname}${p.size ? `?${p}` : ''}`;
+      if (url === location.pathname + location.search) return;
+      history[push ? 'pushState' : 'replaceState'](null, '', url);
+    }
+
+    function showIdle() {
+      const items = recent();
+      recentBox.hidden = !items.length;
+      recentBox.querySelector('ul')!.innerHTML = items
+        .map((x) => `<li><button type="button" class="chip" dir="auto" data-q="${esc(x)}">${esc(x)}</button></li>`)
+        .join('');
+      idle.hidden = false;
+      controls.hidden = true;
+      list.innerHTML = '';
+      status.textContent = '';
+      empty.hidden = true;
+      more.hidden = true;
+      skeleton.hidden = true;
+      document.title = document.title.replace(/^.*? — /, `${document.querySelector('h1')!.textContent} — `);
+    }
+
+    async function render(from: number) {
+      if (!found) return;
+      const mine = seq;
+      const slice = found.results.slice(from, from + PAGE);
+      const data = await Promise.all(slice.map((r) => r.data()));
+      if (mine !== seq) return;
+      const ref = from === 0 ? parseRef(input.value) : undefined;
+      const html = data
+        .filter((x) => !(ref && x.meta.kind === 'surah' && Number(x.meta.s) === ref.s))
+        .map((x) => hitHtml(toHit(x, terms, ctx, true), { full: true }))
+        .join('');
+      if (from === 0) list.innerHTML = (ref ? refHtml(ref, ctx, d.goTo!) : '') + html;
+      else list.insertAdjacentHTML('beforeend', html);
+      shown = from + slice.length;
+      more.hidden = shown >= found.results.length;
+    }
+
+    async function run() {
+      const q = input.value.trim();
+      reset.hidden = !input.value;
+      const mine = ++seq;
+      if (!q) return showIdle();
+      idle.hidden = true;
+      controls.hidden = false;
+      if (!list.children.length) skeleton.hidden = false;
+      root!.classList.add('is-busy');
+      try {
+        found = await search(q, {
+          type,
+          lang: langSel.value || undefined,
+          sort: sortSel.value as Sort,
+        });
+        if (mine !== seq) return;
+        terms = termsOf(q);
+        const n = found.results.length;
+        tabs.forEach((t) => {
+          const k = t.dataset.type as SearchType | '';
+          const c = k ? found!.counts[k] : found!.total;
+          t.querySelector('.num')!.textContent = c ? fmt.format(c) : '';
+          t.classList.toggle('is-zero', !!k && !c);
+        });
+        const ref = parseRef(q);
+        status.textContent = n ? (n === 1 ? ctx.labels.resultsOne : ctx.labels.results).replace('{n}', fmt.format(n)) : '';
+        empty.hidden = !!(n || ref);
+        empty.querySelector('.sp__empty-title')!.textContent = d.none!.replace('{q}', q);
+        empty.querySelector('.sp__suggest')!.innerHTML = found.suggestion ? suggestHtml(found.suggestion, d.didYouMean!) : '';
+        empty.querySelector<HTMLElement>('.sp__hint')!.hidden = !!found.suggestion;
+        await render(0);
+        document.title = document.title.replace(/^.*? — /, `${q} — `);
+      } catch {
+        if (mine !== seq) return;
+        list.innerHTML = '';
+        status.textContent = d.unavailable!;
+      } finally {
+        if (mine === seq) {
+          root!.classList.remove('is-busy');
+          skeleton.hidden = true;
+        }
+      }
+    }
+
+    readUrl();
+    run();
+    if (!input.value) input.focus();
+
+    input.addEventListener('input', () => {
+      reset.hidden = !input.value;
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        writeUrl(false);
+        run();
+      }, 180);
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clearTimeout(timer);
+      remember(input.value);
+      writeUrl(true);
+      run();
+      input.blur();
+    });
+    reset.addEventListener('click', () => {
+      input.value = '';
+      writeUrl(true);
+      run();
+      input.focus();
+    });
+    tabs.forEach((t) =>
+      t.addEventListener('click', () => {
+        type = (t.dataset.type || undefined) as SearchType | undefined;
+        tabs.forEach((x) => x.setAttribute('aria-pressed', String(x === t)));
+        writeUrl(true);
+        run();
+      }),
+    );
+    [langSel, sortSel].forEach((el) =>
+      el.addEventListener('change', () => {
+        writeUrl(true);
+        run();
+      }),
+    );
+    more.querySelector('button')!.addEventListener('click', async () => {
+      const next = list.children.length;
+      await render(shown);
+      (list.children[next]?.querySelector('a') as HTMLElement | null)?.focus({ preventScroll: true });
+    });
+    list.addEventListener('click', (e) => {
+      if ((e.target as Element).closest('a')) remember(input.value);
+    });
+    idle.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-q], [data-forget]');
+      if (!b) return;
+      e.preventDefault();
+      if (b.dataset.forget !== undefined) {
+        forget();
+        showIdle();
+        return;
+      }
+      input.value = b.dataset.q!;
+      remember(input.value);
+      writeUrl(true);
+      run();
+    });
+    empty.addEventListener('click', (e) => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-q]');
+      if (!b) return;
+      input.value = b.dataset.q!;
+      writeUrl(true);
+      run();
+    });
+    window.addEventListener('popstate', () => {
+      readUrl();
+      run();
+    });
+  }
+</script>
+
+<style>
+  .sp {
+    max-width: 52rem;
+    padding-block-end: var(--space-8);
+  }
+  .sp__head {
+    padding-block: var(--space-6) var(--space-5);
+  }
+  .sp__head h1 {
+    font-family: var(--font-serif);
+    font-size: var(--step-4);
+    font-weight: 400;
+    line-height: 1.1;
+    margin-block-end: var(--space-3);
+  }
+  :root[dir='rtl'] .sp__head h1 {
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .sp__head .lede {
+    font-size: var(--step-0);
+  }
+
+  /* ---------- The field ---------- */
+  .sp__form {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 5;
+    padding-block: var(--space-3);
+    background: var(--paper);
+  }
+  .sp__field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  :root[dir='rtl'] .sp__field {
+    padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  }
+  .sp__field:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+  }
+  .sp__field :global(.sp__icon) {
+    width: 1.35rem;
+    height: 1.35rem;
+    color: var(--ink-3);
+    flex: none;
+  }
+  .sp.is-busy :global(.sp__icon) {
+    color: var(--accent);
+    animation: sp-pulse 0.9s ease-in-out infinite;
+  }
+  @keyframes sp-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  .sp__field input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2) 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--step-1);
+    outline: none;
+  }
+  .sp__field input:focus-visible {
+    outline: none;
+  }
+  .sp__field input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .sp__field input::placeholder {
+    color: var(--ink-3);
+  }
+  .sp__reset {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--ink-3);
+    cursor: pointer;
+    flex: none;
+  }
+  .sp__reset:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+  .sp__reset svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+  .sp__submit {
+    border-radius: 999px;
+    padding-inline: 1.1em;
+  }
+
+  /* ---------- Filters ---------- */
+  .sp__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    padding-block: var(--space-2) var(--space-4);
+  }
+  .sp__controls[hidden] {
+    display: none;
+  }
+  .sp__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .sp__tabs .chip {
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .sp__tabs .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .sp__tabs .chip[aria-pressed='true'] .num {
+    color: var(--paper-3);
+  }
+  .sp__tabs .num:empty {
+    display: none;
+  }
+  .sp__tabs .is-zero {
+    opacity: 0.45;
+  }
+  .sp__selects {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .sp__select select {
+    appearance: none;
+    padding: 0.3em 1.9em 0.3em 0.8em;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f695d' stroke-width='1.5'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E")
+      no-repeat right 0.5em center / 1em;
+    color: var(--ink-2);
+    font: inherit;
+    font-size: var(--step--1);
+    cursor: pointer;
+  }
+  :root[dir='rtl'] .sp__select select {
+    padding: 0.3em 0.8em 0.3em 1.9em;
+    background-position: left 0.5em center;
+  }
+  .sp__select select:hover {
+    border-color: var(--ink-3);
+  }
+
+  /* ---------- Results ---------- */
+  .sp__status:empty {
+    display: none;
+  }
+  .sp__status {
+    padding-block-end: var(--space-3);
+  }
+  .sp__list {
+    transition: opacity 0.15s;
+  }
+  .sp.is-busy .sp__list {
+    opacity: 0.55;
+  }
+  .sp__list :global(.hit__link) {
+    padding: var(--space-5) var(--space-2);
+  }
+  .sp__list :global(.hit__link:hover) {
+    background: linear-gradient(to var(--end, right), var(--paper-2), transparent 85%);
+  }
+  .sp__list :global(.hit__title) {
+    font-size: var(--step-1);
+    font-family: var(--font-serif);
+    font-weight: 500;
+  }
+  .sp__list :global(.hit__title[dir='rtl']) {
+    font-family: var(--font-naskh);
+    font-weight: 600;
+    font-size: 1.1875rem;
+  }
+  .sp__list :global(.hit--ayah .hit__title) {
+    font-family: var(--font-persian);
+    font-size: var(--step-0);
+    font-weight: 400;
+    line-height: 1.9;
+  }
+  .sp__list :global(.hit__ar) {
+    font-size: 1.45rem;
+    line-height: 2.2;
+  }
+  .sp__list :global(.hit__body) {
+    -webkit-line-clamp: 3;
+    font-size: 0.9375rem;
+  }
+  .sp__list :global(.hit--jump) {
+    border: 0;
+    margin-block-end: var(--space-3);
+  }
+  .sp__list :global(.hit--jump .hit__link) {
+    padding: var(--space-4) var(--space-3);
+    background: var(--accent-wash);
+  }
+  .sp__list :global(.hit--jump + .hit) {
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .sp__empty {
+    padding: var(--space-7) 0;
+    text-align: center;
+    color: var(--ink-3);
+  }
+  .sp__empty-title {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    color: var(--ink);
+    margin-block-end: var(--space-2);
+  }
+  .sp__suggest:empty {
+    display: none;
+  }
+  .sp__more {
+    display: flex;
+    justify-content: center;
+    padding-block-start: var(--space-6);
+  }
+
+  /* Placeholder rows while the index loads the first time */
+  .sp__skeleton {
+    display: grid;
+  }
+  .sp__skeleton[hidden] {
+    display: none;
+  }
+  .sk {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-5) var(--space-2) var(--space-5) calc(2.75rem + var(--space-6));
+    border-block-end: 1px solid var(--rule);
+  }
+  .sk span {
+    height: 0.75rem;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--paper-2), var(--paper-3), var(--paper-2));
+    background-size: 200% 100%;
+    animation: sk 1.2s linear infinite;
+  }
+  .sk span:nth-child(1) {
+    width: 30%;
+  }
+  .sk span:nth-child(2) {
+    width: 70%;
+    height: 1rem;
+  }
+  .sk span:nth-child(3) {
+    width: 90%;
+  }
+  @keyframes sk {
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  /* ---------- Before typing ---------- */
+  .sp__idle {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--space-6);
+    padding-block: var(--space-6);
+    border-block-start: 1px solid var(--rule);
+    margin-block-start: var(--space-4);
+  }
+  .sp__idle[hidden] {
+    display: none;
+  }
+  .sp__idle header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .sp__h {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--space-3);
+  }
+  :root[dir='rtl'] .sp__h {
+    letter-spacing: 0;
+    font-size: 0.75rem;
+  }
+  .sp__clear {
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .sp__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: 0;
+    list-style: none;
+  }
+  .sp__chips :global(.chip) {
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .sp__tips {
+    padding-inline-start: 1.1em;
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--step--1);
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 40rem) {
+    .sp__head h1 {
+      font-size: var(--step-3);
+    }
+    .sp__list :global(.hit__link) {
+      padding-block: var(--space-4);
+    }
+    .sp__list :global(.hit__title) {
+      font-size: 1.0625rem;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
+    }
+    .sp__list :global(.hit__title[dir='rtl']) {
+      font-size: 1.0625rem;
+    }
+    .sp__list :global(.hit__ar) {
+      font-size: 1.25rem;
+    }
+    .sp__submit {
+      display: none;
+    }
+    .sp__field {
+      padding-inline-end: var(--space-3);
+    }
+    .sp__controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .sp__selects > * {
+      flex: 1;
+      min-width: 0;
+    }
+    .sp__select select {
+      width: 100%;
+    }
+    .sp__tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+    }
+  }
+</style>

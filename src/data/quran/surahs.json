@@ -1,0 +1,1028 @@
+[
+ {
+  "n": 1,
+  "ar": "ٱلْفَاتِحَةِ",
+  "fa": "فاتحه",
+  "translit": "Al-Faatiha",
+  "en": "The Opening",
+  "ayahs": 7,
+  "place": "mecca"
+ },
+ {
+  "n": 2,
+  "ar": "البَقَرَةِ",
+  "fa": "بقره",
+  "translit": "Al-Baqara",
+  "en": "The Cow",
+  "ayahs": 286,
+  "place": "medina"
+ },
+ {
+  "n": 3,
+  "ar": "آلِ عِمۡرَانَ",
+  "fa": "آل عمران",
+  "translit": "Aal-i-Imraan",
+  "en": "The Family of Imraan",
+  "ayahs": 200,
+  "place": "medina"
+ },
+ {
+  "n": 4,
+  "ar": "النِّسَاءِ",
+  "fa": "نساء",
+  "translit": "An-Nisaa",
+  "en": "The Women",
+  "ayahs": 176,
+  "place": "medina"
+ },
+ {
+  "n": 5,
+  "ar": "المَائـِدَةِ",
+  "fa": "مائده",
+  "translit": "Al-Maaida",
+  "en": "The Table",
+  "ayahs": 120,
+  "place": "medina"
+ },
+ {
+  "n": 6,
+  "ar": "الأَنۡعَامِ",
+  "fa": "انعام",
+  "translit": "Al-An'aam",
+  "en": "The Cattle",
+  "ayahs": 165,
+  "place": "mecca"
+ },
+ {
+  "n": 7,
+  "ar": "الأَعۡرَافِ",
+  "fa": "اعراف",
+  "translit": "Al-A'raaf",
+  "en": "The Heights",
+  "ayahs": 206,
+  "place": "mecca"
+ },
+ {
+  "n": 8,
+  "ar": "الأَنفَالِ",
+  "fa": "انفال",
+  "translit": "Al-Anfaal",
+  "en": "The Spoils of War",
+  "ayahs": 75,
+  "place": "medina"
+ },
+ {
+  "n": 9,
+  "ar": "التَّوۡبَةِ",
+  "fa": "توبه",
+  "translit": "At-Tawba",
+  "en": "The Repentance",
+  "ayahs": 129,
+  "place": "medina"
+ },
+ {
+  "n": 10,
+  "ar": "يُونُسَ",
+  "fa": "یونس",
+  "translit": "Yunus",
+  "en": "Jonas",
+  "ayahs": 109,
+  "place": "mecca"
+ },
+ {
+  "n": 11,
+  "ar": "هُودٍ",
+  "fa": "هود",
+  "translit": "Hud",
+  "en": "Hud",
+  "ayahs": 123,
+  "place": "mecca"
+ },
+ {
+  "n": 12,
+  "ar": "يُوسُفَ",
+  "fa": "یوسف",
+  "translit": "Yusuf",
+  "en": "Joseph",
+  "ayahs": 111,
+  "place": "mecca"
+ },
+ {
+  "n": 13,
+  "ar": "الرَّعۡدِ",
+  "fa": "رعد",
+  "translit": "Ar-Ra'd",
+  "en": "The Thunder",
+  "ayahs": 43,
+  "place": "medina"
+ },
+ {
+  "n": 14,
+  "ar": "إِبۡرَاهِيمَ",
+  "fa": "ابراهیم",
+  "translit": "Ibrahim",
+  "en": "Abraham",
+  "ayahs": 52,
+  "place": "mecca"
+ },
+ {
+  "n": 15,
+  "ar": "الحِجۡرِ",
+  "fa": "حجر",
+  "translit": "Al-Hijr",
+  "en": "The Rock",
+  "ayahs": 99,
+  "place": "mecca"
+ },
+ {
+  "n": 16,
+  "ar": "النَّحۡلِ",
+  "fa": "نحل",
+  "translit": "An-Nahl",
+  "en": "The Bee",
+  "ayahs": 128,
+  "place": "mecca"
+ },
+ {
+  "n": 17,
+  "ar": "الإِسۡرَاءِ",
+  "fa": "اسراء",
+  "translit": "Al-Israa",
+  "en": "The Night Journey",
+  "ayahs": 111,
+  "place": "mecca"
+ },
+ {
+  "n": 18,
+  "ar": "الكَهۡفِ",
+  "fa": "کهف",
+  "translit": "Al-Kahf",
+  "en": "The Cave",
+  "ayahs": 110,
+  "place": "mecca"
+ },
+ {
+  "n": 19,
+  "ar": "مَرۡيَمَ",
+  "fa": "مریم",
+  "translit": "Maryam",
+  "en": "Mary",
+  "ayahs": 98,
+  "place": "mecca"
+ },
+ {
+  "n": 20,
+  "ar": "طه",
+  "fa": "طه",
+  "translit": "Taa-Haa",
+  "en": "Taa-Haa",
+  "ayahs": 135,
+  "place": "mecca"
+ },
+ {
+  "n": 21,
+  "ar": "الأَنبِيَاءِ",
+  "fa": "انبیاء",
+  "translit": "Al-Anbiyaa",
+  "en": "The Prophets",
+  "ayahs": 112,
+  "place": "mecca"
+ },
+ {
+  "n": 22,
+  "ar": "الحَجِّ",
+  "fa": "حج",
+  "translit": "Al-Hajj",
+  "en": "The Pilgrimage",
+  "ayahs": 78,
+  "place": "medina"
+ },
+ {
+  "n": 23,
+  "ar": "المُؤۡمِنُونَ",
+  "fa": "مؤمنون",
+  "translit": "Al-Muminoon",
+  "en": "The Believers",
+  "ayahs": 118,
+  "place": "mecca"
+ },
+ {
+  "n": 24,
+  "ar": "النُّورِ",
+  "fa": "نور",
+  "translit": "An-Noor",
+  "en": "The Light",
+  "ayahs": 64,
+  "place": "medina"
+ },
+ {
+  "n": 25,
+  "ar": "الفُرۡقَانِ",
+  "fa": "فرقان",
+  "translit": "Al-Furqaan",
+  "en": "The Criterion",
+  "ayahs": 77,
+  "place": "mecca"
+ },
+ {
+  "n": 26,
+  "ar": "الشُّعَرَاءِ",
+  "fa": "شعراء",
+  "translit": "Ash-Shu'araa",
+  "en": "The Poets",
+  "ayahs": 227,
+  "place": "mecca"
+ },
+ {
+  "n": 27,
+  "ar": "النَّمۡلِ",
+  "fa": "نمل",
+  "translit": "An-Naml",
+  "en": "The Ant",
+  "ayahs": 93,
+  "place": "mecca"
+ },
+ {
+  "n": 28,
+  "ar": "القَصَصِ",
+  "fa": "قصص",
+  "translit": "Al-Qasas",
+  "en": "The Stories",
+  "ayahs": 88,
+  "place": "mecca"
+ },
+ {
+  "n": 29,
+  "ar": "العَنكَبُوتِ",
+  "fa": "عنکبوت",
+  "translit": "Al-Ankaboot",
+  "en": "The Spider",
+  "ayahs": 69,
+  "place": "mecca"
+ },
+ {
+  "n": 30,
+  "ar": "الرُّومِ",
+  "fa": "روم",
+  "translit": "Ar-Room",
+  "en": "The Romans",
+  "ayahs": 60,
+  "place": "mecca"
+ },
+ {
+  "n": 31,
+  "ar": "لُقۡمَانَ",
+  "fa": "لقمان",
+  "translit": "Luqman",
+  "en": "Luqman",
+  "ayahs": 34,
+  "place": "mecca"
+ },
+ {
+  "n": 32,
+  "ar": "السَّجۡدَةِ",
+  "fa": "سجده",
+  "translit": "As-Sajda",
+  "en": "The Prostration",
+  "ayahs": 30,
+  "place": "mecca"
+ },
+ {
+  "n": 33,
+  "ar": "الأَحۡزَابِ",
+  "fa": "احزاب",
+  "translit": "Al-Ahzaab",
+  "en": "The Clans",
+  "ayahs": 73,
+  "place": "medina"
+ },
+ {
+  "n": 34,
+  "ar": "سَبَإٍ",
+  "fa": "سبا",
+  "translit": "Saba",
+  "en": "Sheba",
+  "ayahs": 54,
+  "place": "mecca"
+ },
+ {
+  "n": 35,
+  "ar": "فَاطِرٍ",
+  "fa": "فاطر",
+  "translit": "Faatir",
+  "en": "The Originator",
+  "ayahs": 45,
+  "place": "mecca"
+ },
+ {
+  "n": 36,
+  "ar": "يسٓ",
+  "fa": "یسٓ",
+  "translit": "Yaseen",
+  "en": "Yaseen",
+  "ayahs": 83,
+  "place": "mecca"
+ },
+ {
+  "n": 37,
+  "ar": "الصَّافَّاتِ",
+  "fa": "صافات",
+  "translit": "As-Saaffaat",
+  "en": "Those drawn up in Ranks",
+  "ayahs": 182,
+  "place": "mecca"
+ },
+ {
+  "n": 38,
+  "ar": "صٓ",
+  "fa": "صٓ",
+  "translit": "Saad",
+  "en": "The letter Saad",
+  "ayahs": 88,
+  "place": "mecca"
+ },
+ {
+  "n": 39,
+  "ar": "الزُّمَرِ",
+  "fa": "زمر",
+  "translit": "Az-Zumar",
+  "en": "The Groups",
+  "ayahs": 75,
+  "place": "mecca"
+ },
+ {
+  "n": 40,
+  "ar": "غَافِرٍ",
+  "fa": "غافر",
+  "translit": "Ghafir",
+  "en": "The Forgiver",
+  "ayahs": 85,
+  "place": "mecca"
+ },
+ {
+  "n": 41,
+  "ar": "فُصِّلَتۡ",
+  "fa": "فصلت",
+  "translit": "Fussilat",
+  "en": "Explained in detail",
+  "ayahs": 54,
+  "place": "mecca"
+ },
+ {
+  "n": 42,
+  "ar": "الشُّورَىٰ",
+  "fa": "شورى",
+  "translit": "Ash-Shura",
+  "en": "Consultation",
+  "ayahs": 53,
+  "place": "mecca"
+ },
+ {
+  "n": 43,
+  "ar": "الزُّخۡرُفِ",
+  "fa": "زخرف",
+  "translit": "Az-Zukhruf",
+  "en": "Ornaments of gold",
+  "ayahs": 89,
+  "place": "mecca"
+ },
+ {
+  "n": 44,
+  "ar": "الدُّخَانِ",
+  "fa": "دخان",
+  "translit": "Ad-Dukhaan",
+  "en": "The Smoke",
+  "ayahs": 59,
+  "place": "mecca"
+ },
+ {
+  "n": 45,
+  "ar": "الجَاثِيَةِ",
+  "fa": "جاثیه",
+  "translit": "Al-Jaathiya",
+  "en": "Crouching",
+  "ayahs": 37,
+  "place": "mecca"
+ },
+ {
+  "n": 46,
+  "ar": "الأَحۡقَافِ",
+  "fa": "احقاف",
+  "translit": "Al-Ahqaf",
+  "en": "The Dunes",
+  "ayahs": 35,
+  "place": "mecca"
+ },
+ {
+  "n": 47,
+  "ar": "مُحَمَّدٍ",
+  "fa": "محمد",
+  "translit": "Muhammad",
+  "en": "Muhammad",
+  "ayahs": 38,
+  "place": "medina"
+ },
+ {
+  "n": 48,
+  "ar": "الفَتۡحِ",
+  "fa": "فتح",
+  "translit": "Al-Fath",
+  "en": "The Victory",
+  "ayahs": 29,
+  "place": "medina"
+ },
+ {
+  "n": 49,
+  "ar": "الحُجُرَاتِ",
+  "fa": "حجرات",
+  "translit": "Al-Hujuraat",
+  "en": "The Inner Apartments",
+  "ayahs": 18,
+  "place": "medina"
+ },
+ {
+  "n": 50,
+  "ar": "قٓ",
+  "fa": "قٓ",
+  "translit": "Qaaf",
+  "en": "The letter Qaaf",
+  "ayahs": 45,
+  "place": "mecca"
+ },
+ {
+  "n": 51,
+  "ar": "الذَّارِيَاتِ",
+  "fa": "ذاریات",
+  "translit": "Adh-Dhaariyat",
+  "en": "The Winnowing Winds",
+  "ayahs": 60,
+  "place": "mecca"
+ },
+ {
+  "n": 52,
+  "ar": "الطُّورِ",
+  "fa": "طور",
+  "translit": "At-Tur",
+  "en": "The Mount",
+  "ayahs": 49,
+  "place": "mecca"
+ },
+ {
+  "n": 53,
+  "ar": "النَّجۡمِ",
+  "fa": "نجم",
+  "translit": "An-Najm",
+  "en": "The Star",
+  "ayahs": 62,
+  "place": "mecca"
+ },
+ {
+  "n": 54,
+  "ar": "القَمَرِ",
+  "fa": "قمر",
+  "translit": "Al-Qamar",
+  "en": "The Moon",
+  "ayahs": 55,
+  "place": "mecca"
+ },
+ {
+  "n": 55,
+  "ar": "الرَّحۡمَٰن",
+  "fa": "رحمن",
+  "translit": "Ar-Rahmaan",
+  "en": "The Beneficent",
+  "ayahs": 78,
+  "place": "medina"
+ },
+ {
+  "n": 56,
+  "ar": "الوَاقِعَةِ",
+  "fa": "واقعه",
+  "translit": "Al-Waaqia",
+  "en": "The Inevitable",
+  "ayahs": 96,
+  "place": "mecca"
+ },
+ {
+  "n": 57,
+  "ar": "الحَدِيدِ",
+  "fa": "حدید",
+  "translit": "Al-Hadid",
+  "en": "The Iron",
+  "ayahs": 29,
+  "place": "medina"
+ },
+ {
+  "n": 58,
+  "ar": "المُجَادلَةِ",
+  "fa": "مجادله",
+  "translit": "Al-Mujaadila",
+  "en": "The Pleading Woman",
+  "ayahs": 22,
+  "place": "medina"
+ },
+ {
+  "n": 59,
+  "ar": "الحَشۡرِ",
+  "fa": "حشر",
+  "translit": "Al-Hashr",
+  "en": "The Exile",
+  "ayahs": 24,
+  "place": "medina"
+ },
+ {
+  "n": 60,
+  "ar": "المُمۡتَحنَةِ",
+  "fa": "ممتحنه",
+  "translit": "Al-Mumtahana",
+  "en": "She that is to be examined",
+  "ayahs": 13,
+  "place": "medina"
+ },
+ {
+  "n": 61,
+  "ar": "الصَّفِّ",
+  "fa": "صف",
+  "translit": "As-Saff",
+  "en": "The Ranks",
+  "ayahs": 14,
+  "place": "medina"
+ },
+ {
+  "n": 62,
+  "ar": "الجُمُعَةِ",
+  "fa": "جمعه",
+  "translit": "Al-Jumu'a",
+  "en": "Friday",
+  "ayahs": 11,
+  "place": "medina"
+ },
+ {
+  "n": 63,
+  "ar": "المُنَافِقُونَ",
+  "fa": "منافقون",
+  "translit": "Al-Munaafiqoon",
+  "en": "The Hypocrites",
+  "ayahs": 11,
+  "place": "medina"
+ },
+ {
+  "n": 64,
+  "ar": "التَّغَابُنِ",
+  "fa": "تغابن",
+  "translit": "At-Taghaabun",
+  "en": "Mutual Disillusion",
+  "ayahs": 18,
+  "place": "medina"
+ },
+ {
+  "n": 65,
+  "ar": "الطَّلَاقِ",
+  "fa": "طلاق",
+  "translit": "At-Talaaq",
+  "en": "Divorce",
+  "ayahs": 12,
+  "place": "medina"
+ },
+ {
+  "n": 66,
+  "ar": "التَّحۡرِيمِ",
+  "fa": "تحریم",
+  "translit": "At-Tahrim",
+  "en": "The Prohibition",
+  "ayahs": 12,
+  "place": "medina"
+ },
+ {
+  "n": 67,
+  "ar": "المُلۡكِ",
+  "fa": "ملک",
+  "translit": "Al-Mulk",
+  "en": "The Sovereignty",
+  "ayahs": 30,
+  "place": "mecca"
+ },
+ {
+  "n": 68,
+  "ar": "القَلَمِ",
+  "fa": "قلم",
+  "translit": "Al-Qalam",
+  "en": "The Pen",
+  "ayahs": 52,
+  "place": "mecca"
+ },
+ {
+  "n": 69,
+  "ar": "الحَاقَّةِ",
+  "fa": "حاقه",
+  "translit": "Al-Haaqqa",
+  "en": "The Reality",
+  "ayahs": 52,
+  "place": "mecca"
+ },
+ {
+  "n": 70,
+  "ar": "المَعَارِجِ",
+  "fa": "معارج",
+  "translit": "Al-Ma'aarij",
+  "en": "The Ascending Stairways",
+  "ayahs": 44,
+  "place": "mecca"
+ },
+ {
+  "n": 71,
+  "ar": "نُوحٍ",
+  "fa": "نوح",
+  "translit": "Nooh",
+  "en": "Noah",
+  "ayahs": 28,
+  "place": "mecca"
+ },
+ {
+  "n": 72,
+  "ar": "الجِنِّ",
+  "fa": "جن",
+  "translit": "Al-Jinn",
+  "en": "The Jinn",
+  "ayahs": 28,
+  "place": "mecca"
+ },
+ {
+  "n": 73,
+  "ar": "المُزَّمِّلِ",
+  "fa": "مزمل",
+  "translit": "Al-Muzzammil",
+  "en": "The Enshrouded One",
+  "ayahs": 20,
+  "place": "mecca"
+ },
+ {
+  "n": 74,
+  "ar": "المُدَّثِّرِ",
+  "fa": "مدثر",
+  "translit": "Al-Muddaththir",
+  "en": "The Cloaked One",
+  "ayahs": 56,
+  "place": "mecca"
+ },
+ {
+  "n": 75,
+  "ar": "القِيَامَةِ",
+  "fa": "قیامه",
+  "translit": "Al-Qiyaama",
+  "en": "The Resurrection",
+  "ayahs": 40,
+  "place": "mecca"
+ },
+ {
+  "n": 76,
+  "ar": "الإِنسَانِ",
+  "fa": "انسان",
+  "translit": "Al-Insaan",
+  "en": "Man",
+  "ayahs": 31,
+  "place": "medina"
+ },
+ {
+  "n": 77,
+  "ar": "المُرۡسَلَاتِ",
+  "fa": "مرسلات",
+  "translit": "Al-Mursalaat",
+  "en": "The Emissaries",
+  "ayahs": 50,
+  "place": "mecca"
+ },
+ {
+  "n": 78,
+  "ar": "النَّبَإِ",
+  "fa": "نبا",
+  "translit": "An-Naba",
+  "en": "The Announcement",
+  "ayahs": 40,
+  "place": "mecca"
+ },
+ {
+  "n": 79,
+  "ar": "النَّازِعَاتِ",
+  "fa": "نازعات",
+  "translit": "An-Naazi'aat",
+  "en": "Those who drag forth",
+  "ayahs": 46,
+  "place": "mecca"
+ },
+ {
+  "n": 80,
+  "ar": "عَبَسَ",
+  "fa": "عبس",
+  "translit": "Abasa",
+  "en": "He frowned",
+  "ayahs": 42,
+  "place": "mecca"
+ },
+ {
+  "n": 81,
+  "ar": "التَّكۡوِيرِ",
+  "fa": "تکویر",
+  "translit": "At-Takwir",
+  "en": "The Overthrowing",
+  "ayahs": 29,
+  "place": "mecca"
+ },
+ {
+  "n": 82,
+  "ar": "الانفِطَارِ",
+  "fa": "انفطار",
+  "translit": "Al-Infitaar",
+  "en": "The Cleaving",
+  "ayahs": 19,
+  "place": "mecca"
+ },
+ {
+  "n": 83,
+  "ar": "المُطَفِّفِينَ",
+  "fa": "مطففین",
+  "translit": "Al-Mutaffifin",
+  "en": "Defrauding",
+  "ayahs": 36,
+  "place": "mecca"
+ },
+ {
+  "n": 84,
+  "ar": "الانشِقَاقِ",
+  "fa": "انشقاق",
+  "translit": "Al-Inshiqaaq",
+  "en": "The Splitting Open",
+  "ayahs": 25,
+  "place": "mecca"
+ },
+ {
+  "n": 85,
+  "ar": "البُرُوجِ",
+  "fa": "بروج",
+  "translit": "Al-Burooj",
+  "en": "The Constellations",
+  "ayahs": 22,
+  "place": "mecca"
+ },
+ {
+  "n": 86,
+  "ar": "الطَّارِقِ",
+  "fa": "طارق",
+  "translit": "At-Taariq",
+  "en": "The Morning Star",
+  "ayahs": 17,
+  "place": "mecca"
+ },
+ {
+  "n": 87,
+  "ar": "الأَعۡلَىٰ",
+  "fa": "اعلى",
+  "translit": "Al-A'laa",
+  "en": "The Most High",
+  "ayahs": 19,
+  "place": "mecca"
+ },
+ {
+  "n": 88,
+  "ar": "الغَاشِيَةِ",
+  "fa": "غاشیه",
+  "translit": "Al-Ghaashiya",
+  "en": "The Overwhelming",
+  "ayahs": 26,
+  "place": "mecca"
+ },
+ {
+  "n": 89,
+  "ar": "الفَجۡرِ",
+  "fa": "فجر",
+  "translit": "Al-Fajr",
+  "en": "The Dawn",
+  "ayahs": 30,
+  "place": "mecca"
+ },
+ {
+  "n": 90,
+  "ar": "البَلَدِ",
+  "fa": "بلد",
+  "translit": "Al-Balad",
+  "en": "The City",
+  "ayahs": 20,
+  "place": "mecca"
+ },
+ {
+  "n": 91,
+  "ar": "الشَّمۡسِ",
+  "fa": "شمس",
+  "translit": "Ash-Shams",
+  "en": "The Sun",
+  "ayahs": 15,
+  "place": "mecca"
+ },
+ {
+  "n": 92,
+  "ar": "اللَّيۡلِ",
+  "fa": "لیل",
+  "translit": "Al-Lail",
+  "en": "The Night",
+  "ayahs": 21,
+  "place": "mecca"
+ },
+ {
+  "n": 93,
+  "ar": "الضُّحَىٰ",
+  "fa": "ضحى",
+  "translit": "Ad-Dhuhaa",
+  "en": "The Morning Hours",
+  "ayahs": 11,
+  "place": "mecca"
+ },
+ {
+  "n": 94,
+  "ar": "الشَّرۡحِ",
+  "fa": "شرح",
+  "translit": "Ash-Sharh",
+  "en": "The Consolation",
+  "ayahs": 8,
+  "place": "mecca"
+ },
+ {
+  "n": 95,
+  "ar": "التِّينِ",
+  "fa": "تین",
+  "translit": "At-Tin",
+  "en": "The Fig",
+  "ayahs": 8,
+  "place": "mecca"
+ },
+ {
+  "n": 96,
+  "ar": "العَلَقِ",
+  "fa": "علق",
+  "translit": "Al-Alaq",
+  "en": "The Clot",
+  "ayahs": 19,
+  "place": "mecca"
+ },
+ {
+  "n": 97,
+  "ar": "القَدۡرِ",
+  "fa": "قدر",
+  "translit": "Al-Qadr",
+  "en": "The Power, Fate",
+  "ayahs": 5,
+  "place": "mecca"
+ },
+ {
+  "n": 98,
+  "ar": "البَيِّنَةِ",
+  "fa": "بینه",
+  "translit": "Al-Bayyina",
+  "en": "The Evidence",
+  "ayahs": 8,
+  "place": "medina"
+ },
+ {
+  "n": 99,
+  "ar": "الزَّلۡزَلَةِ",
+  "fa": "زلزله",
+  "translit": "Az-Zalzala",
+  "en": "The Earthquake",
+  "ayahs": 8,
+  "place": "medina"
+ },
+ {
+  "n": 100,
+  "ar": "العَادِيَاتِ",
+  "fa": "عادیات",
+  "translit": "Al-Aadiyaat",
+  "en": "The Chargers",
+  "ayahs": 11,
+  "place": "mecca"
+ },
+ {
+  "n": 101,
+  "ar": "القَارِعَةِ",
+  "fa": "قارعه",
+  "translit": "Al-Qaari'a",
+  "en": "The Calamity",
+  "ayahs": 11,
+  "place": "mecca"
+ },
+ {
+  "n": 102,
+  "ar": "التَّكَاثُرِ",
+  "fa": "تکاثر",
+  "translit": "At-Takaathur",
+  "en": "Competition",
+  "ayahs": 8,
+  "place": "mecca"
+ },
+ {
+  "n": 103,
+  "ar": "العَصۡرِ",
+  "fa": "عصر",
+  "translit": "Al-Asr",
+  "en": "The Declining Day, Epoch",
+  "ayahs": 3,
+  "place": "mecca"
+ },
+ {
+  "n": 104,
+  "ar": "الهُمَزَةِ",
+  "fa": "همزه",
+  "translit": "Al-Humaza",
+  "en": "The Traducer",
+  "ayahs": 9,
+  "place": "mecca"
+ },
+ {
+  "n": 105,
+  "ar": "الفِيلِ",
+  "fa": "فیل",
+  "translit": "Al-Fil",
+  "en": "The Elephant",
+  "ayahs": 5,
+  "place": "mecca"
+ },
+ {
+  "n": 106,
+  "ar": "قُرَيۡشٍ",
+  "fa": "قریش",
+  "translit": "Quraish",
+  "en": "Quraysh",
+  "ayahs": 4,
+  "place": "mecca"
+ },
+ {
+  "n": 107,
+  "ar": "المَاعُونِ",
+  "fa": "ماعون",
+  "translit": "Al-Maa'un",
+  "en": "Almsgiving",
+  "ayahs": 7,
+  "place": "mecca"
+ },
+ {
+  "n": 108,
+  "ar": "الكَوۡثَرِ",
+  "fa": "کوثر",
+  "translit": "Al-Kawthar",
+  "en": "Abundance",
+  "ayahs": 3,
+  "place": "mecca"
+ },
+ {
+  "n": 109,
+  "ar": "الكَافِرُونَ",
+  "fa": "کافرون",
+  "translit": "Al-Kaafiroon",
+  "en": "The Disbelievers",
+  "ayahs": 6,
+  "place": "mecca"
+ },
+ {
+  "n": 110,
+  "ar": "النَّصۡرِ",
+  "fa": "نصر",
+  "translit": "An-Nasr",
+  "en": "Divine Support",
+  "ayahs": 3,
+  "place": "medina"
+ },
+ {
+  "n": 111,
+  "ar": "المَسَدِ",
+  "fa": "مسد",
+  "translit": "Al-Masad",
+  "en": "The Palm Fibre",
+  "ayahs": 5,
+  "place": "mecca"
+ },
+ {
+  "n": 112,
+  "ar": "الإِخۡلَاصِ",
+  "fa": "اخلاص",
+  "translit": "Al-Ikhlaas",
+  "en": "Sincerity",
+  "ayahs": 4,
+  "place": "mecca"
+ },
+ {
+  "n": 113,
+  "ar": "الفَلَقِ",
+  "fa": "فلق",
+  "translit": "Al-Falaq",
+  "en": "The Dawn",
+  "ayahs": 5,
+  "place": "mecca"
+ },
+ {
+  "n": 114,
+  "ar": "النَّاسِ",
+  "fa": "ناس",
+  "translit": "An-Naas",
+  "en": "Mankind",
+  "ayahs": 6,
+  "place": "mecca"
+ }
+]

@@ -1,0 +1,248 @@
+---
+// One Telegram post. `full` renders the whole body (permalink page);
+// otherwise a reading-list entry with an excerpt.
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import type { FeedItem } from '../lib/feed-types';
+import { compact, date, duration } from '../lib/format';
+import { noteById } from '../lib/data';
+import { href } from '../lib/paths';
+import { topicsOf } from '../lib/topics';
+import { excerpt, firstLine } from '../lib/text';
+import Icon from './Icon.astro';
+import TelegramPlayer from './TelegramPlayer.astro';
+
+interface Props {
+  locale: Locale;
+  item: FeedItem;
+  full?: boolean;
+}
+const { locale, item, full = false } = Astro.props;
+const s = t(locale);
+const lang = item.lang ?? 'fa';
+const dir = lang === 'fa' || lang === 'ar' ? 'rtl' : 'ltr';
+// Readers may machine-translate posts in their browser; never the Quran translation.
+const quran = item.series === 'quran-translation';
+
+const images = item.media.filter((m) => (m.kind === 'image' || m.kind === 'video') && m.src);
+const video = item.media.find((m) => m.kind === 'video');
+const docs = item.media.filter((m) => m.kind === 'audio' || m.kind === 'document');
+const title = firstLine(item.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 110) || docs[0]?.title || '';
+const rest = item.text.slice(item.text.indexOf('\n') + 1);
+const topics = topicsOf(item);
+const permalink = href('fa', `notes/${item.id}`);
+
+// Keep readers on the site: links to other posts of the channel and to
+// Quran verses (tanzil.net/#6:108) point at the local copies.
+const bodyHtml = (item.html ?? '')
+  .replace(/href="https?:\/\/t\.me\/hamidhossaini\/(\d+)"/g, (m, id) => (noteById.has(id) ? `href="${href('fa', `notes/${id}`)}"` : m))
+  .replace(/href="https?:\/\/(?:www\.)?tanzil\.net\/[^"#]*#(\d{1,3}):(\d{1,3})"/g, (_, su, ay) => `href="${href(locale, `quran/${su}#a${ay}`)}"`)
+  .replace(/<a href="http/g, '<a target="_blank" rel="noopener" href="http');
+---
+
+<article class:list={['note', { 'note--full': full }]} id={full ? undefined : `n${item.id}`}>
+  <div class="note__meta meta">
+    <a href={full ? item.url : permalink} class="num"><time datetime={item.date}>{date(locale, item.date)}</time></a>
+    {item.views ? <span>{s.views(compact(locale, item.views))}</span> : null}
+    {lang !== locale && <span class="tag" title={s.originalLanguage}>{lang.toUpperCase()}</span>}
+    {topics.slice(0, 2).map((k) => <a class="tag" href={href(locale, `notes/topic/${k}`)}>{s.topics[k]}</a>)}
+  </div>
+
+  <div class="note__body" lang={lang} dir={dir} data-tr={quran ? undefined : ''} translate={quran ? 'no' : undefined}>
+    {
+      item.forwardedFrom && (
+        <p class="note__fwd meta" translate="no">
+          {s.forwardedFrom}{' '}
+          <a href={item.forwardedFrom.url} rel="noopener" target="_blank">
+            {item.forwardedFrom.name}
+          </a>
+        </p>
+      )
+    }
+
+    {
+      full ? (
+        <div class="prose" set:html={bodyHtml} />
+      ) : (
+        <>
+          {title && (
+            <h2 class="note__title serif">
+              <a href={permalink}>{title}</a>
+            </h2>
+          )}
+          {rest && rest !== item.text && <p class="note__excerpt">{excerpt(rest, 260)}</p>}
+        </>
+      )
+    }
+  </div>
+
+  {
+    video ? (
+      <TelegramPlayer locale={locale} post={item.id} poster={video.src} width={video.width} height={video.height} duration={video.duration} full={full} />
+    ) : images.length ? (
+      <div class:list={['note__images', { 'note__images--grid': images.length > 1 }]}>
+        {images.slice(0, full ? 10 : 4).map((m) => (
+          <a href={full ? item.url : permalink} class="frame">
+            <img src={m.src} width={m.width} height={m.height} alt="" loading="lazy" decoding="async" />
+          </a>
+        ))}
+      </div>
+    ) : null
+  }
+
+  {
+    docs.length > 0 && (
+      <ul class="note__docs">
+        {docs.map((d) => (
+          <li>
+            <a href={item.url} rel="noopener" target="_blank">
+              <Icon name={d.kind === 'audio' ? 'audio' : 'file'} />
+              <span class="note__doc-title" dir="auto">{d.title ?? (d.kind === 'audio' ? s.notes.audio : s.notes.document)}</span>
+              {d.subtitle && <span class="meta" dir="auto">{d.subtitle}</span>}
+              <span class="link-arrow">{d.kind === 'audio' ? s.notes.listen : s.notes.download}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  {
+    full && item.linkPreview && (
+      <a class="note__preview" href={item.linkPreview.url} rel="noopener" target="_blank" dir="auto">
+        {item.linkPreview.site && <span class="meta">{item.linkPreview.site}</span>}
+        {item.linkPreview.title && <strong>{item.linkPreview.title}</strong>}
+        {item.linkPreview.description && <span class="note__preview-desc">{excerpt(item.linkPreview.description, 180)}</span>}
+      </a>
+    )
+  }
+
+  {
+    !full && (
+      <div class="note__foot">
+        <a class="link-arrow" href={permalink}>
+          {s.readMore}
+          <Icon name="arrow" class="flip" />
+        </a>
+        <a class="link-arrow muted" href={item.url} rel="noopener" target="_blank">
+          Telegram <Icon name="external" />
+        </a>
+      </div>
+    )
+  }
+</article>
+
+<style>
+  .note {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: var(--space-6);
+  }
+  .note--full {
+    padding-block-start: 0;
+  }
+  .note__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+  }
+  .note__meta > * + *::before {
+    content: none;
+  }
+  .note__meta a:not(.tag) {
+    text-decoration: none;
+    color: var(--ink-3);
+  }
+  .note__meta a.tag {
+    text-decoration: none;
+  }
+  .note__meta a.tag:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .note__title {
+    font-size: 1.3rem;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+  .note__title a {
+    text-decoration: none;
+  }
+  .note__title a:hover {
+    text-decoration: underline;
+  }
+  .note__excerpt {
+    color: var(--ink-2);
+    line-height: 1.95;
+    margin-block-start: var(--space-2);
+  }
+  .note__fwd {
+    margin-block-end: var(--space-2);
+  }
+  .note__images {
+    max-width: 30rem;
+  }
+  .note__images--grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-1);
+  }
+  .note__images--grid .frame {
+    aspect-ratio: 1;
+  }
+  .note--full .note__images {
+    max-width: 40rem;
+  }
+  .note__docs {
+    list-style: none;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+  .note__docs li + li {
+    border-block-start: 1px solid var(--rule);
+  }
+  .note__docs a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    text-decoration: none;
+  }
+  .note__docs a:hover {
+    background: var(--paper-2);
+  }
+  .note__docs :global(svg:first-child) {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--accent);
+  }
+  .note__doc-title {
+    font-weight: 500;
+  }
+  .note__docs .link-arrow {
+    margin-inline-start: auto;
+  }
+  .note__preview {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border-inline-start: 2px solid var(--accent);
+    background: var(--paper-2);
+    text-decoration: none;
+    max-width: 40rem;
+  }
+  .note__preview-desc {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+  .note__foot {
+    display: flex;
+    gap: var(--space-5);
+  }
+  .note__foot .muted {
+    color: var(--ink-3);
+  }
+</style>

@@ -1,0 +1,139 @@
+---
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import type { FeedItem } from '../lib/feed-types';
+import { date, duration, num } from '../lib/format';
+import { href } from '../lib/paths';
+import { excerpt, firstLine } from '../lib/text';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  item: FeedItem;
+}
+const { locale, item } = Astro.props;
+const s = t(locale);
+
+const SOURCE = {
+  telegram: { icon: 'telegram', label: 'Telegram' },
+  youtube: { icon: 'youtube', label: 'YouTube' },
+  tiktok: { icon: 'tiktok', label: 'TikTok' },
+  instagram: { icon: 'instagram', label: 'Instagram' },
+} as const;
+
+const src = SOURCE[item.source];
+const clean = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '');
+const docTitle = item.media.find((m) => m.title)?.title;
+const title =
+  item.title && !/^#/.test(item.title)
+    ? item.title
+    : firstLine(clean(item.text), 120) || docTitle || (item.source === 'youtube' ? item.title ?? '' : '');
+const sub = item.source === 'telegram' ? excerpt(clean(item.text.slice(item.text.indexOf('\n') + 1)), 140) : undefined;
+const link =
+  item.source === 'telegram'
+    ? href('fa', `notes/${item.id}`)
+    : item.source === 'youtube' && item.episode
+      ? href(locale, `videos#ep-${item.episode}`)
+      : item.url;
+const external = link.startsWith('http');
+const thumb = item.media.find((m) => m.src);
+const lang = item.lang ?? 'fa';
+const vertical = item.kind === 'short' || item.source === 'tiktok';
+---
+
+<li class="lrow">
+  <a href={link} rel={external ? 'noopener' : undefined} target={external ? '_blank' : undefined}>
+    <span class="lrow__when meta">
+      <time datetime={item.date}>{date(locale, item.date, 'short')}</time>
+    </span>
+    <span class="lrow__src meta"><Icon name={src.icon} /> {src.label}{item.episode ? ` · ${s.episode(num(locale, item.episode))}` : ''}</span>
+    <span class="lrow__text" lang={lang} dir="auto" {...(item.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
+      <span class="lrow__title">{title}</span>
+      {sub && sub !== title && <span class="lrow__sub">{sub}</span>}
+    </span>
+    {
+      thumb && (
+        <span class:list={['lrow__thumb', 'frame', { 'lrow__thumb--v': vertical }]}>
+          <img src={thumb.src} alt="" loading="lazy" decoding="async" width={thumb.width} height={thumb.height} />
+          {thumb.duration ? <span class="frame__badge">{duration(thumb.duration)}</span> : null}
+        </span>
+      )
+    }
+  </a>
+</li>
+
+<style>
+  .lrow a {
+    display: grid;
+    grid-template-columns: 8.5rem 1fr 6.5rem;
+    grid-template-areas:
+      'when text thumb'
+      'src text thumb';
+    gap: var(--space-1) var(--space-5);
+    padding-block: var(--space-4);
+    text-decoration: none;
+    align-items: start;
+  }
+  .lrow a:hover .lrow__title {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+  }
+  .lrow__when {
+    grid-area: when;
+  }
+  .lrow__src {
+    grid-area: src;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-size: 0.8125rem;
+  }
+  .lrow__src :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+  .lrow__text {
+    grid-area: text;
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  .lrow__title {
+    font-weight: 500;
+    line-height: 1.6;
+  }
+  .lrow__sub {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    line-height: 1.8;
+  }
+  .lrow__thumb {
+    grid-area: thumb;
+    aspect-ratio: 16 / 10;
+  }
+  .lrow__thumb--v {
+    aspect-ratio: 3 / 4;
+    width: 4.5rem;
+    justify-self: end;
+  }
+  .lrow__thumb .frame__badge {
+    font-size: 0.6875rem;
+  }
+  @media (max-width: 40rem) {
+    .lrow a {
+      grid-template-columns: 1fr 5rem;
+      grid-template-areas:
+        'when thumb'
+        'text thumb'
+        'src thumb';
+      gap: var(--space-1) var(--space-4);
+    }
+    .lrow__src {
+      display: none;
+    }
+    .lrow__thumb--v {
+      width: 3.75rem;
+    }
+  }
+</style>

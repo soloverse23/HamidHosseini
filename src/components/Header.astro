@@ -1,0 +1,592 @@
+---
+// Two tiers:
+//  1. A thin channel bar: every platform with its live follower count, the
+//     language switch and the theme toggle.
+//  2. The nameplate (name in the page's script, quietly repeated in the other
+//     script) and the numbered section index, like a book's contents.
+import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { ui } from '../i18n/ui';
+import { compact, num } from '../lib/format';
+import { href } from '../lib/paths';
+import { CHANNELS } from '../lib/social';
+import Icon from './Icon.astro';
+import Mark from './Mark.astro';
+
+interface Props {
+  locale: Locale;
+  /** Current path without the locale prefix, used for the language switch */
+  path: string;
+}
+const { locale, path } = Astro.props;
+const s = t(locale);
+const u = ui(locale);
+const section = path.split('/')[0];
+// Each language's name in the reader's current language, e.g. "Persian" / "فارسی".
+const gloss = new Intl.DisplayNames([LOCALE_META[locale].intl.split('-u-')[0]], { type: 'language' });
+const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
+
+const NAV = ['writings', 'quran', 'notes', 'videos', 'tiktok', 'instagram'] as const;
+const label: Record<string, string> = {
+  writings: s.nav.writings,
+  quran: s.nav.quran,
+  notes: s.nav.notes,
+  videos: s.nav.videos,
+  tiktok: s.nav.tiktok,
+  instagram: s.nav.instagram,
+  about: s.nav.about,
+};
+---
+
+<header class="site-header">
+  <div class="topbar">
+    <div class="wrap topbar__inner">
+      <ul class="social" aria-label={u.channels}>
+        {
+          CHANNELS.map((c) => (
+            <li>
+              <a
+                href={c.url}
+                rel="me noopener"
+                target="_blank"
+                class={`social__link is-${c.platform}`}
+                style={`--brand:${c.brand}`}
+                title={`${c.label} · ${c.name}`}
+              >
+                <Icon name={c.platform} label={`${c.label} ${c.handle}`} />
+                {c.followers ? <span class="social__n num">{compact(locale, c.followers)}</span> : null}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="topbar__end">
+        <details class="lang">
+          <summary class="lang__btn" aria-label={`${u.language}: ${LOCALE_META[locale].label}`}>
+            <Icon name="globe" />
+            <span class="lang__current">{LOCALE_META[locale].label}</span>
+            <Icon name="chevron" class="lang__chev" />
+          </summary>
+          <div class="lang__panel">
+            <p class="lang__title">{u.language}</p>
+            <ul>
+              {
+                LOCALES.map((l) => (
+                  <li>
+                    <a
+                      href={href(l, path)}
+                      hreflang={l}
+                      aria-current={l === locale ? 'true' : undefined}
+                      data-set-locale={l}
+                    >
+                      <span class="lang__code" aria-hidden="true">{LOCALE_META[l].short}</span>
+                      <span class="lang__names">
+                        <span class="lang__native" lang={l} dir={LOCALE_META[l].dir}>
+                          {LOCALE_META[l].label}
+                        </span>
+                        {l !== locale && <span class="lang__gloss">{gloss.of(l)}</span>}
+                      </span>
+                      {l === locale && <Icon name="check" class="lang__check" />}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </details>
+        <button class="icon-btn theme-toggle" type="button" aria-label={s.theme.toggle}>
+          <Icon name="moon" class="i-moon" />
+          <Icon name="sun" class="i-sun" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap mainbar">
+    <a class="plate" href={href(locale)} aria-label={s.nav.home}>
+      <Mark size={34} class="plate__mark" />
+      <span class="plate__name">{s.name}</span>
+    </a>
+
+    <nav class="primary" aria-label={s.contents}>
+      <ol>
+        {
+          NAV.map((key, i) => (
+            <li>
+              <a href={href(locale, key)} aria-current={section === key ? 'page' : undefined}>
+                <span class="primary__no num" aria-hidden="true">
+                  {pad(i + 1)}
+                </span>
+                <span>{label[key]}</span>
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a href={href(locale, 'about')} aria-current={section === 'about' ? 'page' : undefined}>
+            <span>{label.about}</span>
+          </a>
+        </li>
+      </ol>
+    </nav>
+
+    <a
+      class="search-btn"
+      href={href(locale, 'search')}
+      data-search-open
+      aria-label={s.search.label}
+      aria-keyshortcuts="Meta+K Control+K /"
+      aria-current={section === 'search' ? 'page' : undefined}
+    >
+      <Icon name="search" />
+      <span class="search-btn__text">{s.search.open}</span>
+      <span class="search-btn__keys" aria-hidden="true"><span class="kbd" data-mod-key>Ctrl</span><span class="kbd">K</span></span>
+    </a>
+  </div>
+</header>
+
+<script>
+  const menu = document.querySelector<HTMLDetailsElement>('.lang');
+  if (menu) {
+    document.addEventListener('click', (e) => {
+      if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.open) {
+        menu.open = false;
+        menu.querySelector('summary')?.focus();
+      }
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    background: var(--paper);
+    border-block-end: 1px solid var(--rule);
+  }
+
+  /* ---------- Tier 1: channel bar ---------- */
+  .topbar {
+    background: var(--paper-2);
+    border-block-end: 1px solid var(--rule);
+    font-size: 0.8125rem;
+  }
+  .topbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 2.5rem;
+  }
+  .social {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    list-style: none;
+    padding: 0;
+    margin-inline-start: calc(-1 * var(--space-2));
+  }
+  .social__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem var(--space-2);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--ink-2);
+    --icon-cut: var(--paper-2);
+  }
+  .social__link :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    transition: color 0.15s;
+  }
+  .social__link:hover {
+    color: var(--ink);
+    background: var(--paper);
+    --icon-cut: var(--paper);
+  }
+  .social__link:hover :global(svg) {
+    color: var(--brand);
+  }
+  :global(:root[data-theme='dark']) .is-tiktok:hover :global(svg) {
+    color: var(--ink);
+  }
+  .social__n {
+    font-size: 0.75rem;
+    letter-spacing: 0.01em;
+  }
+  .topbar__end {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  /* Language menu: a quiet button that opens a small panel. */
+  .lang {
+    position: relative;
+  }
+  .lang__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    line-height: 1.3;
+    transition: border-color 0.15s;
+  }
+  .lang__btn::-webkit-details-marker {
+    display: none;
+  }
+  .lang__btn:hover,
+  .lang[open] .lang__btn {
+    border-color: var(--ink);
+  }
+  .lang__btn :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--ink-2);
+  }
+  .lang__btn :global(.lang__chev) {
+    width: 0.75rem;
+    height: 0.75rem;
+    transform: rotate(90deg);
+    transition: transform 0.2s ease;
+  }
+  .lang[open] .lang__btn :global(.lang__chev) {
+    transform: rotate(-90deg);
+  }
+  .lang__current {
+    font-weight: 500;
+  }
+  :root[dir='rtl'] .lang__current {
+    font-family: var(--font-persian);
+  }
+  .lang__panel {
+    position: absolute;
+    z-index: 30;
+    inset-block-start: calc(100% + 0.5rem);
+    inset-inline-end: 0;
+    min-width: 15rem;
+    padding: var(--space-2);
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    border-radius: 8px;
+    box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.35);
+    transform-origin: top var(--end);
+    animation: lang-in 0.18s ease-out;
+  }
+  @keyframes lang-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+  }
+  .lang__title {
+    padding: var(--space-1) var(--space-2) var(--space-2);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  :root[dir='rtl'] .lang__title {
+    letter-spacing: 0;
+    font-size: 0.75rem;
+  }
+  .lang__panel ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .lang__panel a {
+    display: grid;
+    grid-template-columns: 2rem 1fr auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: 5px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .lang__panel a:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+  .lang__panel a[aria-current='true'] {
+    background: var(--accent-wash);
+  }
+  .lang__code {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--paper-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  .lang__panel a[aria-current='true'] .lang__code {
+    background: var(--accent);
+    color: var(--paper);
+  }
+  .lang__names {
+    display: grid;
+    line-height: 1.35;
+  }
+  .lang__native {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-align: var(--start);
+  }
+  .lang__native[lang='fa'],
+  .lang__native[lang='ar'] {
+    font-family: var(--font-persian);
+  }
+  .lang__native[lang='en'],
+  .lang__native[lang='ro'] {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  .lang__gloss {
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  .lang__panel :global(.lang__check) {
+    width: 1rem;
+    height: 1rem;
+    color: var(--accent);
+  }
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0;
+    background: none;
+    color: var(--ink-2);
+    cursor: pointer;
+    border-radius: var(--radius);
+    flex: none;
+  }
+  .topbar .icon-btn {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+  .icon-btn:hover {
+    color: var(--ink);
+    background: var(--paper-3);
+  }
+  .icon-btn :global(svg) {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+  .theme-toggle :global(.i-sun) {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .theme-toggle :global(.i-sun) {
+    display: block;
+  }
+  :global(:root[data-theme='dark']) .theme-toggle :global(.i-moon) {
+    display: none;
+  }
+
+  /* ---------- Tier 2: nameplate + contents ---------- */
+  .mainbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'plate nav search';
+    align-items: center;
+    gap: var(--space-5);
+    min-height: 4.75rem;
+  }
+  .plate {
+    grid-area: plate;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .plate:hover {
+    color: var(--ink);
+  }
+  .plate :global(.plate__mark) {
+    color: var(--accent);
+    flex: none;
+    transition: transform 0.4s ease;
+  }
+  .plate:hover :global(.plate__mark) {
+    transform: rotate(45deg);
+  }
+  .plate__name {
+    font-family: var(--font-serif);
+    font-size: 1.375rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  :root[dir='rtl'] .plate__name {
+    font-weight: 700;
+    font-size: 1.3125rem;
+    line-height: 1.5;
+  }
+  .primary {
+    grid-area: nav;
+    justify-self: end;
+    min-width: 0;
+  }
+  .primary ol {
+    display: flex;
+    gap: var(--space-1);
+    list-style: none;
+    padding: 0;
+  }
+  .primary a {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: var(--space-2) var(--space-3);
+    text-decoration: none;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    white-space: nowrap;
+    border-radius: var(--radius);
+  }
+  .primary__no {
+    font-family: var(--font-serif);
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  .primary a:hover {
+    color: var(--ink);
+    background: var(--paper-2);
+  }
+  .primary a[aria-current='page'] {
+    color: var(--ink);
+  }
+  .primary a[aria-current='page'] .primary__no {
+    color: var(--accent);
+  }
+  .primary a[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset-inline: var(--space-3);
+    inset-block-end: -1.05rem;
+    height: 2px;
+    background: var(--accent);
+  }
+  .search-btn {
+    grid-area: search;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius);
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .search-btn:hover,
+  .search-btn[aria-current='page'] {
+    color: var(--ink);
+    background: var(--paper-3);
+  }
+  .search-btn :global(svg) {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: none;
+  }
+  .search-btn__text,
+  .search-btn__keys {
+    display: none;
+  }
+  /* Wide screens: a field-like button that shows the shortcut. */
+  @media (min-width: 80rem) {
+    .search-btn {
+      width: auto;
+      min-width: 9.5rem;
+      justify-content: flex-start;
+      padding-inline: 0.7rem 0.4rem;
+      border: 1px solid var(--rule-strong);
+      border-radius: 999px;
+      background: var(--paper);
+      font-size: 0.875rem;
+      color: var(--ink-3);
+    }
+    .search-btn:hover,
+    .search-btn[aria-current='page'] {
+      border-color: var(--ink);
+      background: var(--paper);
+    }
+    .search-btn__text {
+      display: inline;
+      margin-inline-end: auto;
+    }
+    .search-btn__keys {
+      display: inline-flex;
+      gap: 2px;
+    }
+  }
+
+  /* ---------- Narrower screens ---------- */
+  @media (max-width: 34rem) {
+    .lang__current {
+      display: none;
+    }
+  }
+  @media (max-width: 62rem) {
+    .mainbar {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        'plate search'
+        'nav nav';
+      gap: 0 var(--space-3);
+      padding-block-start: var(--space-3);
+      min-height: 0;
+    }
+    .primary {
+      justify-self: stretch;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+      margin-block-start: var(--space-2);
+    }
+    .primary::-webkit-scrollbar {
+      display: none;
+    }
+    .primary a {
+      padding-block: var(--space-2) var(--space-3);
+    }
+    .primary a[aria-current='page']::after {
+      inset-block-end: 0;
+    }
+  }
+  @media (max-width: 34rem) {
+    .social__n {
+      display: none;
+    }
+    .social {
+      gap: 0;
+    }
+    .plate__name {
+      font-size: 1.125rem;
+    }
+    .plate :global(.plate__mark) {
+      width: 28px;
+      height: 28px;
+    }
+  }
+</style>

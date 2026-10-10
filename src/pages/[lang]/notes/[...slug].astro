@@ -1,0 +1,326 @@
+---
+// /notes/                     all posts, page 1
+// /notes/page/N/              all posts, page N
+// /notes/topic/K/[page/N/]    one topic
+// /notes/<id>/                a single post
+import Chapter from '../../../components/Chapter.astro';
+import Icon from '../../../components/Icon.astro';
+import FeedCard from '../../../components/FeedCard.astro';
+import Note from '../../../components/Note.astro';
+import SearchField from '../../../components/SearchField.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { t } from '../../../i18n/strings';
+import Base from '../../../layouts/Base.astro';
+import { notes, quranFa, telegram } from '../../../lib/data';
+import type { FeedItem } from '../../../lib/feed-types';
+import { compact, date, num, plain } from '../../../lib/format';
+import { notesByDay } from '../../../lib/feed';
+import { href } from '../../../lib/paths';
+import { firstLine, excerpt } from '../../../lib/text';
+import { TOPIC_KEYS, topicsOf, type TopicKey } from '../../../lib/topics';
+
+type Props =
+  | { kind: 'list'; topic?: TopicKey; page: number; pages: number; items: FeedItem[] }
+  | { kind: 'post'; item: FeedItem; newer?: FeedItem; older?: FeedItem };
+
+export function getStaticPaths() {
+  const PER_PAGE = 24;
+  const byTopic = new Map<TopicKey, FeedItem[]>(TOPIC_KEYS.map((k) => [k, []]));
+  for (const n of notes) for (const k of topicsOf(n)) byTopic.get(k)!.push(n);
+
+  const lists: { slug: string | undefined; props: Props }[] = [];
+  const paginate = (items: FeedItem[], base: string, topic?: TopicKey) => {
+    const pages = Math.max(1, Math.ceil(items.length / PER_PAGE));
+    for (let p = 1; p <= pages; p++) {
+      const slug = [base, p > 1 ? `page/${p}` : ''].filter(Boolean).join('/') || undefined;
+      lists.push({
+        slug,
+        props: { kind: 'list', topic, page: p, pages, items: items.slice((p - 1) * PER_PAGE, p * PER_PAGE) },
+      });
+    }
+  };
+  paginate(notes, '');
+  for (const [k, items] of byTopic) paginate(items, `topic/${k}`, k);
+
+  const posts = notes.map((item, i) => ({
+    slug: item.id,
+    props: { kind: 'post', item, newer: notes[i - 1], older: notes[i + 1] } as Props,
+  }));
+
+  // Individual posts are Persian text: one copy, under /fa/. Other locales link to it.
+  return LOCALES.flatMap((lang) =>
+    [...lists, ...(lang === 'fa' ? posts : [])].map((r) => ({ params: { lang, slug: r.slug }, props: r.props })),
+  );
+}
+
+const locale = Astro.params.lang as Locale;
+const slug = Astro.params.slug ?? '';
+const s = t(locale);
+const props = Astro.props as Props;
+
+const topicCounts = Object.fromEntries(
+  TOPIC_KEYS.map((k) => [k, notes.filter((n) => topicsOf(n).includes(k)).length]),
+) as Record<TopicKey, number>;
+
+const listHref = (topic: TopicKey | undefined, page: number) =>
+  href(locale, ['notes', topic ? `topic/${topic}` : '', page > 1 ? `page/${page}` : ''].filter(Boolean).join('/'));
+
+// For translation posts, link to the verses they produced.
+const quranRefs =
+  props.kind === 'post'
+    ? Object.entries(quranFa.surahs).flatMap(([surah, ayahs]) =>
+        Object.entries(ayahs)
+          .filter(([, v]) => String(v.post) === props.item.id)
+          .map(([a]) => ({ surah: Number(surah), ayah: Number(a) })),
+      )
+    : [];
+const firstRef = quranRefs[0];
+const lastRef = quranRefs.at(-1);
+
+const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 90) : '';
+---
+
+{
+  props.kind === 'list' ? (
+    <Base
+      locale={locale}
+      path={`notes/${slug}`}
+      title={props.topic ? s.topics[props.topic] : s.sections.notes.title}
+      description={s.sections.notes.lede}
+      noindex
+      alternates={false}
+    >
+      <div class="wrap">
+        <Chapter locale={locale} no={3} title={props.topic ? s.topics[props.topic] : s.sections.notes.title} lede={s.sections.notes.lede}>
+          <span class="meta">
+            <span>{s.posts(num(locale, notes.length))}</span>
+            {telegram.profiles.main?.followers && <span>{s.followers(compact(locale, telegram.profiles.main.followers))}</span>}
+          </span>
+          <a class="link-arrow" href="https://t.me/hamidhossaini" rel="noopener" target="_blank">
+            <Icon name="telegram" /> {s.followOn('Telegram')}
+          </a>
+        </Chapter>
+
+        <div class="notes-layout">
+          <nav class="topics" aria-label={s.notes.topics}>
+            <SearchField locale={locale} type="notes" class="topics__search" />
+            <p class="eyebrow">{s.notes.topics}</p>
+            <ul class="chips">
+              <li>
+                <a class="chip" href={listHref(undefined, 1)} aria-current={!props.topic ? 'page' : undefined}>
+                  {s.notes.all}
+                  <span class="num">{num(locale, notes.length)}</span>
+                </a>
+              </li>
+              {TOPIC_KEYS.filter((k) => topicCounts[k] > 0).map((k) => (
+                <li>
+                  <a class="chip" href={listHref(k, 1)} aria-current={props.topic === k ? 'page' : undefined}>
+                    {s.topics[k]}
+                    <span class="num">{num(locale, topicCounts[k])}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div class="feed">
+            <ol class="days">
+              {notesByDay(props.items).map((d) => (
+                <li class="day">
+                  <h2 class="day__head">
+                    <time datetime={d.key}>{date(locale, d.date)}</time>
+                  </h2>
+                  <div class="day__entries">
+                    {d.entries.map((e) => (
+                      <FeedCard locale={locale} entry={e} />
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            <nav class="pager" aria-label={s.page(num(locale, props.page), num(locale, props.pages))}>
+              {props.page > 1 ? (
+                <a class="link-arrow" href={listHref(props.topic, props.page - 1)}>
+                  <Icon name="arrow" class="flip-back" /> {s.prev}
+                </a>
+              ) : (
+                <span />
+              )}
+              <span class="muted num">{s.page(num(locale, props.page), num(locale, props.pages))}</span>
+              {props.page < props.pages ? (
+                <a class="link-arrow" href={listHref(props.topic, props.page + 1)}>
+                  {s.next} <Icon name="arrow" class="flip" />
+                </a>
+              ) : (
+                <span />
+              )}
+            </nav>
+          </div>
+        </div>
+      </div>
+    </Base>
+  ) : (
+    <Base
+      locale={locale}
+      path={`notes/${slug}`}
+      title={postTitle || s.sections.notes.title}
+      description={excerpt(props.item.text, 160)}
+      switchPath="notes"
+      alternates={false}
+      image={props.item.media.find((m) => m.src?.startsWith('/'))?.src}
+      ogType="article"
+      published={props.item.date}
+      canonicalLocale="fa"
+      crumbs={[
+        { name: s.sections.notes.title, path: 'notes' },
+        { name: postTitle || `#${props.item.id}`, path: `notes/${slug}` },
+      ]}
+      jsonLd={{
+        '@context': 'https://schema.org',
+        '@type': 'SocialMediaPosting',
+        headline: postTitle,
+        articleBody: props.item.text,
+        datePublished: props.item.date,
+        inLanguage: props.item.lang ?? 'fa',
+        url: props.item.url,
+        mainEntityOfPage: new URL(href('fa', `notes/${slug}`), Astro.site).toString(),
+        author: { '@type': 'Person', name: 'Seyed Hamid Hosseini', url: new URL('/fa/', Astro.site).toString() },
+        ...(props.item.media.find((m) => m.src?.startsWith('/'))
+          ? { image: new URL(props.item.media.find((m) => m.src?.startsWith('/'))!.src!, Astro.site).toString() }
+          : {}),
+        ...(props.item.views ? { interactionStatistic: { '@type': 'InteractionCounter', interactionType: 'https://schema.org/ViewAction', userInteractionCount: props.item.views } } : {}),
+      }}
+    >
+      <div class="wrap post">
+        <p class="crumb meta">
+          <a href={href(locale, 'notes')}>{s.sections.notes.title}</a>
+          <span class="num">#{plain(locale, Number(props.item.id))}</span>
+        </p>
+
+        <Note locale={locale} item={props.item} full />
+
+        <div class="post__actions btn-row">
+          <a class="btn btn--primary" href={props.item.url} rel="noopener" target="_blank">
+            <Icon name="telegram" /> {s.openOn('Telegram')}
+          </a>
+          {firstRef && lastRef && (
+            <a class="btn" href={href(locale, `quran/${firstRef.surah}#a${firstRef.ayah}`)}>
+              <Icon name="book" /> {s.nav.quran} {num(locale, firstRef.surah)}:{num(locale, firstRef.ayah)}
+              {lastRef.ayah !== firstRef.ayah ? `–${num(locale, lastRef.ayah)}` : ''}
+            </a>
+          )}
+        </div>
+
+        <nav class="post__nav">
+          {props.newer ? (
+            <a href={href(locale, `notes/${props.newer.id}`)}>
+              <span class="meta">{s.prev}</span>
+              <span class="post__nav-title" lang={props.newer.lang} dir="auto" {...(props.newer.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
+                {firstLine(props.newer.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 70) || '…'}
+              </span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {props.older ? (
+            <a href={href(locale, `notes/${props.older.id}`)} class="post__nav-older">
+              <span class="meta">{s.next}</span>
+              <span class="post__nav-title" lang={props.older.lang} dir="auto" {...(props.older.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
+                {firstLine(props.older.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 70) || '…'}
+              </span>
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      </div>
+    </Base>
+  )
+}
+
+<style>
+  :global(.topics__search) {
+    margin-block-end: var(--space-5);
+  }
+  .notes-layout {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 62rem) {
+    .notes-layout {
+      grid-template-columns: 14rem minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+    .topics {
+      position: sticky;
+      inset-block-start: var(--space-5);
+      align-self: start;
+    }
+    .topics .chips {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+  .topics .eyebrow {
+    margin-block-end: var(--space-3);
+  }
+  .topics ul {
+    list-style: none;
+    padding: 0;
+  }
+  .feed {
+    min-width: 0;
+  }
+  .feed .day {
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 80rem) {
+    .feed .day {
+      grid-template-columns: 9rem minmax(0, 1fr);
+    }
+  }
+  .feed .rows > li:first-child {
+    border-block-start: 0;
+  }
+  .feed .rows > li > :global(.note) {
+    padding-block: var(--space-6);
+  }
+  :global(.flip-back) {
+    transform: scaleX(-1);
+  }
+  :global(:root[dir='rtl'] .flip-back) {
+    transform: none;
+  }
+
+  .post {
+    max-width: 44rem;
+  }
+  .crumb {
+    margin-block-end: var(--space-5);
+  }
+  .crumb a {
+    color: var(--accent);
+  }
+  .post__actions {
+    margin-block: var(--space-6);
+  }
+  .post__nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+    border-block-start: 1px solid var(--rule);
+    padding-block-start: var(--space-5);
+  }
+  .post__nav a {
+    display: grid;
+    gap: var(--space-1);
+    text-decoration: none;
+  }
+  .post__nav-older {
+    text-align: end;
+  }
+  .post__nav-title {
+    font-weight: 500;
+  }
+</style>

@@ -1,0 +1,1176 @@
+---
+import '@fontsource/amiri-quran/400.css';
+import Icon from '../../components/Icon.astro';
+import QuranMap from '../../components/QuranMap.astro';
+import SearchField from '../../components/SearchField.astro';
+import Timeline from '../../components/Timeline.astro';
+import YouTubePlayer from '../../components/YouTubePlayer.astro';
+import { ARTICLES, BOOKS, LECTURES } from '../../data/writings';
+import { LOCALE_META, type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import { ui } from '../../i18n/ui';
+import Base from '../../layouts/Base.astro';
+import {
+  CHANNEL_URLS,
+  arabic,
+  episodes,
+  instagram,
+  lectureSessions,
+  notes,
+  quranFa,
+  quranNow,
+  shorts,
+  surahs,
+  surahsStarted,
+  tiktok,
+  totalTranslated,
+  youtube,
+} from '../../lib/data';
+import { TIMELINE, TIMELINE_SPAN, featuredNote } from '../../lib/feed';
+import { compact, date, num } from '../../lib/format';
+import { href, localePaths } from '../../lib/paths';
+import { CHANNELS } from '../../lib/social';
+import { excerpt, firstLine } from '../../lib/text';
+import { topicsOf } from '../../lib/topics';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const u = ui(locale);
+const n = (x: number) => num(locale, x);
+const pad = (i: number) => n(i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
+const dirOf = (lang?: string) => (lang === 'fa' || lang === 'ar' ? 'rtl' : 'ltr');
+const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
+
+/* Hero: the newest written note */
+const feat = featuredNote();
+const featTitle = feat ? firstLine(strip(feat.text), 140) : '';
+const featBody = feat ? excerpt(strip(feat.text.slice(feat.text.indexOf('\n') + 1)), 520) : '';
+const featTopic = feat ? topicsOf(feat)[0] : undefined;
+
+/* Now: Quran */
+const nowSurah = quranNow ? surahs[quranNow.surah - 1] : undefined;
+const nowVerse = quranNow ? quranFa.surahs[quranNow.surah]?.[quranNow.ayah] : undefined;
+const nowArabic = quranNow ? arabic[quranNow.surah]?.[quranNow.ayah - 1] : undefined;
+const surahName = (m: (typeof surahs)[number]) => (locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit);
+
+/* Now: episode */
+const ep = episodes[0];
+const prefer: ('fa' | 'ro')[] = locale === 'fa' || locale === 'ar' ? ['fa', 'ro'] : ['ro', 'fa'];
+const epMain = ep ? (ep[prefer[0]] ?? ep[prefer[1]]) : undefined;
+const epOther = ep ? (ep[prefer[0]] ? ep[prefer[1]] : undefined) : undefined;
+const cleanTitle = (x = '') => x.replace(/^\s*[\d۰-۹]+\s*[-–.]\s*/, '');
+
+/* Now: short videos */
+const shortPool = [...tiktok.items, ...shorts].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+
+/* Timeline: the first ten days; later windows load on demand */
+const first = TIMELINE[0];
+const next = TIMELINE[1];
+
+/* Index of sections */
+const sessionsTotal = LECTURES.reduce((a, l) => a + (lectureSessions[l.id]?.length ?? 0), 0);
+const sections = [
+  { key: 'writings', title: s.sections.writings.title, count: BOOKS.length + ARTICLES.length + LECTURES.length, detail: s.books.sessions(n(sessionsTotal)) },
+  { key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` },
+  { key: 'notes', title: s.sections.notes.title, count: notes.length, detail: 'Telegram' },
+  { key: 'videos', title: s.sections.videos.title, count: youtube.items.length, detail: s.episode(n(ep?.n ?? 0)) },
+  { key: 'tiktok', title: s.sections.tiktok.title, count: tiktok.items.length, detail: 'TikTok' },
+  { key: 'instagram', title: s.sections.instagram.title, count: instagram.items.length || undefined, detail: 'Instagram' },
+];
+
+const origin = (Astro.site ?? new URL('https://hamidhosseini.vercel.app')).origin;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${origin}/#website`,
+    url: `${origin}/${locale}/`,
+    name: s.name,
+    description: s.tagline,
+    inLanguage: locale,
+    publisher: { '@id': `${origin}/#person` },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: { '@type': 'EntryPoint', urlTemplate: `${origin}/${locale}/search/?q={search_term_string}` },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': `${origin}/#person`,
+    name: s.name,
+    alternateName: ['سید حمید حسینی', 'Hamid Hosseini'],
+    url: `${origin}/${locale}/`,
+    jobTitle: 'Islamic scholar',
+    knowsLanguage: ['fa', 'ro', 'ar', 'en'],
+    sameAs: Object.values(CHANNEL_URLS),
+  },
+];
+---
+
+<Base locale={locale} path="" jsonLd={jsonLd}>
+  <!-- ============ Hero ============ -->
+  <section class="wrap hero">
+    <div class="hero__intro">
+      <h1 class="hero__name">{s.name}</h1>
+      <p class="hero__tag">{s.tagline}</p>
+      <p class="hero__actions">
+        <a class="btn btn--primary" href={href(locale, 'notes')}>
+          {u.readNotes}
+          <Icon name="arrow" class="flip" />
+        </a>
+        <a class="btn" href={href(locale, 'quran')}>
+          <Icon name="book" />
+          {u.openQuran}
+        </a>
+      </p>
+      <SearchField locale={locale} class="hero__search" />
+    </div>
+
+    {
+      feat && (
+        <article class="feature">
+          <p class="feature__label">
+            <span>{u.featured}</span>
+            <time datetime={feat.date} data-rel>
+              {date(locale, feat.date, 'short')}
+            </time>
+          </p>
+          <span class="feature__quote" aria-hidden="true">
+            ❝
+          </span>
+          <h2 class="feature__title x" lang={feat.lang} dir={dirOf(feat.lang)} data-tr>
+            <a href={href('fa', `notes/${feat.id}`)}>{featTitle}</a>
+          </h2>
+          <p class="feature__body x clamp-4" lang={feat.lang} dir={dirOf(feat.lang)} data-tr>
+            {featBody}
+          </p>
+          <p class="feature__foot">
+            <a class="feature__go" href={href('fa', `notes/${feat.id}`)}>
+              {s.readMore}
+              <Icon name="arrow" class="flip" />
+            </a>
+            {featTopic && <a class="feature__topic" href={href(locale, `notes/topic/${featTopic}`)}>{s.topics[featTopic]}</a>}
+          </p>
+        </article>
+      )
+    }
+  </section>
+
+  <!-- ============ Now ============ -->
+  <section class="wrap now" aria-labelledby="now-title">
+    <div class="block-head">
+      <h2 id="now-title">{u.now}</h2>
+    </div>
+    <div class="now-grid">
+      <article class="panel panel--quran">
+        <header class="panel__head">
+          <h3>{s.sections.quran.title}</h3>
+          <a class="more" href={href(locale, 'quran')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
+        </header>
+        <p class="q-count num">{n(totalTranslated)}<span> / {n(6236)}</span></p>
+        <QuranMap locale={locale} compact />
+        {
+          nowSurah && quranNow && nowVerse && (
+            <a class="q-verse" href={href(locale, `quran/${nowSurah.n}#a${quranNow.ayah}`)}>
+              <span class="q-verse__label">
+                {u.latestVerse} · {surahName(nowSurah)} {n(nowSurah.n)}:{n(quranNow.ayah)}
+              </span>
+              {nowArabic && (
+                <span class="q-verse__ar clamp-2" lang="ar" dir="rtl">
+                  {nowArabic}
+                </span>
+              )}
+              <span class="q-verse__fa x clamp-3" lang="fa" dir="rtl">
+                {nowVerse.text}
+              </span>
+            </a>
+          )
+        }
+      </article>
+
+      {
+        ep && epMain && (
+          <article class="panel panel--episode">
+            <header class="panel__head">
+              <h3>{s.episode(n(ep.n))}</h3>
+              <a class="more" href={href(locale, `videos#ep-${ep.n}`)}>{s.sections.videos.title}<Icon name="chevron" class="flip" /></a>
+            </header>
+            <YouTubePlayer locale={locale} id={epMain.id} title={epMain.title ?? ''} duration={epMain.media[0]?.duration} lang={epMain.lang} />
+            <p class="ep__title x" lang={epMain.lang} dir={dirOf(epMain.lang)} data-tr>{cleanTitle(epMain.title)}</p>
+            {epOther && <p class="ep__alt x" lang={epOther.lang} dir={dirOf(epOther.lang)}>{cleanTitle(epOther.title)}</p>}
+            <p class="ep__langs">
+              {ep.fa && <a class="pill" href={ep.fa.url} rel="noopener" target="_blank"><Icon name="youtube" />{s.videos.persian}</a>}
+              {ep.ro && <a class="pill" href={ep.ro.url} rel="noopener" target="_blank"><Icon name="youtube" />{s.videos.romanian}</a>}
+            </p>
+          </article>
+        )
+      }
+
+      <article class="panel panel--shorts">
+        <header class="panel__head">
+          <h3>{u.shortsTitle}</h3>
+          <a class="more" href={href(locale, 'tiktok')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
+        </header>
+        <ul class="shorts4">
+          {
+            shortPool.map((v) => (
+              <li>
+                <a class="frame frame--9x16" href={v.url} rel="noopener" target="_blank" title={v.text || v.title}>
+                  <img src={v.media[0]?.src} alt="" loading="lazy" decoding="async" />
+                  <span class="s-src">
+                    <Icon name={v.source === 'tiktok' ? 'tiktok' : 'youtube'} />
+                  </span>
+                  {v.views ? <span class="frame__badge">{compact(locale, v.views)}</span> : null}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ Timeline ============ -->
+  <section class="wrap timeline" aria-labelledby="tl-title" data-locale={locale} data-intl={LOCALE_META[locale].intl}>
+    <div class="tl-bar">
+      <div class="tl-bar__title">
+        <h2 id="tl-title">{u.fromAll}</h2>
+        <p class="tl-bar__sub">
+          <span class="live" aria-hidden="true"></span>
+          <span>{u.lastDays(n(TIMELINE_SPAN))}</span>
+        </p>
+      </div>
+      <div class="filters" role="toolbar" aria-label={u.fromAll}>
+        <button type="button" aria-pressed="true" data-filter="all">{u.all}</button>
+        <button type="button" aria-pressed="false" data-filter="note"><Icon name="telegram" />{u.notes}</button>
+        <button type="button" aria-pressed="false" data-filter="video"><Icon name="youtube" />{u.videos}</button>
+        <button type="button" aria-pressed="false" data-filter="shorts"><Icon name="tiktok" />{u.shorts}</button>
+        {instagram.items.length > 0 && <button type="button" aria-pressed="false" data-filter="photo"><Icon name="instagram" />{u.instagram}</button>}
+      </div>
+    </div>
+
+    <ol class="tl" data-today={u.today} data-yesterday={u.yesterday}>
+      {first && <Timeline locale={locale} days={first.days} />}
+    </ol>
+
+    <div class="tl-more">
+      <span class="tl-more__rail" aria-hidden="true"></span>
+      {
+        next ? (
+          <button
+            type="button"
+            class="tl-more__btn"
+            data-next={next.index}
+            data-next-to={next.to}
+            data-label={u.loadMore}
+            data-loading={u.loading}
+            data-back={u.backTo('%')}
+          >
+            <span class="tl-more__plus" aria-hidden="true">
+              <span class="tl-more__spin" />
+            </span>
+            <span class="tl-more__text">
+              <span class="tl-more__label">{u.loadMore}</span>
+              <span class="tl-more__range">{u.backTo(date(locale, `${next.to}T12:00:00Z`))}</span>
+            </span>
+          </button>
+        ) : null
+      }
+      <p class="tl-more__end" hidden={!!next}>
+        {u.timelineEnd}{' '}
+        <a href={href(locale, 'notes')}>{s.sections.notes.title}</a> ·{' '}
+        <a href={href(locale, 'videos')}>{s.sections.videos.title}</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ Channels (compact) ============ -->
+  <section class="wrap channels" aria-labelledby="ch-title">
+    <div class="channels__head">
+      <h2 id="ch-title">{u.channels}</h2>
+      <p class="sync"><span class="live" aria-hidden="true"></span>{u.synced}</p>
+    </div>
+    <ul class="chs">
+      {
+        CHANNELS.map((c) => (
+          <li class={`ch is-${c.platform}`} style={`--brand:${c.brand}`}>
+            <a class="ch__main" href={c.url} rel="me noopener" target="_blank">
+              <span class="ch__icon">
+                <Icon name={c.platform} />
+              </span>
+              <span class="ch__id">
+                <span class="ch__label">
+                  {c.label}
+                  <span class="ch__lang">{c.lang === 'fa' ? s.videos.persian : s.videos.romanian}</span>
+                </span>
+                <span class="ch__handle handle">{c.handle}</span>
+              </span>
+              <span class="ch__n">
+                <span class="num">{c.followers ? compact(locale, c.followers) : '—'}</span>
+                <span class="ch__unit">{u.followers}</span>
+              </span>
+            </a>
+            <a class="ch__site" href={href(locale, c.page)} title={u.lastPost}>
+              {c.count ? (
+                <>
+                  <span>{u.countPosts(n(c.count), c.count === 1)}</span>
+                  {c.lastPost && (
+                    <time datetime={c.lastPost} data-rel>
+                      {date(locale, c.lastPost, 'short')}
+                    </time>
+                  )}
+                </>
+              ) : (
+                <span>{u.open}</span>
+              )}
+              <Icon name="chevron" class="flip" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- ============ Index ============ -->
+  <section class="wrap index" aria-labelledby="idx-title">
+    <div class="block-head">
+      <h2 id="idx-title">{u.sections}</h2>
+    </div>
+    <ol class="idx">
+      {
+        sections.map((sec, i) => (
+          <li>
+            <a href={href(locale, sec.key)}>
+              <span class="idx__no">{pad(i + 1)}</span>
+              <span class="idx__title">{sec.title}</span>
+              <span class="idx__meta">
+                {sec.count !== undefined && <span class="num">{n(sec.count)}</span>}
+                <span>{sec.detail}</span>
+              </span>
+              <Icon name="arrow" class="idx__arrow flip" />
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</Base>
+
+<script>
+  const section = document.querySelector<HTMLElement>('.timeline');
+  const list = section?.querySelector<HTMLOListElement>('.tl');
+  const btn = section?.querySelector<HTMLButtonElement>('.tl-more__btn');
+  const end = section?.querySelector<HTMLElement>('.tl-more__end');
+  let filter = 'all';
+
+  // Source filter: applies to loaded and future days alike.
+  function applyFilter() {
+    list?.querySelectorAll<HTMLElement>('.tl-day').forEach((day) => {
+      let shown = 0;
+      day.querySelectorAll<HTMLElement>('.tl-entry').forEach((row) => {
+        const on = filter === 'all' || row.dataset.kind === filter;
+        row.hidden = !on;
+        if (on) shown++;
+      });
+      day.hidden = shown === 0;
+    });
+  }
+  const buttons = section?.querySelectorAll<HTMLButtonElement>('.filters [data-filter]') ?? [];
+  buttons.forEach((b) =>
+    b.addEventListener('click', () => {
+      filter = b.dataset.filter!;
+      buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      applyFilter();
+    }),
+  );
+
+  // "Today" / "Yesterday" relative to the reader's clock.
+  const dayKey = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tehran' }).format(d);
+  function labelDays(root: ParentNode) {
+    const today = dayKey(new Date());
+    const yesterday = dayKey(new Date(Date.now() - 86400000));
+    root.querySelectorAll<HTMLTimeElement>('time[data-day]').forEach((el) => {
+      if (el.dataset.day === today) el.textContent = list?.dataset.today ?? el.textContent;
+      else if (el.dataset.day === yesterday) el.textContent = list?.dataset.yesterday ?? el.textContent;
+    });
+  }
+  if (list) labelDays(list);
+
+  // Load ten more days: fetch the pre-built fragment and ease it in.
+  const fmt = new Intl.DateTimeFormat(section?.dataset.intl ?? document.documentElement.lang, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Asia/Tehran',
+  });
+  btn?.addEventListener('click', async () => {
+    if (!list || btn.classList.contains('is-loading')) return;
+    const lang = section!.dataset.locale;
+    btn.classList.add('is-loading');
+    btn.setAttribute('aria-busy', 'true');
+    const label = btn.querySelector('.tl-more__label')!;
+    label.textContent = btn.dataset.loading ?? '';
+    try {
+      const res = await fetch(`/${lang}/timeline/${btn.dataset.next}/`);
+      if (!res.ok) throw new Error(String(res.status));
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      const tpl = doc.querySelector<HTMLTemplateElement>('template[data-chunk]');
+      if (!tpl) throw new Error('fragment');
+      const days = [...tpl.content.querySelectorAll<HTMLElement>('.tl-day')];
+      days.forEach((d, i) => {
+        d.classList.add('is-new');
+        d.style.setProperty('--i', String(i));
+        // Animate once; toggling a filter later must not replay it.
+        d.addEventListener('animationend', () => d.classList.remove('is-new'), { once: true });
+        list.append(d);
+      });
+      labelDays(list);
+      applyFilter();
+      const nextIndex = tpl.dataset.next;
+      if (nextIndex) {
+        btn.dataset.next = nextIndex;
+        const range = btn.querySelector('.tl-more__range');
+        const to = tpl.dataset.nextTo;
+        if (range && to) range.textContent = (btn.dataset.back ?? '%').replace('%', fmt.format(new Date(`${to}T12:00:00Z`)));
+      } else {
+        btn.remove();
+        if (end) end.hidden = false;
+      }
+      days[0]?.querySelector<HTMLElement>('time')?.focus?.();
+    } catch {
+      label.textContent = '↻ ' + (btn.dataset.label ?? '');
+    } finally {
+      btn.classList.remove('is-loading');
+      btn.removeAttribute('aria-busy');
+      if (label.textContent === btn.dataset.loading) label.textContent = btn.dataset.label ?? '';
+    }
+  });
+</script>
+
+<style>
+  /* ---------- Hero ---------- */
+  .hero {
+    display: grid;
+    gap: var(--space-7);
+    padding-block: 0 var(--space-8);
+    align-items: center;
+  }
+  @media (min-width: 62rem) {
+    .hero {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+  }
+  .hero__intro {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+  .hero__name {
+    font-size: clamp(2.6rem, 1.6rem + 4.4vw, 5rem);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+  }
+  :root[dir='rtl'] .hero__name {
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+    font-size: clamp(2.4rem, 1.6rem + 3.6vw, 4.25rem);
+  }
+  .hero__tag {
+    font-family: var(--font-serif);
+    font-size: clamp(1.15rem, 1rem + 0.5vw, 1.4rem);
+    color: var(--ink-2);
+    max-width: 32rem;
+    line-height: 1.6;
+    margin-block-start: var(--space-2);
+  }
+  :root[dir='rtl'] .hero__tag {
+    font-family: var(--font-persian);
+    line-height: 2;
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block-start: var(--space-3);
+  }
+  .hero__actions .btn {
+    padding: 0.65em 1.15em;
+    font-size: 0.9375rem;
+  }
+  :global(.hero__search) {
+    margin-block-start: var(--space-5);
+  }
+
+  .feature {
+    position: relative;
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    background: var(--paper-2);
+    border-inline-start: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  :root[dir='rtl'] .feature {
+    border-radius: var(--radius) 0 0 var(--radius);
+  }
+  .feature__label {
+    display: flex;
+    gap: var(--space-3);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .feature__label span {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .feature__quote {
+    position: absolute;
+    inset-block-start: var(--space-3);
+    inset-inline-end: var(--space-5);
+    font-family: var(--font-serif);
+    font-size: 4.5rem;
+    line-height: 1;
+    color: var(--paper-3);
+    pointer-events: none;
+  }
+  .feature__title {
+    font-size: 1.5rem;
+    line-height: 1.5;
+    font-weight: 700;
+    position: relative;
+  }
+  .feature__title[lang='fa'] {
+    font-family: var(--font-persian);
+  }
+  .feature__title a {
+    text-decoration: none;
+  }
+  .feature__title a:hover {
+    color: var(--accent);
+  }
+  .feature__body {
+    color: var(--ink-2);
+    line-height: 1.95;
+  }
+  .feature__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    margin-block-start: var(--space-1);
+    font-size: var(--step--1);
+  }
+  .feature__go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .feature__go :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+  .feature__topic {
+    color: var(--ink-3);
+    text-decoration: none;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    padding: 0 0.6rem;
+  }
+
+  .now,
+  .timeline {
+    margin-block-end: var(--space-8);
+  }
+  .sync {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  /* ---------- Channels (compact, after the timeline) ---------- */
+  .channels {
+    margin-block-end: var(--space-8);
+    padding: var(--space-4) var(--space-5) var(--space-5);
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+  .channels__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block-end: var(--space-3);
+  }
+  .channels__head h2 {
+    font-size: 1.125rem;
+  }
+  .chs {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .ch {
+    display: grid;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .ch:hover {
+    border-color: var(--brand);
+  }
+  .ch__main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .ch__icon {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 50%;
+    color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 12%, transparent);
+    --icon-cut: color-mix(in srgb, var(--brand) 12%, var(--paper));
+  }
+  .ch__icon :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+  .ch__id {
+    display: grid;
+    min-width: 0;
+    line-height: 1.35;
+  }
+  .ch__label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+  .ch__lang {
+    font-weight: 400;
+    font-size: 0.6875rem;
+    color: var(--ink-3);
+  }
+  .ch__handle {
+    font-size: 0.6875rem;
+    color: var(--ink-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: var(--start);
+  }
+  .ch__n {
+    display: grid;
+    justify-items: end;
+    line-height: 1.2;
+  }
+  .ch__n .num {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+  .ch__unit {
+    font-size: 0.625rem;
+    color: var(--ink-3);
+  }
+  .ch__site {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem var(--space-3);
+    border-block-start: 1px solid var(--rule);
+    font-size: 0.75rem;
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+  .ch__site:hover {
+    color: var(--accent);
+  }
+  .ch__site time {
+    margin-inline-start: auto;
+  }
+  .ch__site :global(svg) {
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+  @media (max-width: 68rem) {
+    .chs {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 40rem) {
+    .channels {
+      padding: var(--space-3);
+    }
+    .chs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .ch__main {
+      grid-template-columns: auto minmax(0, 1fr);
+      padding: var(--space-2);
+    }
+    .ch__lang,
+    .ch__handle,
+    .ch__unit,
+    .ch__site {
+      display: none;
+    }
+    .ch__n {
+      grid-column: 2;
+      justify-items: start;
+      margin-block-start: -0.15rem;
+    }
+    .ch__icon {
+      grid-row: span 2;
+    }
+  }
+
+  /* ---------- Now ---------- */
+  .now-grid {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 62rem) {
+    .now-grid {
+      grid-template-columns: 1.1fr 1.2fr 0.9fr;
+      gap: var(--space-6);
+    }
+  }
+  .panel {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    min-width: 0;
+  }
+  .panel__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-block-end: var(--space-2);
+    border-block-end: 1px solid var(--ink);
+  }
+  .panel__head h3 {
+    font-size: 1.125rem;
+  }
+  .panel__head .more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.8125rem;
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .panel__head .more :global(svg) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+  .q-count {
+    font-family: var(--font-serif);
+    font-size: 2.25rem;
+    line-height: 1;
+  }
+  .q-count span {
+    font-size: 1rem;
+    color: var(--ink-3);
+  }
+  .q-verse {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    margin-block-start: var(--space-1);
+    background: var(--paper-2);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .q-verse:hover {
+    background: var(--accent-wash);
+  }
+  .q-verse__label {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .q-verse__ar {
+    font-family: var(--font-quran);
+    font-size: 1.35rem;
+    line-height: 2.1;
+    text-align: right;
+  }
+  .q-verse__fa {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    line-height: 1.9;
+    text-align: right;
+  }
+  .ep__title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+  .ep__alt {
+    font-size: 0.875rem;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+  .ep__langs {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.7rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .pill :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+    color: #e62117;
+  }
+  .pill:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .shorts4 {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  @media (min-width: 62rem) {
+    .shorts4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .shorts4 .frame {
+    display: block;
+  }
+  .s-src {
+    position: absolute;
+    inset-block-start: var(--space-2);
+    inset-inline-start: var(--space-2);
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: rgb(20 19 15 / 0.7);
+    color: #fff;
+    --icon-cut: rgb(20 19 15);
+  }
+  .s-src :global(svg) {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+
+  /* ---------- Timeline ---------- */
+  /* The bar sticks to the top while the timeline scrolls past, and is
+     released when the section ends. */
+  .tl-bar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+    padding-block: var(--space-3);
+    margin-inline: calc(-1 * var(--space-3));
+    padding-inline: var(--space-3);
+    background: var(--paper);
+    box-shadow: 0 10px 14px -14px rgb(0 0 0 / 0.35);
+    border-block-end: 1px solid var(--ink);
+  }
+  .tl-bar__title {
+    display: grid;
+    gap: 0.15rem;
+  }
+  .tl-bar__title h2 {
+    font-size: var(--step-2);
+    line-height: 1.2;
+  }
+  .tl-bar__sub {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+  }
+  .filters button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.85rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition:
+      background 0.2s,
+      color 0.2s;
+  }
+  .filters button :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  .filters button:hover {
+    color: var(--ink);
+  }
+  .filters button[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--paper);
+    --icon-cut: var(--ink);
+  }
+
+  /* Load more: a node at the end of the rail. */
+  .tl-more {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--tl-time, 3.25rem) var(--tl-rail, 1.75rem) minmax(0, 1fr);
+    column-gap: var(--space-4);
+    align-items: center;
+    padding-block: var(--space-3) var(--space-2);
+  }
+  .tl-more__rail {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    align-self: start;
+    width: 1px;
+    height: 1.6rem;
+    background: linear-gradient(var(--rule-strong), transparent);
+  }
+  .tl-more__btn {
+    grid-column: 2 / 4;
+    grid-row: 1;
+    justify-self: start;
+    margin-block-start: 1.4rem;
+    margin-inline-start: calc(var(--tl-rail, 1.75rem) / 2 - 1.25rem);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.35rem 1.25rem 0.35rem 0.35rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    font: inherit;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s,
+      transform 0.2s;
+  }
+  :root[dir='rtl'] .tl-more__btn {
+    padding: 0.35rem 0.35rem 0.35rem 1.25rem;
+  }
+  .tl-more__btn:hover {
+    border-color: var(--ink);
+    box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.35);
+    transform: translateY(-1px);
+  }
+  .tl-more__btn:active {
+    transform: translateY(0);
+  }
+  .tl-more__plus {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    flex: none;
+  }
+  .tl-more__plus::before,
+  .tl-more__plus::after {
+    content: '';
+    position: absolute;
+    width: 0.95rem;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition:
+      transform 0.3s ease,
+      opacity 0.2s;
+  }
+  .tl-more__plus::after {
+    transform: rotate(90deg);
+  }
+  .tl-more__btn:hover .tl-more__plus::after {
+    transform: rotate(180deg);
+  }
+  .tl-more__spin {
+    position: absolute;
+    inset: 0.45rem;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-block-start-color: currentColor;
+    opacity: 0;
+  }
+  .tl-more__btn.is-loading .tl-more__plus::before,
+  .tl-more__btn.is-loading .tl-more__plus::after {
+    opacity: 0;
+  }
+  .tl-more__btn.is-loading .tl-more__spin {
+    opacity: 1;
+    animation: tl-spin 0.8s linear infinite;
+  }
+  @keyframes tl-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .tl-more__text {
+    display: grid;
+    text-align: start;
+    line-height: 1.3;
+  }
+  .tl-more__label {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+  .tl-more__range {
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  .tl-more__end {
+    grid-column: 3;
+    margin-block-start: var(--space-4);
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+  .tl-more__end a {
+    color: var(--accent);
+  }
+  @media (max-width: 40rem) {
+    .tl-more {
+      grid-template-columns: 0 1rem minmax(0, 1fr);
+      column-gap: var(--space-3);
+    }
+    .tl-bar {
+      gap: var(--space-2);
+      padding-block: var(--space-2);
+    }
+    .tl-bar__title h2 {
+      font-size: 1.25rem;
+    }
+    .tl-bar__sub {
+      display: none;
+    }
+    .filters {
+      flex-wrap: nowrap;
+      max-width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+    .filters button {
+      padding-inline: 0.6rem;
+      white-space: nowrap;
+    }
+  }
+
+  /* ---------- Index ---------- */
+  .idx {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    border-block-start: 1px solid var(--rule);
+  }
+  .idx a {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    grid-template-areas:
+      'no title arrow'
+      'no meta arrow';
+    gap: 0.1rem var(--space-3);
+    align-items: center;
+    padding: var(--space-4) var(--space-2);
+    border-block-end: 1px solid var(--rule);
+    text-decoration: none;
+  }
+  .idx a:hover {
+    background: var(--paper-2);
+  }
+  .idx__no {
+    grid-area: no;
+    font-family: var(--font-serif);
+    font-size: 1.75rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .idx__title {
+    grid-area: title;
+    font-weight: 600;
+  }
+  .idx__meta {
+    grid-area: meta;
+    display: flex;
+    gap: var(--space-2);
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .idx a :global(.idx__arrow) {
+    grid-area: arrow;
+    width: 1rem;
+    height: 1rem;
+    color: var(--ink-3);
+    transition: transform 0.15s;
+  }
+  .idx a:hover :global(.idx__arrow) {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+  :root[dir='rtl'] .idx a:hover :global(.idx__arrow) {
+    transform: scaleX(-1) translateX(3px);
+  }
+</style>

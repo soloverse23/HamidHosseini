@@ -1,0 +1,103 @@
+---
+import Chapter from '../../components/Chapter.astro';
+import Icon from '../../components/Icon.astro';
+import { type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import Base from '../../layouts/Base.astro';
+import { CHANNEL_URLS, tiktok } from '../../lib/data';
+import { compact, date, duration, num } from '../../lib/format';
+import { localePaths } from '../../lib/paths';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const items = tiktok.items;
+const views = items.reduce((a, i) => a + (i.views ?? 0), 0);
+---
+
+<Base locale={locale} path="tiktok" crumbs={[{ name: s.sections.tiktok.title, path: 'tiktok' }]} title={s.sections.tiktok.title} description={s.sections.tiktok.lede}>
+  <div class="wrap">
+    <Chapter locale={locale} no={5} title={s.sections.tiktok.title} lede={s.sections.tiktok.lede}>
+      <span class="meta">
+        <span>{s.videosCount(num(locale, items.length))}</span>
+        <span>{s.views(compact(locale, views))}</span>
+      </span>
+      <a class="link-arrow" href={CHANNEL_URLS.tiktok} rel="noopener" target="_blank">
+        <Icon name="tiktok" /> {s.followOn('TikTok')}
+      </a>
+    </Chapter>
+
+    <ul class="sheet">
+      {
+        items.map((v) => {
+          const m = v.media[0];
+          return (
+            <li>
+              <div class="frame frame--9x16 tt" data-tt={v.id}>
+                {m?.src && <img src={m.src} width={m.width} height={m.height} alt="" loading="lazy" decoding="async" />}
+                <button class="play-btn" type="button">
+                  <span>
+                    <Icon name="play" />
+                  </span>
+                  <span class="visually-hidden">{s.videos.play}</span>
+                </button>
+                {m?.duration ? <span class="frame__badge">{duration(m.duration)}</span> : null}
+              </div>
+              <p class="cap" lang={v.lang} dir="auto" data-tr>
+                {v.text}
+              </p>
+              <p class="meta">
+                <a href={v.url} rel="noopener" target="_blank">
+                  <time datetime={v.date}>{date(locale, v.date, 'short')}</time>
+                </a>
+                {v.views ? <span>{compact(locale, v.views)}</span> : null}
+              </p>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.tt').forEach((box) => {
+    box.querySelector('button')?.addEventListener('click', () => {
+      const f = document.createElement('iframe');
+      f.src = `https://www.tiktok.com/player/v1/${box.dataset.tt}?autoplay=1&rel=0&description=0`;
+      f.allow = 'autoplay; fullscreen; encrypted-media';
+      f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0';
+      box.replaceChildren(f);
+    });
+  });
+</script>
+
+<style>
+  .sheet {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(46%, 11rem), 1fr));
+    gap: var(--space-6) var(--space-4);
+  }
+  .sheet li {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .cap {
+    font-size: var(--step--1);
+    line-height: 1.5;
+    color: var(--ink-2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .meta {
+    font-size: 0.75rem;
+  }
+  .meta a {
+    text-decoration: none;
+  }
+</style>

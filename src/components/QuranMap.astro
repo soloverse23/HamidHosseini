@@ -1,0 +1,138 @@
+---
+// 114 equal cells, one per surah, filled from the bottom by the share of
+// verses translated. Hovering or focusing a cell shows the surah's name.
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { surahs, translatedCount } from '../lib/data';
+import { num } from '../lib/format';
+import { href } from '../lib/paths';
+
+interface Props {
+  locale: Locale;
+  compact?: boolean;
+}
+const { locale, compact = false } = Astro.props;
+const s = t(locale);
+const name = (n: number) => {
+  const m = surahs[n - 1];
+  return locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit;
+};
+---
+
+<div class="qmap-wrap">
+  <ol class:list={['qmap', { 'qmap--compact': compact }]} aria-label={s.quran.progress}>
+    {
+      surahs.map((m) => {
+        const done = translatedCount(m.n);
+        const pct = Math.round((done / m.ayahs) * 100);
+        return (
+          <li style={`--p:${pct}%`} class:list={{ done: pct === 100, partial: pct > 0 && pct < 100 }}>
+            <a
+              href={href(locale, `quran/${m.n}`)}
+              data-name={`${num(locale, m.n)}. ${name(m.n)}`}
+              data-meta={s.quran.translated(num(locale, done), num(locale, m.ayahs))}
+            >
+              <span class="visually-hidden">
+                {num(locale, m.n)}. {name(m.n)}: {num(locale, pct)}%
+              </span>
+            </a>
+          </li>
+        );
+      })
+    }
+  </ol>
+  <div class="qmap-tip" role="tooltip" aria-hidden="true" hidden>
+    <strong></strong>
+    <span></span>
+  </div>
+</div>
+
+<script>
+  for (const wrap of document.querySelectorAll<HTMLElement>('.qmap-wrap')) {
+    const tip = wrap.querySelector<HTMLElement>('.qmap-tip')!;
+    const [title, meta] = tip.children as unknown as [HTMLElement, HTMLElement];
+
+    const show = (a: HTMLAnchorElement) => {
+      title.textContent = a.dataset.name ?? '';
+      meta.textContent = a.dataset.meta ?? '';
+      tip.hidden = false;
+      const cell = a.getBoundingClientRect();
+      const box = wrap.getBoundingClientRect();
+      const w = tip.offsetWidth;
+      const margin = 8;
+      let left = cell.left + cell.width / 2 - w / 2;
+      left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+      tip.style.left = `${left - box.left}px`;
+      tip.style.top = `${cell.top - box.top - tip.offsetHeight - 6}px`;
+    };
+    const hide = () => (tip.hidden = true);
+
+    wrap.addEventListener('pointerover', (e) => {
+      const a = (e.target as Element).closest<HTMLAnchorElement>('.qmap a');
+      if (a) show(a);
+    });
+    wrap.addEventListener('pointerleave', hide);
+    wrap.addEventListener('focusin', (e) => {
+      const a = (e.target as Element).closest<HTMLAnchorElement>('.qmap a');
+      if (a) show(a);
+    });
+    wrap.addEventListener('focusout', hide);
+  }
+</script>
+
+<style>
+  .qmap-wrap {
+    position: relative;
+  }
+  .qmap {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(1.1rem, 1fr));
+    gap: 3px;
+  }
+  .qmap li {
+    height: 1.6rem;
+    background: linear-gradient(to top, var(--accent) var(--p), var(--fill-empty) var(--p));
+    border-radius: 1px;
+  }
+  .qmap--compact {
+    grid-template-columns: repeat(auto-fill, minmax(0.8rem, 1fr));
+  }
+  .qmap--compact li {
+    height: 1.15rem;
+  }
+  .qmap a {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .qmap li:hover,
+  .qmap li:focus-within {
+    outline: 1px solid var(--ink);
+    outline-offset: 1px;
+  }
+  .qmap-tip {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 3px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+  .qmap-tip[hidden] {
+    display: none;
+  }
+  .qmap-tip span {
+    opacity: 0.75;
+    font-size: 0.72rem;
+  }
+</style>

@@ -1,0 +1,151 @@
+---
+import Chapter from '../../../components/Chapter.astro';
+import QuranMap from '../../../components/QuranMap.astro';
+import SearchField from '../../../components/SearchField.astro';
+import { type Locale } from '../../../i18n/locales';
+import { t } from '../../../i18n/strings';
+import Base from '../../../layouts/Base.astro';
+import { quranNow, surahs, surahsStarted, totalTranslated, translatedCount } from '../../../lib/data';
+import { num } from '../../../lib/format';
+import { href, localePaths } from '../../../lib/paths';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const n = (x: number) => num(locale, x);
+const localName = (m: (typeof surahs)[number]) =>
+  locale === 'fa' ? m.fa : locale === 'ar' ? null : locale === 'ro' ? m.translit : `${m.translit} · ${m.en}`;
+---
+
+<Base locale={locale} path="quran" crumbs={[{ name: s.sections.quran.title, path: 'quran' }]} title={s.sections.quran.title} description={s.sections.quran.lede}>
+  <div class="wrap">
+    <Chapter locale={locale} no={2} title={s.sections.quran.title} lede={s.sections.quran.lede}>
+      <span class="meta">
+        <span>{s.quran.translated(n(totalTranslated), n(6236))}</span>
+        <span>{n(surahsStarted)} {s.quran.surahs}</span>
+      </span>
+    </Chapter>
+
+    {locale !== 'fa' && <p class="note-lang">{s.quran.onlyPersian}</p>}
+
+    <SearchField locale={locale} type="quran" class="page-search" />
+
+    <section class="overview" aria-label={s.quran.progress}>
+      <QuranMap locale={locale} />
+      {
+        quranNow && (
+          <p class="meta">
+            <span>{s.quran.now}</span>
+            <a href={href(locale, `quran/${quranNow.surah}#a${quranNow.ayah}`)}>
+              {localName(surahs[quranNow.surah - 1]) ?? surahs[quranNow.surah - 1].ar} {n(quranNow.surah)}:{n(quranNow.ayah)}
+            </a>
+          </p>
+        )
+      }
+    </section>
+
+    <ol class="surahs">
+      {
+        surahs.map((m) => {
+          const done = translatedCount(m.n);
+          return (
+            <li class:list={{ started: done > 0 }}>
+              <a href={href(locale, `quran/${m.n}`)}>
+                <span class="surahs__n num">{n(m.n)}</span>
+                <span class="surahs__ar" lang="ar">{m.ar}</span>
+                {localName(m) && <span class="surahs__name">{localName(m)}</span>}
+                <span class="surahs__meta meta">
+                  <span>{s.quran.verses(n(m.ayahs))}</span>
+                  <span>{m.place === 'mecca' ? s.quran.mecca : s.quran.medina}</span>
+                </span>
+                <span class="surahs__bar" style={`--p:${(done / m.ayahs) * 100}%`} aria-label={s.quran.translated(n(done), n(m.ayahs))} />
+              </a>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </div>
+</Base>
+
+<style>
+  .note-lang {
+    max-width: 40rem;
+    padding: var(--space-3) var(--space-4);
+    border-inline-start: 2px solid var(--accent);
+    background: var(--paper-2);
+    color: var(--ink-2);
+    margin-block-end: var(--space-6);
+  }
+  :global(.page-search) {
+    margin-block-end: var(--space-6);
+  }
+  .overview {
+    display: grid;
+    gap: var(--space-3);
+    margin-block-end: var(--space-7);
+  }
+  .overview a {
+    color: var(--accent);
+  }
+  .surahs {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+    column-gap: var(--space-6);
+  }
+  .surahs li {
+    border-block-start: 1px solid var(--rule);
+  }
+  .surahs a {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr auto;
+    grid-template-areas:
+      'n name ar'
+      'n meta meta'
+      'n bar bar';
+    gap: 0.15rem var(--space-3);
+    align-items: baseline;
+    padding-block: var(--space-3);
+    text-decoration: none;
+  }
+  .surahs__n {
+    grid-area: n;
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+  .started .surahs__n {
+    color: var(--accent);
+  }
+  .surahs__ar {
+    grid-area: ar;
+    font-family: var(--font-quran);
+    font-size: 1.35rem;
+    line-height: 1.4;
+    direction: rtl;
+  }
+  .surahs__name {
+    grid-area: name;
+    font-weight: 500;
+  }
+  .surahs a:hover .surahs__name {
+    color: var(--accent);
+  }
+  :root[lang='ar'] .surahs__ar {
+    grid-area: name;
+    justify-self: start;
+  }
+  .surahs__meta {
+    grid-area: meta;
+  }
+  .surahs__bar {
+    grid-area: bar;
+    height: 3px;
+    margin-block-start: var(--space-2);
+    background: linear-gradient(to var(--bar-dir, right), var(--accent) var(--p), var(--fill-empty) var(--p));
+  }
+  :root[dir='rtl'] .surahs__bar {
+    --bar-dir: left;
+  }
+</style>

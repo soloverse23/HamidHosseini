@@ -1,0 +1,163 @@
+---
+import '@fontsource-variable/newsreader';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource-variable/vazirmatn';
+import '@fontsource-variable/noto-naskh-arabic';
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import SearchDialog from '../components/SearchDialog.astro';
+import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { href } from '../lib/paths';
+
+interface Props {
+  locale: Locale;
+  title?: string;
+  description?: string;
+  /** Path without locale prefix, e.g. "quran/9" */
+  path: string;
+  image?: string;
+  /** One or several schema.org nodes; a BreadcrumbList is added automatically. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Page type for Open Graph. Defaults to "website". */
+  ogType?: 'website' | 'article';
+  /** ISO dates for article pages */
+  published?: string;
+  modified?: string;
+  imageAlt?: string;
+  /** Label for the last breadcrumb. Omit on the home page. */
+  crumbs?: { name: string; path: string }[];
+  /** Point canonical at another locale's copy (content that exists once, e.g. Persian posts). */
+  canonicalLocale?: Locale;
+  /** Emit hreflang alternates. Turn off for content that is only indexed in one locale. */
+  alternates?: boolean;
+  /** Ask search engines not to index this page (listing pages that duplicate content) */
+  noindex?: boolean;
+  /** Path used by the language switcher when this page exists in one locale only */
+  switchPath?: string;
+}
+
+const {
+  locale, title, description, path, image, jsonLd, noindex, switchPath,
+  ogType = 'website', published, modified, imageAlt, crumbs, canonicalLocale, alternates = true,
+} = Astro.props;
+const s = t(locale);
+const ogLocale = (l: Locale) => LOCALE_META[l].intl.split('-u-')[0].replace('-', '_');
+const { dir } = LOCALE_META[locale];
+const fullTitle = title ? `${title} — ${s.name}` : s.name;
+const desc = description ?? s.tagline;
+const site = Astro.site ?? new URL('https://hamidhosseini.vercel.app');
+const canonical = new URL(href(canonicalLocale ?? locale, path), site).toString();
+const abs = (p: string) => new URL(p, site).toString();
+const nodes = [
+  ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : []),
+  ...(crumbs
+    ? [{
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [{ name: s.nav.home, path: '' }, ...crumbs].map((c, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: c.name,
+          item: abs(href(locale, c.path)),
+        })),
+      }]
+    : []),
+];
+const ogImage = new URL(image ?? '/og.png', site).toString();
+---
+
+<!doctype html>
+<html lang={locale} dir={dir} data-shared={switchPath ? '' : undefined}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    {alternates && LOCALES.map((l) => <link rel="alternate" hreflang={l} href={new URL(href(l, path), site).toString()} />)}
+    {alternates && <link rel="alternate" hreflang="x-default" href={new URL(href('en', path), site).toString()} />}
+    <link rel="alternate" type="application/rss+xml" title={s.name} href="/rss.xml" />
+    <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
+    <meta name="author" content={s.name} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14130f" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={s.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={ogLocale(locale)} />
+    {alternates && LOCALES.filter((l) => l !== locale).map((l) => <meta property="og:locale:alternate" content={ogLocale(l)} />)}
+    <meta property="og:image:alt" content={imageAlt ?? s.name} />
+    {!image && <meta property="og:image:width" content="1200" />}
+    {!image && <meta property="og:image:height" content="630" />}
+    {ogType === 'article' && published && <meta property="article:published_time" content={published} />}
+    {ogType === 'article' && (modified ?? published) && <meta property="article:modified_time" content={modified ?? published} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={desc} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={imageAlt ?? s.name} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    {nodes.map((n) => <script type="application/ld+json" set:html={JSON.stringify(n).replace(/</g, '\\u003c')} />)}
+    <script is:inline>
+      // Apply the saved theme before first paint.
+      try {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark' || saved === 'light') document.documentElement.dataset.theme = saved;
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">{s.skip}</a>
+    <Header locale={locale} path={switchPath ?? path} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer locale={locale} path={switchPath ?? path} />
+    <SearchDialog locale={locale} />
+
+    <script>
+      import '../scripts/translate';
+    </script>
+    <script>
+      const root = document.documentElement;
+      document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+        const dark =
+          root.dataset.theme === 'dark' ||
+          (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+        root.dataset.theme = dark ? 'light' : 'dark';
+        try {
+          localStorage.setItem('theme', root.dataset.theme);
+        } catch {}
+      });
+      // Remember an explicit language choice for the "/" redirect.
+      document.querySelectorAll<HTMLAnchorElement>('[data-set-locale]').forEach((a) =>
+        a.addEventListener('click', () => {
+          document.cookie = `locale=${a.dataset.setLocale}; path=/; max-age=31536000; samesite=lax`;
+        }),
+      );
+      // Recent dates read better as "3 hours ago". The static build shows the
+      // full date; this refines it in the reader's language when the page opens.
+      const rtf = new Intl.RelativeTimeFormat(root.lang, { numeric: 'auto' });
+      const units: [Intl.RelativeTimeFormatUnit, number][] = [
+        ['day', 86400],
+        ['hour', 3600],
+        ['minute', 60],
+      ];
+      document.querySelectorAll<HTMLTimeElement>('time[data-rel]').forEach((el) => {
+        const secs = (Date.parse(el.dateTime) - Date.now()) / 1000;
+        if (Math.abs(secs) > 6 * 86400) return;
+        const [unit, size] = units.find(([, n]) => Math.abs(secs) >= n) ?? ['minute', 60];
+        el.title = el.textContent ?? '';
+        el.textContent = rtf.format(Math.round(secs / size), unit);
+      });
+    </script>
+  </body>
+</html>

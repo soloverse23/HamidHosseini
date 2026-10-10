@@ -1,0 +1,22 @@
+---
+// HTML fragment for "load 10 more days". Not a full page: the home page
+// fetches it and appends the days inside [data-chunk] to its timeline.
+import Timeline from '../../../components/Timeline.astro';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { TIMELINE } from '../../../lib/feed';
+
+export function getStaticPaths() {
+  return LOCALES.flatMap((lang) =>
+    TIMELINE.slice(1).map((c) => ({ params: { lang, chunk: String(c.index) }, props: { index: c.index } })),
+  );
+}
+
+const locale = Astro.params.lang as Locale;
+const { index } = Astro.props as { index: number };
+const chunk = TIMELINE[index];
+const next = TIMELINE[index + 1];
+---
+
+<template data-chunk={index} data-next={next?.index} data-next-to={next?.to}>
+  <Timeline locale={locale} days={chunk.days} />
+</template>

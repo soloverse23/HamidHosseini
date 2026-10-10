@@ -1,0 +1,99 @@
+---
+// A search box inside a page. It submits to /search/ (optionally limited to
+// one type), so it works without JavaScript.
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { href } from '../lib/paths';
+import type { SearchType } from '../lib/search/client';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  type?: SearchType;
+  class?: string;
+}
+const { locale, type, class: cls } = Astro.props;
+const s = t(locale);
+const scoped = type && type in s.search.scoped ? s.search.scoped[type as keyof typeof s.search.scoped] : undefined;
+const placeholder = scoped ?? s.search.placeholder;
+---
+
+<form class:list={['sf', cls]} role="search" method="get" action={href(locale, 'search')}>
+  <Icon name="search" class="sf__icon" />
+  <input
+    type="search"
+    name="q"
+    required
+    autocomplete="off"
+    enterkeyhint="search"
+    placeholder={placeholder}
+    aria-label={placeholder}
+  />
+  {type && <input type="hidden" name="type" value={type} />}
+  <button type="submit" class="sf__go" aria-label={s.search.open}>
+    <Icon name="arrow" class="flip" />
+  </button>
+</form>
+
+<style>
+  .sf {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    max-width: 30rem;
+    padding: 0.2rem 0.25rem;
+    padding-inline-start: var(--space-4);
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .sf:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+  }
+  .sf :global(.sf__icon) {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--ink-3);
+    flex: none;
+  }
+  .sf input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.45rem 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.9375rem;
+    outline: none;
+  }
+  .sf input::placeholder {
+    color: var(--ink-3);
+  }
+  .sf input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .sf__go {
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    flex: none;
+    transition: background 0.15s;
+  }
+  .sf__go:hover {
+    background: var(--accent-ink);
+  }
+  .sf__go :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+</style>

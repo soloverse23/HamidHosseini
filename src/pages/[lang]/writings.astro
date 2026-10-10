@@ -1,0 +1,285 @@
+---
+import Chapter from '../../components/Chapter.astro';
+import Icon from '../../components/Icon.astro';
+import { ARTICLES, BOOKS, LECTURES, type Localized, type Work, type WorkLink } from '../../data/writings';
+import { type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import Base from '../../layouts/Base.astro';
+import { lectureSessions } from '../../lib/data';
+import { num, year } from '../../lib/format';
+import { localePaths } from '../../lib/paths';
+import { toAsciiDigits } from '../../lib/text';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+
+/** Original title first; a gloss in the reader's language when it differs. */
+function titles(w: { lang: Locale; title: Localized }) {
+  const original = w.title[w.lang] ?? Object.values(w.title)[0]!;
+  const gloss = w.lang !== locale ? w.title[locale] : undefined;
+  return { original, gloss };
+}
+const pick = (l?: Localized) => (l ? (l[locale] ?? l.en ?? Object.values(l)[0]) : undefined);
+
+const ORDER: WorkLink['kind'][] = ['read', 'ebook', 'pdf', 'buy', 'telegram'];
+const linkLabel = (l: WorkLink) =>
+  l.kind === 'read'
+    ? s.books.read
+    : l.kind === 'ebook'
+      ? s.books.ebook
+      : l.kind === 'pdf'
+        ? s.books.pdf
+        : l.kind === 'buy'
+          ? `${s.books.buy}${l.label ? ` · ${l.label}` : ''}`
+          : s.books.file;
+const sortLinks = (w: Work) => [...w.links].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+const typeLabel = { article: s.books.articles, interview: s.books.articles, dialogue: s.books.articles, book: s.books.books };
+const sessionNo = (title: string) => toAsciiDigits(title).match(/(\d+)\s*$/)?.[1];
+---
+
+<Base locale={locale} path="writings" crumbs={[{ name: s.sections.writings.title, path: 'writings' }]} title={s.sections.writings.title} description={s.sections.writings.lede}>
+  <div class="wrap">
+    <Chapter locale={locale} no={1} title={s.sections.writings.title} lede={s.sections.writings.lede} />
+
+    <section aria-labelledby="books" class="block">
+      <div class="section-title"><h2 id="books">{s.books.books}</h2></div>
+      {
+        BOOKS.length === 0 ? (
+          <p class="empty">{s.books.empty}</p>
+        ) : (
+          <ul class="books">
+            {BOOKS.map((b) => {
+              const { original, gloss } = titles(b);
+              return (
+                <li class="book">
+                  <div class="book__cover frame">
+                    {b.cover ? <img src={b.cover} alt="" loading="lazy" /> : <Icon name="book" />}
+                  </div>
+                  <div class="book__body">
+                    <h3 class="serif align-start" lang={b.lang} dir="auto">{original}</h3>
+                    {gloss && <p class="gloss">{gloss}</p>}
+                    <p class="meta">
+                      {pick(b.venue) && <span>{pick(b.venue)}</span>}
+                      <span>{year(locale, b.year)}</span>
+                    </p>
+                    {pick(b.summary) && <p class="summary">{pick(b.summary)}</p>}
+                    <p class="btn-row">
+                      {sortLinks(b).map((l, i) => (
+                        <a class:list={['btn', { 'btn--primary': i === 0 }]} href={l.url} rel="noopener" target="_blank">
+                          <Icon name={l.kind === 'telegram' ? 'telegram' : l.kind === 'buy' ? 'external' : 'file'} />
+                          {linkLabel(l)}
+                        </a>
+                      ))}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )
+      }
+    </section>
+
+    <section aria-labelledby="articles" class="block">
+      <div class="section-title"><h2 id="articles">{s.books.articles}</h2></div>
+      <ol class="rows works">
+        {
+          ARTICLES.map((w) => {
+            const { original, gloss } = titles(w);
+            return (
+              <li class="work" id={w.id}>
+                <span class="work__year num">{year(locale, w.year)}</span>
+                <div class="work__body">
+                  <h3 class="serif align-start" lang={w.lang} dir="auto">{original}</h3>
+                  {gloss && <p class="gloss">{gloss}</p>}
+                  {pick(w.venue) && <p class="meta">{pick(w.venue)}</p>}
+                  {pick(w.summary) && <p class="summary">{pick(w.summary)}</p>}
+                </div>
+                <p class="work__links">
+                  {sortLinks(w).map((l) => (
+                    <a class="link-arrow" href={l.url} rel="noopener" target="_blank">
+                      <Icon name={l.kind === 'telegram' ? 'telegram' : 'external'} />
+                      {linkLabel(l)}
+                    </a>
+                  ))}
+                </p>
+              </li>
+            );
+          })
+        }
+      </ol>
+    </section>
+
+    <section aria-labelledby="lectures" class="block">
+      <div class="section-title"><h2 id="lectures">{s.books.lectures}</h2></div>
+      <div class="series">
+        {
+          LECTURES.map((l) => {
+            const { original, gloss } = titles(l);
+            const sessions = lectureSessions[l.id] ?? [];
+            return (
+              <article class="serie" id={l.id}>
+                <header>
+                  <h3 class="serif align-start" lang={l.lang} dir="auto">{original}</h3>
+                  {gloss && <p class="gloss">{gloss}</p>}
+                  <p class="meta">
+                    {pick(l.venue) && <span>{pick(l.venue)}</span>}
+                    <span class="num">{l.years}</span>
+                    <span>{s.books.sessions(num(locale, sessions.length))}</span>
+                  </p>
+                </header>
+                <ol class="sessions">
+                  {sessions.map(({ item, title }) => {
+                    const exam = /^(آزمون|پاسخنامه)/.test(title);
+                    const no = exam ? undefined : sessionNo(title);
+                    return (
+                      <li class:list={{ wide: !no }}>
+                        <a href={item.url} rel="noopener" target="_blank" title={title} lang={l.lang}>
+                          {no ? num(locale, Number(no)) : <span dir="auto">{title}</span>}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </article>
+            );
+          })
+        }
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .block + .block {
+    margin-block-start: var(--space-8);
+  }
+  .gloss {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    font-style: italic;
+  }
+  :root[dir='rtl'] .gloss {
+    font-style: normal;
+  }
+  .summary {
+    color: var(--ink-2);
+    max-width: 40rem;
+  }
+
+  .books {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-6);
+  }
+  .book {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: var(--space-5);
+  }
+  .book__cover {
+    aspect-ratio: 2 / 3;
+    display: grid;
+    place-items: center;
+    color: var(--ink-3);
+  }
+  .book__body {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+
+  .work {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+    gap: var(--space-2) var(--space-5);
+    padding-block: var(--space-5);
+  }
+  .work__year {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    padding-block-start: 0.3rem;
+  }
+  .work__body {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .work__body h3 {
+    font-size: 1.25rem;
+    line-height: 1.55;
+  }
+  .work__links {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    justify-items: start;
+    padding-block-start: 0.3rem;
+  }
+  @media (max-width: 44rem) {
+    .work {
+      grid-template-columns: 3.5rem minmax(0, 1fr);
+    }
+    .work__links {
+      grid-column: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+  }
+
+  .series {
+    display: grid;
+    gap: var(--space-7);
+  }
+  @media (min-width: 60rem) {
+    .series {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+  .serie header {
+    display: grid;
+    gap: var(--space-1);
+    margin-block-end: var(--space-4);
+  }
+  .serie h3 {
+    font-size: 1.25rem;
+  }
+  .sessions {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
+    gap: 4px;
+  }
+  .sessions a {
+    display: grid;
+    place-items: center;
+    height: 2.5rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+  }
+  .sessions .wide {
+    grid-column: span 3;
+  }
+  .sessions .wide a {
+    padding-inline: var(--space-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    line-height: 2.5rem;
+    text-align: center;
+  }
+  .sessions a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-wash);
+  }
+</style>
