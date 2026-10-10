@@ -50,7 +50,7 @@ const ogLocale = (l: Locale) => LOCALE_META[l].intl.split('-u-')[0].replace('-',
 const { dir } = LOCALE_META[locale];
 const fullTitle = title ? `${title} — ${s.name}` : s.name;
 const desc = description ?? s.tagline;
-const site = Astro.site ?? new URL('https://hamidhosseini.vercel.app');
+const site = Astro.site ?? new URL('https://hamid-hosseini.vercel.app');
 const canonical = new URL(href(canonicalLocale ?? locale, path), site).toString();
 const abs = (p: string) => new URL(p, site).toString();
 const nodes = [

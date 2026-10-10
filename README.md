@@ -65,7 +65,7 @@ You need `yt-dlp` on your PATH (or at `~/.local/bin/yt-dlp`) for the YouTube and
 
 1. Push this folder to a GitHub repository.
 2. In Vercel, import the repository. Its settings are in `vercel.json`.
-3. Set the environment variable `SITE_URL` to the final domain, e.g. `https://hamidhosseini.com`. It's used for canonical links, the sitemap and social previews.
+3. Set the environment variable `SITE_URL` to the final domain, e.g. `https://hamidhosseini.com` (until then the production address `https://hamid-hosseini.vercel.app` is used). It's used for canonical links, the sitemap and social previews.
 4. `middleware.ts` sends `/` to the visitor's language, using a saved choice first, then the browser language, then English.
 
 ## Credits

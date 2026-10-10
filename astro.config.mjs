@@ -17,7 +17,7 @@ const articleDates = new Map(
   ]),
 );
 
-const SITE = process.env.SITE_URL ?? 'https://hamidhosseini.vercel.app';
+const SITE = process.env.SITE_URL ?? 'https://hamid-hosseini.vercel.app';
 
 export default defineConfig({
   site: SITE,
