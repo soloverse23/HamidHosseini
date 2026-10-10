@@ -39,7 +39,7 @@ const ratio = width && height ? `${width} / ${height}` : '16 / 9';
       s.dataset.telegramPost = box.dataset.post!;
       s.dataset.width = '100%';
       s.dataset.userpic = 'false';
-      if (document.documentElement.dataset.theme === 'dark' || matchMedia('(prefers-color-scheme: dark)').matches)
+      if (document.documentElement.dataset.theme === 'dark')
         s.dataset.dark = '1';
       box.replaceChildren(s);
       box.classList.add('is-live');
