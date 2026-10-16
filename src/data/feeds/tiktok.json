@@ -1,6 +1,6 @@
 {
  "source": "tiktok",
- "updatedAt": "2026-10-16T11:15:32.743Z",
+ "updatedAt": "2026-10-16T19:00:19.423Z",
  "profiles": {
   "main": {
    "name": "Islam De Ce Si Cum?",
@@ -10,6 +10,26 @@
   }
  },
  "items": [
+  {
+   "source": "tiktok",
+   "id": "7697326940092452118",
+   "url": "https://www.tiktok.com/@islam.de.ce.si.cum/video/7697326940092452118",
+   "date": "2026-10-16T17:59:53.000Z",
+   "kind": "short",
+   "lang": "ro",
+   "text": "#fyp #românia #emotii",
+   "media": [
+    {
+     "kind": "video",
+     "src": "/media/tiktok/7697326940092452118.webp",
+     "width": 540,
+     "height": 960,
+     "duration": 22
+    }
+   ],
+   "views": 798,
+   "likes": 108
+  },
   {
    "source": "tiktok",
    "id": "7695866426770443542",
@@ -27,8 +47,8 @@
      "duration": 36
     }
    ],
-   "views": 4586,
-   "likes": 543
+   "views": 4741,
+   "likes": 550
   },
   {
    "source": "tiktok",
@@ -47,8 +67,8 @@
      "duration": 19
     }
    ],
-   "views": 12100,
-   "likes": 939
+   "views": 12200,
+   "likes": 951
   },
   {
    "source": "tiktok",
@@ -67,8 +87,8 @@
      "duration": 23
     }
    ],
-   "views": 8851,
-   "likes": 881
+   "views": 9028,
+   "likes": 892
   },
   {
    "source": "tiktok",
@@ -87,8 +107,8 @@
      "duration": 21
     }
    ],
-   "views": 123200,
-   "likes": 6015
+   "views": 127100,
+   "likes": 6203
   },
   {
    "source": "tiktok",
@@ -107,8 +127,8 @@
      "duration": 17
     }
    ],
-   "views": 5429,
-   "likes": 663
+   "views": 5497,
+   "likes": 667
   },
   {
    "source": "tiktok",
@@ -127,8 +147,8 @@
      "duration": 29
     }
    ],
-   "views": 12300,
-   "likes": 1239
+   "views": 12400,
+   "likes": 1249
   },
   {
    "source": "tiktok",
@@ -147,8 +167,8 @@
      "duration": 18
     }
    ],
-   "views": 52300,
-   "likes": 1829
+   "views": 52500,
+   "likes": 1842
   },
   {
    "source": "tiktok",
@@ -168,7 +188,7 @@
     }
    ],
    "views": 14000,
-   "likes": 1232
+   "likes": 1237
   },
   {
    "source": "tiktok",
@@ -187,8 +207,8 @@
      "duration": 24
     }
    ],
-   "views": 24700,
-   "likes": 2106
+   "views": 24800,
+   "likes": 2120
   },
   {
    "source": "tiktok",
@@ -207,8 +227,8 @@
      "duration": 21
     }
    ],
-   "views": 50900,
-   "likes": 2445
+   "views": 51000,
+   "likes": 2457
   },
   {
    "source": "tiktok",
@@ -227,8 +247,8 @@
      "duration": 21
     }
    ],
-   "views": 61300,
-   "likes": 4100
+   "views": 61500,
+   "likes": 4119
   },
   {
    "source": "tiktok",
@@ -247,8 +267,8 @@
      "duration": 23
     }
    ],
-   "views": 21500,
-   "likes": 1770
+   "views": 21600,
+   "likes": 1775
   },
   {
    "source": "tiktok",
@@ -267,8 +287,8 @@
      "duration": 84
     }
    ],
-   "views": 23200,
-   "likes": 1594
+   "views": 23500,
+   "likes": 1606
   },
   {
    "source": "tiktok",
@@ -288,7 +308,7 @@
     }
    ],
    "views": 11000,
-   "likes": 935
+   "likes": 936
   },
   {
    "source": "tiktok",
@@ -307,8 +327,8 @@
      "duration": 77
     }
    ],
-   "views": 6629,
-   "likes": 762
+   "views": 6639,
+   "likes": 763
   },
   {
    "source": "tiktok",
@@ -347,8 +367,8 @@
      "duration": 50
     }
    ],
-   "views": 7083,
-   "likes": 861
+   "views": 7091,
+   "likes": 862
   },
   {
    "source": "tiktok",
@@ -368,7 +388,7 @@
     }
    ],
    "views": 32800,
-   "likes": 1964
+   "likes": 1965
   },
   {
    "source": "tiktok",
@@ -387,8 +407,8 @@
      "duration": 21
     }
    ],
-   "views": 8753,
-   "likes": 830
+   "views": 8756,
+   "likes": 832
   },
   {
    "source": "tiktok",
@@ -507,7 +527,7 @@
      "duration": 52
     }
    ],
-   "views": 55500,
+   "views": 55600,
    "likes": 2512
   },
   {
@@ -607,7 +627,7 @@
      "duration": 393
     }
    ],
-   "views": 2241,
+   "views": 2242,
    "likes": 122
   },
   {
@@ -627,7 +647,7 @@
      "duration": 429
     }
    ],
-   "views": 1529,
+   "views": 1531,
    "likes": 55
   },
   {
@@ -647,7 +667,7 @@
      "duration": 415
     }
    ],
-   "views": 1472,
+   "views": 1474,
    "likes": 74
   },
   {
@@ -667,7 +687,7 @@
      "duration": 287
     }
    ],
-   "views": 1398,
+   "views": 1399,
    "likes": 77
   },
   {
@@ -1407,7 +1427,7 @@
      "duration": 180
     }
    ],
-   "views": 231,
+   "views": 232,
    "likes": 9
   },
   {
@@ -1427,7 +1447,7 @@
      "duration": 246
     }
    ],
-   "views": 1275,
+   "views": 1277,
    "likes": 14
   },
   {
@@ -1447,7 +1467,7 @@
      "duration": 143
     }
    ],
-   "views": 1238,
+   "views": 1239,
    "likes": 41
   },
   {
@@ -1467,7 +1487,7 @@
      "duration": 170
     }
    ],
-   "views": 138,
+   "views": 139,
    "likes": 8
   },
   {
@@ -1487,8 +1507,8 @@
      "duration": 92
     }
    ],
-   "views": 317,
-   "likes": 20
+   "views": 320,
+   "likes": 21
   }
  ]
 }
