@@ -1,0 +1,89 @@
+---
+// Questions and answers in the reader's language. Built only for languages
+// that have at least one question.
+import Chapter from '../../../components/Chapter.astro';
+import { PROJECTS } from '../../../data/projects';
+import { LOCALES, type Locale } from '../../../i18n/locales';
+import { t } from '../../../i18n/strings';
+import Base from '../../../layouts/Base.astro';
+import { questionsIn } from '../../../lib/content';
+import { href } from '../../../lib/paths';
+
+export function getStaticPaths() {
+  return LOCALES.filter((l) => questionsIn(l).length).map((lang) => ({ params: { lang } }));
+}
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const list = questionsIn(locale);
+const muin = PROJECTS.find((p) => p.id === 'muin')!;
+const locales = LOCALES.filter((l) => questionsIn(l).length);
+---
+
+<Base
+  locale={locale}
+  path="qa"
+  locales={locales}
+  title={s.qa.title}
+  description={s.qa.lede}
+  crumbs={[{ name: s.qa.title, path: 'qa' }]}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    inLanguage: locale,
+    mainEntity: list.map((q) => ({
+      '@type': 'Question',
+      name: q.question,
+      url: new URL(href(locale, `qa/${q.slug}`), Astro.site).toString(),
+      acceptedAnswer: { '@type': 'Answer', text: q.short },
+    })),
+  }}
+>
+  <div class="wrap">
+    <Chapter locale={locale} title={s.qa.title} lede={s.qa.lede} />
+    <ol class="qa">
+      {
+        list.map((q) => (
+          <li>
+            <h2><a href={href(locale, `qa/${q.slug}`)}>{q.question}</a></h2>
+            <p>{q.short}</p>
+          </li>
+        ))
+      }
+    </ol>
+    <aside class="ask">
+      <a class="btn btn--primary" href={muin.url} rel="noopener" target="_blank">{s.qa.ask}</a>
+      <p class="meta">{s.qa.askLede}</p>
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .qa {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5);
+    max-width: var(--measure);
+  }
+  .qa li {
+    padding-block-end: var(--space-4);
+    border-block-end: 1px solid var(--rule);
+  }
+  .qa h2 {
+    font-size: var(--step-1);
+    margin-block-end: var(--space-2);
+  }
+  .qa h2 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .qa h2 a:hover {
+    color: var(--accent);
+  }
+  .ask {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: start;
+    margin-block-start: var(--space-7);
+  }
+</style>

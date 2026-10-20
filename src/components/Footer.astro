@@ -15,8 +15,11 @@ import Mark from './Mark.astro';
 interface Props {
   locale: Locale;
   path?: string;
+  /** Locales this page exists in; the others link to their home page */
+  locales?: readonly Locale[];
 }
-const { locale, path = '' } = Astro.props;
+const { locale, path = '', locales = LOCALES } = Astro.props;
+const switchHref = (l: Locale) => (locales.includes(l) ? href(l, path) : href(l));
 const s = t(locale);
 const u = ui(locale);
 const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
@@ -102,7 +105,7 @@ const sections = [
           {
             LOCALES.map((l) => (
               <li>
-                <a href={href(l, path)} lang={l} hreflang={l} aria-current={l === locale ? 'true' : undefined} data-set-locale={l}>
+                <a href={switchHref(l)} lang={l} hreflang={l} aria-current={l === locale ? 'true' : undefined} data-set-locale={l}>
                   {LOCALE_META[l].label}
                 </a>
               </li>

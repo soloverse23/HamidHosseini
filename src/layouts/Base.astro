@@ -125,11 +125,11 @@ const ogImage = new URL(image ?? '/og.png', site).toString();
   </head>
   <body>
     <a class="skip" href="#main">{s.skip}</a>
-    <Header locale={locale} path={switchPath ?? path} />
+    <Header locale={locale} path={switchPath ?? path} locales={locales} />
     <main id="main">
       <slot />
     </main>
-    <Footer locale={locale} path={switchPath ?? path} />
+    <Footer locale={locale} path={switchPath ?? path} locales={locales} />
     <SearchDialog locale={locale} />
     <GoogleAnalytics locale={locale} />
 

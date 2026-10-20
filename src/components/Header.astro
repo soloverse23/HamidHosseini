@@ -7,6 +7,7 @@
 import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { ui } from '../i18n/ui';
+import { questionsIn } from '../lib/content';
 import { num } from '../lib/format';
 import { href } from '../lib/paths';
 import Icon from './Icon.astro';
@@ -16,8 +17,11 @@ interface Props {
   locale: Locale;
   /** Current path without the locale prefix, used for the language switch */
   path: string;
+  /** Locales this page exists in; the others switch to their home page */
+  locales?: readonly Locale[];
 }
-const { locale, path } = Astro.props;
+const { locale, path, locales = LOCALES } = Astro.props;
+const switchHref = (l: Locale) => (locales.includes(l) ? href(l, path) : href(l));
 const s = t(locale);
 const u = ui(locale);
 const section = path.split('/')[0];
@@ -34,6 +38,8 @@ const NAV = [
   { key: 'series', path: 'videos', match: ['videos'] },
   { key: 'library', path: 'writings', match: ['writings', 'articles'] },
   { key: 'shorts', path: 'shorts', match: ['shorts', 'tiktok', 'instagram'] },
+  // Questions and answers appear once the reader's language has some.
+  ...(questionsIn(locale).length ? [{ key: 'qa', path: 'qa', match: ['qa'] } as const] : []),
   { key: 'latest', path: '#latest', match: ['notes'] },
   { key: 'about', path: 'about', match: ['about'] },
 ] as const;
@@ -57,7 +63,7 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
                 LOCALES.map((l) => (
                   <li>
                     <a
-                      href={href(l, path)}
+                      href={switchHref(l)}
                       hreflang={l}
                       aria-current={l === locale ? 'true' : undefined}
                       data-set-locale={l}
@@ -101,7 +107,7 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
               <li>
                 <a href={navHref(path)} aria-current={(match as readonly string[]).includes(section) ? 'page' : undefined}>
                   <span class="primary__no num" aria-hidden="true">{key === 'about' ? '' : pad(i + 1)}</span>
-                  <span class="primary__label">{s.nav[key]}</span>
+                  <span class="primary__label">{key === 'qa' ? s.qa.title : s.nav[key]}</span>
                   <Icon name="chevron" class="primary__chev flip" />
                 </a>
               </li>
@@ -116,7 +122,7 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
             LOCALES.map((l) => (
               <li>
                 <a
-                  href={href(l, path)}
+                  href={switchHref(l)}
                   lang={l}
                   dir={LOCALE_META[l].dir}
                   hreflang={l}

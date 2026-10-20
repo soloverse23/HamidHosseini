@@ -34,6 +34,8 @@ import { href, localePaths } from '../../lib/paths';
 import { PRODUCTION_URL } from '../../lib/site';
 import { verseHref } from '../../lib/quran-refs';
 import { foundationNode, personNode } from '../../lib/schema';
+import { PROJECTS } from '../../data/projects';
+import { pathsIn } from '../../lib/content';
 import { CHANNELS } from '../../lib/social';
 import { withoutEpisodeNo } from '../../lib/series';
 import { clipTitle, excerpt, itemTitle } from '../../lib/text';
@@ -50,6 +52,8 @@ const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
 
 /* Hero: the newest written note */
 const feat = featuredNote(locale);
+const paths = pathsIn(locale);
+const muin = PROJECTS.find((p) => p.id === 'muin')!;
 const featTitle = feat ? itemTitle(feat, 140) : '';
 const featBody = feat ? excerpt(strip(feat.text.slice(feat.text.indexOf('\n') + 1)), 520) : '';
 const featTopic = feat ? topicsOf(feat)[0] : undefined;
@@ -116,16 +120,33 @@ const jsonLd = [
     <div class="hero__intro">
       <h1 class="hero__name">{s.name}</h1>
       <p class="hero__tag">{s.tagline}</p>
-      <p class="hero__actions">
-        <a class="btn btn--primary" href={href(locale, 'notes')}>
-          {u.readNotes}
-          <Icon name="arrow" class="flip" />
-        </a>
-        <a class="btn" href={href(locale, 'quran')}>
-          <Icon name="book" />
-          {u.openQuran}
-        </a>
-      </p>
+      {
+        locale === 'fa' ? (
+          <p class="hero__actions">
+            <a class="btn btn--primary" href={href(locale, 'notes')}>
+              {u.readNotes}
+              <Icon name="arrow" class="flip" />
+            </a>
+            <a class="btn" href={href(locale, 'quran')}>
+              <Icon name="book" />
+              {u.openQuran}
+            </a>
+          </p>
+        ) : (
+          // Readers in the other languages mostly come to learn about Islam:
+          // the video series and a place to ask come first.
+          <p class="hero__actions">
+            <a class="btn btn--primary" href={href(locale, 'videos')}>
+              <Icon name="play" />
+              {s.qa.watch}
+            </a>
+            <a class="btn" href={muin.url} rel="noopener" target="_blank">
+              {s.qa.ask}
+              <Icon name="arrow" class="flip" />
+            </a>
+          </p>
+        )
+      }
       <SearchField locale={locale} class="hero__search" />
     </div>
 
@@ -158,6 +179,51 @@ const jsonLd = [
       )
     }
   </section>
+
+  {
+    paths.length > 0 && (
+      <section class="wrap start" aria-labelledby="start-title">
+        <div class="block-head">
+          <h2 id="start-title">{s.qa.start}</h2>
+        </div>
+        <div class="start__grid">
+          {paths.map((p) => (
+            <article class="start__path">
+              <h3>{p.title}</h3>
+              {p.intro && <p class="meta">{p.intro}</p>}
+              <ol>
+                {p.steps.map((st) => (
+                  <li>
+                    <a href={st.url}>{st.label}</a>
+                    {st.note && <span class="meta"> · {st.note}</span>}
+                  </li>
+                ))}
+              </ol>
+            </article>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    locale === 'ro' && (
+      <section class="wrap start" aria-labelledby="found-title">
+        <div class="block-head">
+          <h2 id="found-title">{s.about.projects}</h2>
+        </div>
+        <div class="start__grid">
+          {PROJECTS.map((p) => (
+            <article class="start__path">
+              <h3><a href={p.url} rel="noopener" target="_blank">{p.name.ro}</a></h3>
+              <p class="meta">{p.description.ro}</p>
+              {p.appUrl && <a class="link-arrow" href={p.appUrl} rel="noopener" target="_blank">{s.about.openApp}</a>}
+            </article>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   <!-- ============ Now ============ -->
   <section class="wrap now" aria-labelledby="now-title">
@@ -834,6 +900,35 @@ const jsonLd = [
     font-size: 1.0625rem;
     font-weight: 600;
     line-height: 1.6;
+  }
+  .start {
+    margin-block: var(--space-7);
+  }
+  .start__grid {
+    display: grid;
+    gap: var(--space-5);
+  }
+  @media (min-width: 48rem) {
+    .start__grid {
+      grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+  }
+  .start__path {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+  .start__path h3 a,
+  .start__path li a {
+    color: var(--accent);
+  }
+  .start__path ol {
+    display: grid;
+    gap: var(--space-1);
+    padding-inline-start: 1.2em;
   }
   .ep__langs {
     display: flex;

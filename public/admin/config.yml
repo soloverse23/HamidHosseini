@@ -184,6 +184,72 @@ collections:
           - { label: URL, name: url, widget: string }
           - { label: Label, name: label, widget: string, required: false, hint: 'For “Buy”: the shop name' }
 
+  - name: qa
+    label: Questions and answers
+    label_singular: Question
+    description: Each question gets its own page in its language, and the Q&A section appears in a language's menu once it has one. Untick Draft to publish.
+    folder: src/data/content/qa
+    format: json
+    extension: json
+    create: true
+    delete: true
+    identifier_field: question
+    slug: '{{fields.slug}}'
+    summary: '{{lang}} · {{question}}'
+    fields:
+      - { label: Draft, name: draft, widget: boolean, required: false, default: true }
+      - { label: Address, name: slug, widget: string, pattern: ['^[a-z0-9-]+$', 'Lowercase Latin letters, digits and hyphens'], hint: 'The end of the link, e.g. insulting-the-sacred' }
+      - { label: Language, name: lang, widget: select, options: [fa, ro, ar, ur, en], default: fa }
+      - { label: Question, name: question, widget: string }
+      - { label: Short answer, name: short, widget: text, hint: 'Two or three sentences (40–60 words), complete on their own. Shown first and quoted by search engines.' }
+      - { label: Full answer, name: answer, widget: text, required: false, hint: Paragraphs separated by an empty line. }
+      - { label: Date, name: date, widget: datetime, required: false, date_format: 'YYYY-MM-DD', time_format: false, format: 'YYYY-MM-DD' }
+      - label: Sources
+        name: sources
+        widget: list
+        required: false
+        summary: '{{kind}} {{ref}}'
+        fields:
+          - label: Kind
+            name: kind
+            widget: select
+            options:
+              - { label: 'Quran verse (ref = 9:8)', value: verse }
+              - { label: 'Telegram post (ref = post number)', value: note }
+              - { label: 'Episode (ref = episode number)', value: video }
+              - { label: 'Article (ref = article id)', value: article }
+              - { label: 'Other link (ref = URL)', value: link }
+          - { label: Reference, name: ref, widget: string }
+          - { label: Label, name: label, widget: string, required: false }
+
+  - name: paths
+    label: Reading paths
+    label_singular: Reading path
+    description: Curated "where to start" routes for newcomers, shown on the home page of their language.
+    folder: src/data/content/paths
+    format: json
+    extension: json
+    create: true
+    delete: true
+    identifier_field: title
+    slug: '{{fields.id}}'
+    summary: '{{lang}} · {{title}}'
+    fields:
+      - { label: Draft, name: draft, widget: boolean, required: false, default: true }
+      - { label: Id, name: id, widget: string, pattern: ['^[a-z0-9-]+$', 'Lowercase Latin letters, digits and hyphens'] }
+      - { label: Language, name: lang, widget: select, options: [fa, ro, ar, ur, en], default: fa }
+      - { label: Title, name: title, widget: string }
+      - { label: Introduction, name: intro, widget: text, required: false }
+      - { label: Order, name: order, widget: number, value_type: int, required: false, hint: Lower comes first. }
+      - label: Steps
+        name: steps
+        widget: list
+        summary: '{{label}}'
+        fields:
+          - { label: Label, name: label, widget: string }
+          - { label: Link, name: url, widget: string, hint: 'A page on this site (e.g. /fa/quran/1/1/) or a full URL' }
+          - { label: Note, name: note, widget: string, required: false }
+
   - name: pages
     label: Pages
     files:
