@@ -33,6 +33,16 @@ export function year(locale: Locale, y: number): string {
   return num(locale, y).replace(/[,.\s]/g, '');
 }
 
+/** "2016–2017" in the reader's calendar and digits (۱۳۹۵–۱۳۹۶ for Persian). */
+export function yearRange(locale: Locale, [from, to]: [number, number?]): string {
+  return to && to !== from ? `${year(locale, from)}–${year(locale, to)}` : year(locale, from);
+}
+
+/** ASCII digits inside a string in the reader's digits (۲۱ on the Persian site). */
+export function digits(locale: Locale, s: string): string {
+  return s.replace(/\d/g, (d) => plain(locale, Number(d)));
+}
+
 export function duration(seconds?: number): string | undefined {
   if (!seconds) return undefined;
   const h = Math.floor(seconds / 3600);

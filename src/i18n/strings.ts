@@ -90,6 +90,7 @@ const en = {
     buy: 'Buy',
     file: 'File on Telegram',
     sessions: (n: string) => `${n} sessions`,
+    notPublished: 'Notes not on Telegram yet',
     empty: 'His books will be listed here with links to the eBook, the PDF and places to buy them.',
   },
   quran: {
@@ -301,6 +302,7 @@ const ro: Strings = {
     buy: 'Cumpără',
     file: 'Fișier pe Telegram',
     sessions: (n) => `${n} întâlniri`,
+    notPublished: 'Notele nu sunt încă pe Telegram',
     empty: 'Cărțile sale vor fi listate aici, cu linkuri către eBook, PDF și locurile de unde pot fi cumpărate.',
   },
   quran: {
@@ -511,6 +513,7 @@ const ar: Strings = {
     buy: 'شراء',
     file: 'الملف على تيليغرام',
     sessions: (n) => `${n} جلسة`,
+    notPublished: 'لم تُنشر مذكراتها على تيليغرام بعد',
     empty: 'ستُدرج كتبه هنا مع روابط النسخة الإلكترونية وملف PDF وأماكن الشراء.',
   },
   quran: {
@@ -718,6 +721,7 @@ const fa: Strings = {
     buy: 'خرید',
     file: 'فایل در تلگرام',
     sessions: (n) => `${n} جلسه`,
+    notPublished: 'مستندات این جلسه هنوز در تلگرام منتشر نشده است',
     empty: 'کتاب‌ها اینجا با پیوند نسخهٔ الکترونیک، PDF و راه‌های خرید فهرست می‌شوند.',
   },
   quran: {
@@ -926,6 +930,7 @@ const ur: Strings = {
     buy: 'خریدیں',
     file: 'ٹیلی گرام پر فائل',
     sessions: (n) => `${n} نشستیں`,
+    notPublished: 'اس نشست کے نوٹس ابھی ٹیلی گرام پر نہیں',
     empty: 'ان کی کتابیں یہاں ای بک، PDF اور خریداری کے مقامات کے روابط کے ساتھ درج ہوں گی۔',
   },
   quran: {

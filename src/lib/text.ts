@@ -75,3 +75,20 @@ export function titleLine(text: string, max = 120): string {
 export function isThin(item: { text: string; media: { title?: string }[] }): boolean {
   return !titleLine(cleanDisplay(item.text)) && !item.media.some((m) => m.title);
 }
+
+/** Caption without hashtags and mentions; empty when it was nothing but tags. */
+export const withoutTags = (text: string) => cleanDisplay(text.replace(/[#@][\p{L}\p{N}_.]+/gu, ' ')).trim();
+
+/** A short title from running speech (auto captions have no punctuation): the opening words. */
+export function speechTitle(text: string, max = 60): string {
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  const cut = t.length <= max ? t : t.slice(0, t.lastIndexOf(' ', max) > max * 0.5 ? t.lastIndexOf(' ', max) : max) + '…';
+  return cut.charAt(0).toLocaleUpperCase() + cut.slice(1);
+}
+
+/** Title of a short clip: its own title, else its caption without hashtags. */
+export function clipTitle(item: { title?: string; text: string }, max = 90): string {
+  if (item.title && withoutTags(item.title)) return excerpt(item.title, max);
+  return titleLine(withoutTags(item.text), max);
+}

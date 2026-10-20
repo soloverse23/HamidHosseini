@@ -1,13 +1,13 @@
 ---
 import Chapter from '../../components/Chapter.astro';
 import Icon from '../../components/Icon.astro';
-import { ARTICLES, BOOKS, LECTURES, type Localized, type Work, type WorkLink } from '../../data/writings';
+import { ARTICLES, BOOKS, LECTURES, type LectureSeries, type Localized, type Work, type WorkLink } from '../../data/writings';
 import { type Locale } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
 import Base from '../../layouts/Base.astro';
 import { articles as blogArticles } from '../../lib/articles';
 import { lectureSessions } from '../../lib/data';
-import { num, year } from '../../lib/format';
+import { digits, num, year, yearRange } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
 import { toAsciiDigits } from '../../lib/text';
 
@@ -35,8 +35,18 @@ const linkLabel = (l: WorkLink) =>
           ? `${s.books.buy}${l.label ? ` · ${l.label}` : ''}`
           : s.books.file;
 const sortLinks = (w: Work) => [...w.links].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
-const typeLabel = { article: s.books.articles, interview: s.books.articles, dialogue: s.books.articles, book: s.books.books };
 const sessionNo = (title: string) => toAsciiDigits(title).match(/(\d+)\s*$/)?.[1];
+type Session = (typeof lectureSessions)[string][number];
+/** With a known total, every session in order, and `session` empty where it has no notes yet. */
+function sessionRows(l: LectureSeries, sessions: Session[]): { slot: number; session?: Session }[] {
+  if (!l.total) return sessions.map((x) => ({ slot: 0, session: x }));
+  const byNo = new Map(sessions.map((x) => [Number(sessionNo(x.title)), x]));
+  const total = l.total;
+  return [
+    ...Array.from({ length: total }, (_, i) => ({ slot: i + 1, session: byNo.get(i + 1) })),
+    ...sessions.filter((x) => !(Number(sessionNo(x.title)) <= total)).map((x) => ({ slot: 0, session: x })),
+  ];
+}
 ---
 
 <Base locale={locale} path="writings" crumbs={[{ name: s.sections.writings.title, path: 'writings' }]} title={s.sections.writings.title} description={s.sections.writings.lede}>
@@ -131,6 +141,7 @@ const sessionNo = (title: string) => toAsciiDigits(title).match(/(\d+)\s*$/)?.[1
           LECTURES.map((l) => {
             const { original, gloss } = titles(l);
             const sessions = lectureSessions[l.id] ?? [];
+            const rows = sessionRows(l, sessions);
             return (
               <article class="serie" id={l.id}>
                 <header>
@@ -138,18 +149,26 @@ const sessionNo = (title: string) => toAsciiDigits(title).match(/(\d+)\s*$/)?.[1
                   {gloss && <p class="gloss">{gloss}</p>}
                   <p class="meta">
                     {pick(l.venue) && <span>{pick(l.venue)}</span>}
-                    <span class="num">{l.years}</span>
-                    <span>{s.books.sessions(num(locale, sessions.length))}</span>
+                    <span class="num">{yearRange(locale, l.years)}</span>
+                    <span>{s.books.sessions(num(locale, l.total ?? sessions.length))}</span>
                   </p>
                 </header>
                 <ol class="sessions">
-                  {sessions.map(({ item, title }) => {
+                  {rows.map(({ slot, session }) => {
+                    if (!session)
+                      return (
+                        <li class="missing" title={s.books.notPublished}>
+                          <span>{num(locale, slot)}</span>
+                        </li>
+                      );
+                    const { item, title } = session;
                     const exam = /^(آزمون|پاسخنامه)/.test(title);
                     const no = exam ? undefined : sessionNo(title);
+                    const label = digits(l.lang, title);
                     return (
                       <li class:list={{ wide: !no }}>
-                        <a href={item.url} rel="noopener" target="_blank" title={title} lang={l.lang}>
-                          {no ? num(locale, Number(no)) : <span dir="auto">{title}</span>}
+                        <a href={item.url} rel="noopener" target="_blank" title={label} lang={l.lang}>
+                          {no ? num(locale, Number(no)) : <span dir="auto">{label}</span>}
                         </a>
                       </li>
                     );
@@ -322,5 +341,16 @@ const sessionNo = (title: string) => toAsciiDigits(title).match(/(\d+)\s*$/)?.[1
     border-color: var(--accent);
     color: var(--accent);
     background: var(--accent-wash);
+  }
+  .sessions .missing span {
+    display: grid;
+    place-items: center;
+    height: 2.5rem;
+    border: 1px dashed var(--rule);
+    border-radius: var(--radius);
+    font-size: var(--step--1);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-3);
+    cursor: help;
   }
 </style>

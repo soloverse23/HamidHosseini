@@ -6,9 +6,8 @@
 import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { ui } from '../i18n/ui';
-import { compact, num } from '../lib/format';
+import { num } from '../lib/format';
 import { href } from '../lib/paths';
-import { CHANNELS } from '../lib/social';
 import Icon from './Icon.astro';
 import Mark from './Mark.astro';
 
@@ -41,26 +40,6 @@ const label: Record<string, string> = {
 <header class="site-header">
   <div class="topbar">
     <div class="wrap topbar__inner">
-      <ul class="social" aria-label={u.channels}>
-        {
-          CHANNELS.map((c) => (
-            <li>
-              <a
-                href={c.url}
-                rel="me noopener"
-                target="_blank"
-                class={`social__link is-${c.platform}`}
-                style={`--brand:${c.brand}`}
-                title={`${c.label} · ${c.name}`}
-              >
-                <Icon name={c.platform} label={`${c.label} ${c.handle}`} />
-                {c.followers ? <span class="social__n num">{compact(locale, c.followers)}</span> : null}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-
       <div class="topbar__end">
         <details class="lang">
           <summary class="lang__btn" aria-label={`${u.language}: ${LOCALE_META[locale].label}`}>

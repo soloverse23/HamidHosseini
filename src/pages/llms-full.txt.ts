@@ -32,7 +32,7 @@ export function GET({ site }: APIContext) {
 
   out.push('## Lecture series', '');
   for (const l of LECTURES) {
-    out.push(`### ${pick(l.title)} (${l.years})`);
+    out.push(`### ${pick(l.title)} (${l.years.join('–')})`);
     const venue = pick(l.venue);
     if (venue) out.push(`Venue: ${venue}`);
     const sum = pick(l.summary);

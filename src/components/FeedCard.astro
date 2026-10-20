@@ -11,7 +11,7 @@ import type { FeedEntry } from '../lib/feed';
 import { compact, duration, num } from '../lib/format';
 import { href } from '../lib/paths';
 import { withoutEpisodeNo } from '../lib/series';
-import { excerpt, titleLine } from '../lib/text';
+import { clipTitle, excerpt, titleLine } from '../lib/text';
 import { topicsOf } from '../lib/topics';
 import Icon from './Icon.astro';
 
@@ -223,7 +223,7 @@ const companionLabel = (c: FeedItem) =>
       <ul class="strip">
         {entry.items.slice(0, 6).map((i) => (
           <li>
-            <a class="frame frame--9x16" href={i.url} rel="noopener" target="_blank" title={i.text || i.title}>
+            <a class="frame frame--9x16" href={i.url} rel="noopener" target="_blank" title={clipTitle(i) || undefined}>
               <img src={i.media[0]?.src} alt="" loading="lazy" decoding="async" />
               <span class="card__play card__play--sm">
                 <Icon name="play" />

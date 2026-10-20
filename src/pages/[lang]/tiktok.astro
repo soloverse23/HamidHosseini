@@ -7,6 +7,7 @@ import Base from '../../layouts/Base.astro';
 import { CHANNEL_URLS, tiktok } from '../../lib/data';
 import { compact, date, duration, num } from '../../lib/format';
 import { localePaths } from '../../lib/paths';
+import { clipTitle } from '../../lib/text';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
@@ -31,10 +32,11 @@ const views = items.reduce((a, i) => a + (i.views ?? 0), 0);
       {
         items.map((v) => {
           const m = v.media[0];
+          const title = clipTitle(v);
           return (
             <li>
               <div class="frame frame--9x16 tt" data-tt={v.id}>
-                {m?.src && <img src={m.src} width={m.width} height={m.height} alt="" loading="lazy" decoding="async" />}
+                {m?.src && <img src={m.src} width={m.width} height={m.height} alt={title} loading="lazy" decoding="async" />}
                 <button class="play-btn" type="button">
                   <span>
                     <Icon name="play" />
@@ -43,9 +45,11 @@ const views = items.reduce((a, i) => a + (i.views ?? 0), 0);
                 </button>
                 {m?.duration ? <span class="frame__badge">{duration(m.duration)}</span> : null}
               </div>
-              <p class="cap" lang={v.lang} dir="auto" data-tr>
-                {v.text}
-              </p>
+              {title && (
+                <p class="cap" lang={v.lang} dir="auto" data-tr>
+                  {title}
+                </p>
+              )}
               <p class="meta">
                 <a href={v.url} rel="noopener" target="_blank">
                   <time datetime={v.date}>{date(locale, v.date, 'short')}</time>

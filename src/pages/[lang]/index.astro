@@ -35,7 +35,7 @@ import { href, localePaths } from '../../lib/paths';
 import { PRODUCTION_URL } from '../../lib/site';
 import { CHANNELS } from '../../lib/social';
 import { withoutEpisodeNo } from '../../lib/series';
-import { excerpt, titleLine } from '../../lib/text';
+import { clipTitle, excerpt, titleLine } from '../../lib/text';
 import { topicsOf } from '../../lib/topics';
 
 export const getStaticPaths = localePaths;
@@ -227,7 +227,7 @@ const jsonLd = [
           {
             shortPool.map((v) => (
               <li>
-                <a class="frame frame--9x16" href={v.url} rel="noopener" target="_blank" title={v.text || v.title}>
+                <a class="frame frame--9x16" href={v.url} rel="noopener" target="_blank" title={clipTitle(v) || undefined}>
                   <img src={v.media[0]?.src} alt="" loading="lazy" decoding="async" />
                   <span class="s-src">
                     <Icon name={v.source === 'tiktok' ? 'tiktok' : 'youtube'} />
@@ -319,7 +319,7 @@ const jsonLd = [
                 <span class="ch__handle handle">{c.handle}</span>
               </span>
               <span class="ch__n">
-                <span class="num">{c.followers ? compact(locale, c.followers) : '—'}</span>
+                <span class="num">{c.followers ? compact(locale, c.followers) : ''}</span>
                 <span class="ch__unit">{u.followers}</span>
               </span>
             </a>

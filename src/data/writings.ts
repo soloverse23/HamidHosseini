@@ -34,7 +34,10 @@ export interface Work {
 
 export interface LectureSeries {
   id: string;
-  years: string;
+  /** First and last year (Gregorian); shown in the reader's calendar */
+  years: [number, number?];
+  /** Sessions held, when some have no notes on Telegram yet */
+  total?: number;
   lang: Locale;
   title: Localized;
   venue?: Localized;
@@ -218,7 +221,9 @@ export const ARTICLES: Work[] = [
 export const LECTURES: LectureSeries[] = [
   {
     id: 'ethics-of-servitude',
-    years: '2016–2017',
+    years: [2016, 2017],
+    // Sessions 1 and 20 have no notes on Telegram.
+    total: 32,
     lang: 'fa',
     title: { fa: 'اخلاق بندگی', en: 'The ethics of servitude', ro: 'Etica slujirii', ar: 'أخلاق العبودية' },
     venue: {
@@ -231,7 +236,7 @@ export const LECTURES: LectureSeries[] = [
   },
   {
     id: 'knowing-god',
-    years: '2016–2017',
+    years: [2016, 2017],
     lang: 'fa',
     title: { fa: 'خداشناسی در قرآن', en: 'Knowing God in the Quran', ro: 'Cunoașterea lui Dumnezeu în Coran', ar: 'معرفة الله في القرآن' },
     venue: { fa: 'تفسیر موضوعی', en: 'Thematic tafsir course', ro: 'Curs de tafsir tematic', ar: 'دورة التفسير الموضوعي' },
@@ -239,7 +244,7 @@ export const LECTURES: LectureSeries[] = [
   },
   {
     id: 'thematic-tafsir',
-    years: '2016',
+    years: [2016],
     lang: 'fa',
     title: { fa: 'تفسیر موضوعی قرآن', en: 'Thematic tafsir of the Quran', ro: 'Tafsir tematic al Coranului', ar: 'التفسير الموضوعي للقرآن' },
     match: /^(تفسیر موضوعی|آزمون تفسیر موضوعی|پاسخنامه آزمون تفسیر)/,
