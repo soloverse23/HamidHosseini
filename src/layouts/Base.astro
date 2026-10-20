@@ -49,7 +49,7 @@ const {
 const s = t(locale);
 const ogLocale = (l: Locale) => LOCALE_META[l].intl.split('-u-')[0].replace('-', '_');
 const { dir } = LOCALE_META[locale];
-const fullTitle = title ? `${title} — ${s.name}` : s.name;
+const fullTitle = title ? `${title} | ${s.name}` : s.name;
 const desc = description ?? s.tagline;
 const site = Astro.site ?? new URL(PRODUCTION_URL);
 const canonical = new URL(href(canonicalLocale ?? locale, path), site).toString();

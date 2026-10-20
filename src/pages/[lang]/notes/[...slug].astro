@@ -11,12 +11,12 @@ import SearchField from '../../../components/SearchField.astro';
 import { LOCALES, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
-import { notes, quranFa, telegram } from '../../../lib/data';
+import { notes, noteTitleCount, quranFa, telegram } from '../../../lib/data';
 import type { FeedItem } from '../../../lib/feed-types';
 import { compact, date, num, plain } from '../../../lib/format';
 import { notesByDay } from '../../../lib/feed';
 import { href } from '../../../lib/paths';
-import { firstLine, excerpt } from '../../../lib/text';
+import { excerpt, isThin, titleLine } from '../../../lib/text';
 import { TOPIC_KEYS, topicsOf, type TopicKey } from '../../../lib/topics';
 
 type Props =
@@ -80,7 +80,16 @@ const firstRef = quranRefs[0];
 const hub = props.kind === 'list' && locale === 'fa' && props.page === 1;
 const lastRef = quranRefs.at(-1);
 
-const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 90) : '';
+const postTitle =
+  props.kind === 'post'
+    ? titleLine(props.item.text, 90) ||
+      props.item.media.find((m) => m.title)?.title?.replace(/\.pdf$/i, '') ||
+      `${s.sections.notes.title} #${plain(locale, Number(props.item.id))}`
+    : '';
+const thin = props.kind === 'post' && isThin(props.item);
+// Multi-part posts often repeat one heading; the date tells them apart in search results.
+const repeated = props.kind === 'post' && postTitle && noteTitleCount.get(postTitle)! > 1;
+const pageTitle = repeated ? `${postTitle}، ${date(locale, props.item.date)}` : postTitle;
 ---
 
 {
@@ -167,8 +176,9 @@ const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^
     <Base
       locale={locale}
       path={`notes/${slug}`}
-      title={postTitle || s.sections.notes.title}
-      description={excerpt(props.item.text, 160)}
+      title={pageTitle || s.sections.notes.title}
+      description={excerpt(props.item.text, 160) || `${postTitle}, ${date(locale, props.item.date)}`}
+      noindex={thin}
       switchPath="notes"
       alternates={false}
       image={props.item.media.find((m) => m.src?.startsWith('/'))?.src}
@@ -220,7 +230,7 @@ const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^
             <a href={href(locale, `notes/${props.newer.id}`)}>
               <span class="meta">{s.prev}</span>
               <span class="post__nav-title" lang={props.newer.lang} dir="auto" {...(props.newer.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
-                {firstLine(props.newer.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 70) || '…'}
+                {titleLine(props.newer.text, 70) || '…'}
               </span>
             </a>
           ) : (
@@ -230,7 +240,7 @@ const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^
             <a href={href(locale, `notes/${props.older.id}`)} class="post__nav-older">
               <span class="meta">{s.next}</span>
               <span class="post__nav-title" lang={props.older.lang} dir="auto" {...(props.older.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
-                {firstLine(props.older.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 70) || '…'}
+                {titleLine(props.older.text, 70) || '…'}
               </span>
             </a>
           ) : (

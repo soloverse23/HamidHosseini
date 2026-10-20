@@ -207,7 +207,7 @@ const LANGS = ['fa', 'ar', 'ur', 'ro', 'en'] as const;
       empty.hidden = true;
       more.hidden = true;
       skeleton.hidden = true;
-      document.title = document.title.replace(/^.*? — /, `${document.querySelector('h1')!.textContent} — `);
+      document.title = document.title.replace(/^.*? \| /, `${document.querySelector('h1')!.textContent} | `);
     }
 
     async function render(from: number) {
@@ -258,7 +258,7 @@ const LANGS = ['fa', 'ar', 'ur', 'ro', 'en'] as const;
         empty.querySelector('.sp__suggest')!.innerHTML = found.suggestion ? suggestHtml(found.suggestion, d.didYouMean!) : '';
         empty.querySelector<HTMLElement>('.sp__hint')!.hidden = !!found.suggestion;
         await render(0);
-        document.title = document.title.replace(/^.*? — /, `${q} — `);
+        document.title = document.title.replace(/^.*? \| /, `${q} | `);
       } catch {
         if (mine !== seq) return;
         list.innerHTML = '';

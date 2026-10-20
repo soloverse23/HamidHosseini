@@ -4,6 +4,7 @@
 
 import surahList from '../../data/quran/surahs.json';
 import { foldMapped, normalize, queryTerms, tidy, vocabKey } from './normalize';
+import { DECOR } from '../text';
 
 export const TYPES = ['quran', 'notes', 'videos', 'writings', 'pages'] as const;
 export type SearchType = (typeof TYPES)[number];
@@ -291,8 +292,6 @@ export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ESC[c]);
  * HTML for `text` with matches marked. With `max`, trims to a window around
  * the first match.
  */
-/** Emoji and decorative symbols (💢 ❇️ 🔸 …) that clutter a result line. */
-const DECOR = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\uFE0E\uFE0F\u20E3\u200D✳❇✴⭕◾◽▪▫►◄●○■□]/gu;
 export const plainText = (s: string) => s.replace(DECOR, ' ').replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').trim();
 
 const isLow = (s: string, i: number) => {

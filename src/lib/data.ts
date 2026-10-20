@@ -12,11 +12,26 @@ import faTranslation from '../data/quran/fa.json';
 import { LECTURES } from '../data/writings';
 import type { Locale } from '../i18n/locales';
 import type { FeedFile, FeedItem } from './feed-types';
+import { cleanDisplay, cleanDisplayHtml, titleLine } from './text';
 
-export const telegram = telegramFeed as unknown as FeedFile;
-export const youtube = youtubeFeed as unknown as FeedFile;
-export const tiktok = tiktokFeed as unknown as FeedFile;
-export const instagram = instagramFeed as unknown as FeedFile;
+/** Items as the site shows them: decorative emoji removed from text and HTML. */
+const shown = (feed: unknown): FeedFile => {
+  const f = feed as FeedFile;
+  return {
+    ...f,
+    items: f.items.map((i) => ({
+      ...i,
+      text: cleanDisplay(i.text),
+      ...(i.title ? { title: cleanDisplay(i.title) } : {}),
+      ...(i.html ? { html: cleanDisplayHtml(i.html) } : {}),
+    })),
+  };
+};
+
+export const telegram = shown(telegramFeed);
+export const youtube = shown(youtubeFeed);
+export const tiktok = shown(tiktokFeed);
+export const instagram = shown(instagramFeed);
 export const instagramManualPosts = (instagramManual as { posts: string[] }).posts;
 
 export const CHANNEL_URLS = {
@@ -35,6 +50,12 @@ export const CHANNEL_URLS = {
 
 export const notes: FeedItem[] = telegram.items;
 export const noteById = new Map(notes.map((n) => [n.id, n]));
+/** How many posts share each generated title (multi-part posts repeat theirs). */
+export const noteTitleCount = notes.reduce((m, n) => {
+  const k = titleLine(n.text, 90);
+  if (k) m.set(k, (m.get(k) ?? 0) + 1);
+  return m;
+}, new Map<string, number>());
 
 /* ---------- YouTube ---------- */
 

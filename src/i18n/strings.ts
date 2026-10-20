@@ -2,7 +2,7 @@ import type { Locale } from './locales';
 
 const en = {
   name: 'Seyed Hamid Hosseini',
-  tagline: 'Notes and reflections on the path of awareness — the Quran, faith, ethics and reason.',
+  tagline: 'Notes and reflections on the path of awareness: the Quran, faith, ethics and reason',
   skip: 'Skip to content',
   nav: {
     home: 'Home',
@@ -213,7 +213,7 @@ export type Strings = typeof en;
 const ro: Strings = {
   ...en,
   name: 'Seyed Hamid Hosseini',
-  tagline: 'Note și reflecții pe calea conștientizării — Coranul, credința, etica și rațiunea.',
+  tagline: 'Note și reflecții pe calea conștientizării: Coranul, credința, etica și rațiunea',
   skip: 'Sari la conținut',
   nav: {
     home: 'Acasă',
@@ -423,7 +423,7 @@ const ro: Strings = {
 const ar: Strings = {
   ...en,
   name: 'السيد حميد الحسيني',
-  tagline: 'ملاحظات وتأملات في طريق الوعي — القرآن، والإيمان، والأخلاق، والعقل.',
+  tagline: 'ملاحظات وتأملات في طريق الوعي: القرآن، والإيمان، والأخلاق، والعقل',
   skip: 'انتقل إلى المحتوى',
   nav: {
     home: 'الرئيسية',
@@ -630,7 +630,7 @@ const ar: Strings = {
 const fa: Strings = {
   ...en,
   name: 'سید حمید حسینی',
-  tagline: 'یادداشت‌ها و پیشنهادهایی در مسیر آگاهی — قرآن، ایمان، اخلاق و خرد.',
+  tagline: 'یادداشت‌ها و پیشنهادهایی در مسیر آگاهی: قرآن، ایمان، اخلاق و خرد',
   skip: 'رفتن به محتوا',
   nav: {
     home: 'خانه',
@@ -838,7 +838,7 @@ const fa: Strings = {
 const ur: Strings = {
   ...en,
   name: 'سید حمید حسینی',
-  tagline: 'آگاہی کی راہ میں یادداشتیں اور غور و فکر — قرآن، ایمان، اخلاق اور عقل۔',
+  tagline: 'آگاہی کی راہ میں یادداشتیں اور غور و فکر: قرآن، ایمان، اخلاق اور عقل',
   skip: 'مواد پر جائیں',
   nav: {
     home: 'صفحۂ اول',

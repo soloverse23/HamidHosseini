@@ -3,12 +3,12 @@ import sitemap from '@astrojs/sitemap';
 import search from './scripts/search/integration.ts';
 import { readFileSync } from 'node:fs';
 import { PRODUCTION_URL } from './src/lib/site.ts';
+import { isThin } from './src/lib/text.ts';
 
-const postDates = new Map(
-  JSON.parse(readFileSync(new URL('./src/data/feeds/telegram.json', import.meta.url), 'utf8')).items.map(
-    (i) => [i.id, i.date],
-  ),
-);
+const telegramItems = JSON.parse(readFileSync(new URL('./src/data/feeds/telegram.json', import.meta.url), 'utf8')).items;
+const postDates = new Map(telegramItems.map((i) => [i.id, i.date]));
+// Posts with nothing to read are noindex on their page; keep them out of the sitemap too.
+const thinPosts = new Set(telegramItems.filter(isThin).map((i) => i.id));
 
 // kalaam.ir articles: last edit on the blog (stored as Tehran local time).
 const articleDates = new Map(
@@ -39,6 +39,7 @@ export default defineConfig({
         new URL(page).pathname !== '/' &&
         !/\/404\/$/.test(page) &&
         !/\/(en|ro|ar|ur)\/notes\//.test(page) &&
+        !thinPosts.has(page.match(/\/fa\/notes\/(\d+)\/$/)?.[1]) &&
         !/\/notes\/(.+\/)?page\//.test(page) &&
         !/\/search\/$/.test(page) &&
         !/\/timeline\//.test(page),

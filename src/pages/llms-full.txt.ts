@@ -9,7 +9,7 @@ const pick = (l?: Localized) => (l ? (l.en ?? l.fa ?? Object.values(l)[0]) : und
 // Plain-text corpus for AI agents: works, lectures, episodes and the newest notes.
 export function GET({ site }: APIContext) {
   const o = site!.origin;
-  const out: string[] = ['# Seyed Hamid Hosseini — full text index', '', `Source: ${o}/llms.txt`, ''];
+  const out: string[] = ['# Seyed Hamid Hosseini: full text index', '', `Source: ${o}/llms.txt`, ''];
 
   out.push('## Writings', '');
   for (const w of [...BOOKS, ...ARTICLES]) {
@@ -24,7 +24,7 @@ export function GET({ site }: APIContext) {
 
   out.push('## Articles from kalaam.ir (Persian; titles and summaries)', '');
   for (const a of articles) {
-    out.push(`### ${a.title} — ${o}/fa/articles/${a.id}/ (${a.date.slice(0, 10)})`);
+    out.push(`### ${a.title} | ${o}/fa/articles/${a.id}/ (${a.date.slice(0, 10)})`);
     out.push(`Topics: ${a.categories.map((k) => CATEGORIES[k].title.en).join(', ')}`);
     if (a.excerpt) out.push(a.excerpt);
     out.push('');
@@ -44,14 +44,14 @@ export function GET({ site }: APIContext) {
   for (const ep of episodes) {
     for (const k of YT_LANGS) {
       const v = ep[k];
-      if (v) out.push(`- #${ep.n} [${k}] ${v.title ?? ''} — ${v.url} (${v.date.slice(0, 10)})`);
+      if (v) out.push(`- #${ep.n} [${k}] ${v.title ?? ''} | ${v.url} (${v.date.slice(0, 10)})`);
     }
   }
   out.push('');
 
   out.push('## Latest Telegram notes (Persian)', '');
   for (const n of notes.slice(0, 100)) {
-    out.push(`### ${o}/fa/notes/${n.id}/ — ${n.date.slice(0, 10)}`, n.text.trim(), '');
+    out.push(`### ${o}/fa/notes/${n.id}/ | ${n.date.slice(0, 10)}`, n.text.trim(), '');
   }
   return new Response(out.join('\n'), { headers: { 'content-type': 'text/plain; charset=utf-8' } });
 }

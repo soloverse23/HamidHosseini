@@ -11,7 +11,7 @@ import type { FeedEntry } from '../lib/feed';
 import { compact, duration, num } from '../lib/format';
 import { href } from '../lib/paths';
 import { withoutEpisodeNo } from '../lib/series';
-import { excerpt, firstLine } from '../lib/text';
+import { excerpt, titleLine } from '../lib/text';
 import { topicsOf } from '../lib/topics';
 import Icon from './Icon.astro';
 
@@ -40,7 +40,7 @@ const tr = (i: FeedItem) => (i.series === 'quran-translation' ? { translate: 'no
 const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
 const titleOf = (i: FeedItem) => {
   const doc = i.media.find((m) => m.title)?.title;
-  return firstLine(strip(i.text), 140) || doc || '';
+  return titleLine(i.text, 140) || doc || '';
 };
 const bodyOf = (i: FeedItem) => {
   const rest = i.text.slice(i.text.indexOf('\n') + 1);

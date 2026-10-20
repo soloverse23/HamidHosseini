@@ -4,7 +4,7 @@ import { t } from '../i18n/strings';
 import type { FeedItem } from '../lib/feed-types';
 import { date, duration, num } from '../lib/format';
 import { href } from '../lib/paths';
-import { excerpt, firstLine } from '../lib/text';
+import { excerpt, titleLine } from '../lib/text';
 import Icon from './Icon.astro';
 
 interface Props {
@@ -27,7 +27,7 @@ const docTitle = item.media.find((m) => m.title)?.title;
 const title =
   item.title && !/^#/.test(item.title)
     ? item.title
-    : firstLine(clean(item.text), 120) || docTitle || (item.source === 'youtube' ? item.title ?? '' : '');
+    : titleLine(item.text, 120) || docTitle || (item.source === 'youtube' ? item.title ?? '' : '');
 const sub = item.source === 'telegram' ? excerpt(clean(item.text.slice(item.text.indexOf('\n') + 1)), 140) : undefined;
 const link =
   item.source === 'telegram'

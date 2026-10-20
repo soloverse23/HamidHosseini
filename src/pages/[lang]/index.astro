@@ -35,7 +35,7 @@ import { href, localePaths } from '../../lib/paths';
 import { PRODUCTION_URL } from '../../lib/site';
 import { CHANNELS } from '../../lib/social';
 import { withoutEpisodeNo } from '../../lib/series';
-import { excerpt, firstLine } from '../../lib/text';
+import { excerpt, titleLine } from '../../lib/text';
 import { topicsOf } from '../../lib/topics';
 
 export const getStaticPaths = localePaths;
@@ -49,7 +49,7 @@ const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
 
 /* Hero: the newest written note */
 const feat = featuredNote();
-const featTitle = feat ? firstLine(strip(feat.text), 140) : '';
+const featTitle = feat ? titleLine(feat.text, 140) : '';
 const featBody = feat ? excerpt(strip(feat.text.slice(feat.text.indexOf('\n') + 1)), 520) : '';
 const featTopic = feat ? topicsOf(feat)[0] : undefined;
 

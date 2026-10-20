@@ -34,3 +34,44 @@ export function firstLine(text: string, max = 120): string {
   const line = text.split('\n').map((l) => l.trim()).find(Boolean) ?? '';
   return excerpt(line, max);
 }
+
+/** Emoji and decorative symbols (💢 ❇️ 🔺 ⬅️ …) that Telegram posts use as ornaments and bullets. */
+export const DECOR =
+  /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u{1F170}-\u{1F251}\uFE0E\uFE0F\u20E3\u200D✳❇✴⭕◾◽▪▫►◄●○■□➡⬅⬆⬇]/gu;
+
+/** Text without decorative emoji, keeping line breaks. */
+export function cleanDisplay(text: string): string {
+  return text
+    .replace(DECOR, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/** HTML without decorative emoji; only text between tags is touched. */
+export function cleanDisplayHtml(html: string): string {
+  return html
+    .split(/(<[^>]+>)/)
+    .map((part) => (part.startsWith('<') ? part : part.replace(DECOR, ' ').replace(/[ \t]{2,}/g, ' ')))
+    .join('')
+    .replace(/(^|<br \/>)\s+/g, '$1')
+    .replace(/\s+(<br \/>|$)/g, '$1');
+}
+
+/** A line that says nothing on its own: a handle, hashtags, a link or punctuation. */
+const EMPTY_LINE = /^(?:[@#]\S+|https?:\/\/\S+|[^\p{L}\p{N}]+|\s)*$/u;
+
+/** Title for an item that has none: its first line with something to say. */
+export function titleLine(text: string, max = 120): string {
+  const line = text
+    .split('\n')
+    .map((l) => l.replace(/^[^\p{L}\p{N}«(@#]+/u, '').replace(/\s*[:：]$/, '').trim())
+    .find((l) => l && !EMPTY_LINE.test(l));
+  return line ? excerpt(line, max) : '';
+}
+
+/** Posts with nothing to read (a bare image, a channel plug): kept on the site, not offered to search engines. */
+export function isThin(item: { text: string; media: { title?: string }[] }): boolean {
+  return !titleLine(cleanDisplay(item.text)) && !item.media.some((m) => m.title);
+}
