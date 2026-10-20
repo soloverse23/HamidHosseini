@@ -50,6 +50,12 @@ const en = {
   languages: 'Languages',
   more: 'More',
   rss: 'RSS feed',
+  consent: {
+    text: 'With your permission, this site counts visits with Google Analytics to learn which notes, verses and videos are read most. Nothing is used for advertising.',
+    accept: 'Allow',
+    decline: 'No, thanks',
+    settings: 'Cookie settings',
+  },
 };
 
 export type UI = typeof en;
@@ -100,6 +106,12 @@ const ro: UI = {
   languages: 'Limbi',
   more: 'Mai mult',
   rss: 'Flux RSS',
+  consent: {
+    text: 'Cu permisiunea dumneavoastră, site-ul numără vizitele cu Google Analytics, ca să afle ce note, versete și videoclipuri sunt citite cel mai mult. Nimic nu este folosit pentru reclame.',
+    accept: 'Permit',
+    decline: 'Nu, mulțumesc',
+    settings: 'Setări cookie',
+  },
 };
 
 const ar: UI = {
@@ -152,6 +164,12 @@ const ar: UI = {
   languages: 'اللغات',
   more: 'المزيد',
   rss: 'خلاصة RSS',
+  consent: {
+    text: 'بإذنك، يحصي هذا الموقع الزيارات عبر Google Analytics لمعرفة أكثر الملاحظات والآيات والمرئيات قراءةً. لا يُستخدم شيء منها للإعلانات.',
+    accept: 'أسمح',
+    decline: 'لا، شكرًا',
+    settings: 'إعدادات ملفات تعريف الارتباط',
+  },
 };
 
 const fa: UI = {
@@ -204,6 +222,12 @@ const fa: UI = {
   languages: 'زبان‌ها',
   more: 'بیشتر',
   rss: 'خوراک RSS',
+  consent: {
+    text: 'با اجازهٔ شما، این سایت بازدیدها را با گوگل آنالیتیکس می‌شمارد تا بداند کدام یادداشت‌ها، آیات و ویدئوها بیشتر خوانده می‌شوند. هیچ داده‌ای برای تبلیغات به کار نمی‌رود.',
+    accept: 'اجازه می‌دهم',
+    decline: 'نه، ممنون',
+    settings: 'تنظیمات کوکی',
+  },
 };
 
 const ur: UI = {
@@ -256,6 +280,12 @@ const ur: UI = {
   languages: 'زبانیں',
   more: 'مزید',
   rss: 'RSS فیڈ',
+  consent: {
+    text: 'آپ کی اجازت سے یہ سائٹ گوگل اینالیٹکس کے ذریعے وزٹس گنتی ہے تاکہ معلوم ہو کہ کون سی یادداشتیں، آیات اور ویڈیوز زیادہ پڑھی جاتی ہیں۔ کچھ بھی اشتہارات کے لیے استعمال نہیں ہوتا۔',
+    accept: 'اجازت ہے',
+    decline: 'نہیں، شکریہ',
+    settings: 'کوکی کی ترتیبات',
+  },
 };
 
 export const UI_STRINGS: Record<Locale, UI> = { en, ro, ar, fa, ur };

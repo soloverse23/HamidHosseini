@@ -120,6 +120,7 @@ const page = href(locale, 'search');
     type Ctx,
     type SearchType,
   } from '../lib/search/client';
+  import { track } from '../lib/analytics';
 
   const dlg = document.querySelector<HTMLDialogElement>('#search-dialog');
   if (dlg) {
@@ -241,6 +242,7 @@ const page = href(locale, 'search');
     function go(el: HTMLElement | undefined) {
       const a = el?.querySelector<HTMLAnchorElement>('a');
       remember(input.value);
+      if (input.value.trim()) track('search', { search_term: input.value.trim() });
       if (a) {
         if (a.target === '_blank') window.open(a.href, '_blank', 'noopener');
         else location.href = a.href;

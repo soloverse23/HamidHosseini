@@ -1,0 +1,111 @@
+---
+// Google Analytics 4 with Consent Mode v2. Nothing is loaded unless
+// PUBLIC_GA4_ID is set. Analytics storage starts denied in the EEA, the UK
+// and Switzerland (Google applies `region` by IP) and granted elsewhere;
+// until a visitor there accepts, GA4 sends only cookieless pings. The banner
+// asks visitors whose time zone is in Europe; a footer link reopens it.
+import { type Locale } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const id = import.meta.env.PUBLIC_GA4_ID as string | undefined;
+const c = ui(locale).consent;
+const CONSENT_REGIONS = [
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
+  'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'GB', 'CH',
+];
+---
+
+{
+  id && (
+    <>
+      <script is:inline define:vars={{ id, regions: CONSENT_REGIONS }}>
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          dataLayer.push(arguments);
+        };
+        var denied = { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' };
+        gtag('consent', 'default', Object.assign({ analytics_storage: 'denied', region: regions, wait_for_update: 500 }, denied));
+        gtag('consent', 'default', Object.assign({ analytics_storage: 'granted' }, denied));
+        try {
+          var saved = localStorage.getItem('consent');
+          if (saved) gtag('consent', 'update', { analytics_storage: saved });
+        } catch (e) {}
+        gtag('js', new Date());
+        gtag('config', id, { anonymize_ip: true });
+      </script>
+      <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${id}`} />
+      <div class="consent" role="dialog" aria-live="polite" aria-label={c.settings} hidden>
+        <p>{c.text}</p>
+        <p class="consent__actions">
+          <button class="btn btn--primary" type="button" data-consent="granted">{c.accept}</button>
+          <button class="btn" type="button" data-consent="denied">{c.decline}</button>
+        </p>
+      </div>
+    </>
+  )
+}
+
+<script>
+  import { track } from '../lib/analytics';
+
+  const banner = document.querySelector<HTMLElement>('.consent');
+  if (banner) {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem('consent');
+    } catch {}
+    const europe = /^Europe\//.test(Intl.DateTimeFormat().resolvedOptions().timeZone ?? '');
+    if (!saved && europe) banner.hidden = false;
+    banner.querySelectorAll<HTMLButtonElement>('[data-consent]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const choice = b.dataset.consent!;
+        window.gtag?.('consent', 'update', { analytics_storage: choice });
+        try {
+          localStorage.setItem('consent', choice);
+        } catch {}
+        banner.hidden = true;
+      }),
+    );
+    document.querySelectorAll<HTMLElement>('[data-consent-open]').forEach((el) => {
+      el.hidden = false;
+      el.addEventListener('click', () => (banner.hidden = false));
+    });
+  }
+
+  // Language changes say which versions people actually want.
+  document.querySelectorAll<HTMLAnchorElement>('[data-set-locale]').forEach((a) =>
+    a.addEventListener('click', () => track('language_switch', { from: document.documentElement.lang, to: a.dataset.setLocale })),
+  );
+</script>
+
+<style>
+  .consent {
+    position: fixed;
+    inset-inline: var(--space-3);
+    inset-block-end: var(--space-3);
+    z-index: 50;
+    max-width: 34rem;
+    margin-inline: auto;
+    padding: var(--space-4);
+    display: grid;
+    gap: var(--space-3);
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 30px rgb(0 0 0 / 0.12);
+    font-size: var(--step--1);
+  }
+  .consent[hidden] {
+    display: none;
+  }
+  .consent__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>

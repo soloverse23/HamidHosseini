@@ -1,8 +1,9 @@
 ---
-// Two tiers:
-//  1. A thin channel bar: every platform with its live follower count, the
-//     language switch and the theme toggle.
+// Wide screens, two tiers:
+//  1. A thin bar with the language switch and the theme toggle.
 //  2. The nameplate (logo mark) and the numbered section index, like a book's contents.
+// Narrow screens, one bar: logo, search and a hamburger that opens the same
+// index as a sheet, with language and theme at its foot.
 import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { ui } from '../i18n/ui';
@@ -87,39 +88,54 @@ const label: Record<string, string> = {
       <Mark size={34} class="plate__mark" />
     </a>
 
-    <nav class="primary" id="primary-nav" aria-label={s.contents}>
-      <ol>
-        {
-          NAV.map((key, i) => (
-            <li>
-              <a href={href(locale, key)} aria-current={section === key ? 'page' : undefined}>
-                <span class="primary__no num" aria-hidden="true">
-                  {pad(i + 1)}
-                </span>
-                <span>{label[key]}</span>
-              </a>
-            </li>
-          ))
-        }
-        <li>
-          <a href={href(locale, 'about')} aria-current={section === 'about' ? 'page' : undefined}>
-            <span>{label.about}</span>
-          </a>
-        </li>
-      </ol>
-    </nav>
+    <!-- Wide screens: the nav sits inline and the rest is hidden (the menu
+         box itself has display: contents). Narrow screens: the whole box is
+         the sheet the hamburger opens, with language and theme at its foot. -->
+    <div class="menu" id="site-menu">
+      <nav class="primary" aria-label={s.contents}>
+        <ol>
+          {
+            [...NAV, 'about' as const].map((key, i) => (
+              <li>
+                <a href={href(locale, key)} aria-current={section === key ? 'page' : undefined}>
+                  <span class="primary__no num" aria-hidden="true">{key === 'about' ? '' : pad(i + 1)}</span>
+                  <span class="primary__label">{label[key]}</span>
+                  <Icon name="chevron" class="primary__chev flip" />
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
+
+      <div class="menu__foot">
+        <ul class="menu__langs" aria-label={u.language}>
+          {
+            LOCALES.map((l) => (
+              <li>
+                <a
+                  href={href(l, path)}
+                  lang={l}
+                  dir={LOCALE_META[l].dir}
+                  hreflang={l}
+                  aria-current={l === locale ? 'true' : undefined}
+                  data-set-locale={l}
+                >
+                  {LOCALE_META[l].label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <button class="menu__theme theme-toggle" type="button">
+          <Icon name="moon" class="i-moon" />
+          <Icon name="sun" class="i-sun" />
+          <span>{s.theme.toggle}</span>
+        </button>
+      </div>
+    </div>
 
     <div class="mainbar__actions">
-      <button
-        class="icon-btn menu-toggle"
-        type="button"
-        aria-expanded="false"
-        aria-controls="primary-nav"
-        aria-label={u.menu}
-      >
-        <Icon name="menu" class="i-menu" />
-        <Icon name="close" class="i-close" />
-      </button>
       <a
         class="search-btn"
         href={href(locale, 'search')}
@@ -132,6 +148,16 @@ const label: Record<string, string> = {
         <span class="search-btn__text">{s.search.open}</span>
         <span class="search-btn__keys" aria-hidden="true"><span class="kbd" data-mod-key>Ctrl</span><span class="kbd">K</span></span>
       </a>
+      <button
+        class="icon-btn menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-menu"
+        aria-label={u.menu}
+      >
+        <Icon name="menu" class="i-menu flip" />
+        <Icon name="close" class="i-close" />
+      </button>
     </div>
   </div>
 </header>
@@ -150,23 +176,24 @@ const label: Record<string, string> = {
     });
   }
 
-  // Mobile hamburger menu: the same nav list, shown as a dropdown below the
-  // header on narrow screens (see the max-width: 62rem styles below).
+  // Narrow screens: the hamburger opens #site-menu as a sheet under the bar
+  // (see the max-width: 62rem styles) and the page behind it stops scrolling.
   const menuBtn = document.querySelector<HTMLButtonElement>('.menu-toggle');
-  const primaryNav = document.getElementById('primary-nav');
-  if (menuBtn && primaryNav) {
+  const sheet = document.getElementById('site-menu');
+  if (menuBtn && sheet) {
     const setOpen = (open: boolean) => {
       menuBtn.setAttribute('aria-expanded', String(open));
-      primaryNav.toggleAttribute('data-open', open);
+      sheet.toggleAttribute('data-open', open);
+      document.documentElement.toggleAttribute('data-menu-open', open);
     };
     menuBtn.addEventListener('click', () => setOpen(menuBtn.getAttribute('aria-expanded') !== 'true'));
-    primaryNav.addEventListener('click', (e) => {
+    sheet.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('a')) setOpen(false);
     });
     document.addEventListener('click', (e) => {
       if (
         menuBtn.getAttribute('aria-expanded') === 'true' &&
-        !primaryNav.contains(e.target as Node) &&
+        !sheet.contains(e.target as Node) &&
         !menuBtn.contains(e.target as Node)
       ) {
         setOpen(false);
@@ -186,6 +213,7 @@ const label: Record<string, string> = {
 
 <style>
   .site-header {
+    position: relative;
     background: var(--paper);
     border-block-end: 1px solid var(--rule);
   }
@@ -413,6 +441,16 @@ const label: Record<string, string> = {
   .plate:hover :global(.plate__mark) {
     transform: rotate(45deg);
   }
+  /* On wide screens the menu box is transparent: its nav is a grid item of
+     the bar, and the sheet-only parts are hidden. */
+  .menu {
+    display: contents;
+  }
+  .menu__foot,
+  .primary :global(.primary__chev),
+  .primary__no:empty {
+    display: none;
+  }
   .primary {
     grid-area: nav;
     justify-self: end;
@@ -531,62 +569,166 @@ const label: Record<string, string> = {
     }
   }
 
-  /* ---------- Narrower screens ---------- */
-  @media (max-width: 34rem) {
-    .lang__current {
+  /* ---------- Narrow screens: one bar and a menu sheet ----------
+     Logo at the start edge; search, then the hamburger, at the end edge.
+     Every offset is logical (inline-start/end), so the bar and the sheet
+     mirror themselves for Persian, Arabic and Urdu. */
+  @media (max-width: 62rem) {
+    .topbar {
       display: none;
     }
-  }
-  @media (max-width: 62rem) {
     .mainbar {
-      position: relative;
       grid-template-columns: 1fr auto;
       grid-template-areas: 'plate search';
-      gap: 0 var(--space-3);
-      min-height: 0;
+      gap: var(--space-3);
+      min-height: 3.5rem;
+    }
+    .plate :global(.plate__mark) {
+      width: 30px;
+      height: 30px;
+    }
+    .mainbar__actions {
+      gap: var(--space-1);
+      /* Line the outermost glyph up with the page gutter, not its hit area. */
+      margin-inline-end: calc(-1 * var(--space-2));
     }
     .menu-toggle {
       display: grid;
     }
-    /* The nav list becomes a dropdown panel under the header, opened by
-       the hamburger button (see the script above). */
-    .primary {
+    .menu-toggle[aria-expanded='true'] {
+      color: var(--ink);
+      background: var(--paper-3);
+    }
+
+    .menu {
       display: none;
-      grid-column: 1 / -1;
       position: absolute;
-      z-index: 25;
+      z-index: 40;
       inset-inline: 0;
       inset-block-start: 100%;
-      max-height: calc(100vh - 100%);
+      height: calc(100dvh - 3.5rem - 1px);
+      flex-direction: column;
       overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: var(--space-2) var(--gutter) calc(var(--space-6) + env(safe-area-inset-bottom));
       background: var(--paper);
-      border-block-end: 1px solid var(--rule);
-      box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.35);
-      padding-block: var(--space-2);
     }
-    .primary[data-open] {
-      display: block;
+    .menu[data-open] {
+      display: flex;
+      animation: sheet-in 0.18s ease-out;
+    }
+    :global(html[data-menu-open]) {
+      overflow: hidden;
+    }
+
+    .primary {
+      justify-self: stretch;
     }
     .primary ol {
       flex-direction: column;
       gap: 0;
-      padding-inline: var(--gutter);
+    }
+    .primary li + li {
+      border-block-start: 1px solid var(--rule);
     }
     .primary a {
-      padding: var(--space-3) var(--space-2);
-      border-radius: var(--radius);
+      display: grid;
+      grid-template-columns: 2rem 1fr auto;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4) 0;
+      border-radius: 0;
+      font-size: 1.0625rem;
+      color: var(--ink);
+      white-space: normal;
+    }
+    .primary a:hover {
+      background: none;
+      color: var(--accent);
+    }
+    .primary__no:empty,
+    .primary :global(.primary__chev) {
+      display: block;
+    }
+    .primary__no {
+      font-size: 0.8125rem;
+    }
+    .primary :global(.primary__chev) {
+      width: 1rem;
+      height: 1rem;
+      color: var(--ink-3);
+    }
+    .primary a[aria-current='page'],
+    .primary a[aria-current='page'] :global(.primary__chev) {
+      color: var(--accent);
     }
     .primary a[aria-current='page']::after {
       content: none;
     }
-    .primary a[aria-current='page'] {
-      color: var(--accent);
+
+    .menu__foot {
+      display: grid;
+      gap: var(--space-4);
+      margin-block-start: auto;
+      padding-block-start: var(--space-5);
+      border-block-start: 1px solid var(--rule-strong);
+    }
+    .menu__langs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      list-style: none;
+      padding: 0;
+    }
+    .menu__langs a {
+      display: inline-block;
+      padding: 0.35rem 0.9rem;
+      border: 1px solid var(--rule-strong);
+      border-radius: 999px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      text-decoration: none;
+      color: var(--ink-2);
+    }
+    .menu__langs a:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+    .menu__langs a[aria-current='true'] {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .menu__langs a:is([lang='fa'], [lang='ar'], [lang='ur']) {
+      font-family: var(--font-persian);
+    }
+    .menu__langs a:is([lang='en'], [lang='ro']) {
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    }
+    .menu__theme {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-1) 0;
+      border: 0;
+      background: none;
+      color: var(--ink-2);
+      font-size: 0.9375rem;
+      cursor: pointer;
+    }
+    .menu__theme:hover {
+      color: var(--ink);
+    }
+    .menu__theme :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
     }
   }
-  @media (max-width: 34rem) {
-    .plate :global(.plate__mark) {
-      width: 28px;
-      height: 28px;
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
     }
   }
 </style>

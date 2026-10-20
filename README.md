@@ -77,7 +77,8 @@ You need `yt-dlp` on your PATH (or at `~/.local/bin/yt-dlp`) for the YouTube and
 1. Push this folder to a GitHub repository.
 2. In Vercel, import the repository. Its settings are in `vercel.json`.
 3. Set the environment variable `SITE_URL` to the final domain, `https://www.hamidhosseini.site` (the same value is the fallback in `src/lib/site.ts`; `hamid-hosseini.vercel.app` redirects there). It's used for canonical links, the sitemap and social previews.
-4. `middleware.ts` sends `/` to the visitor's language, using a saved choice first, then the browser language, then English.
+4. Analytics: Vercel Analytics is always on. For Google Analytics 4, set `PUBLIC_GA4_ID` (e.g. `G-XXXXXXX`) in Vercel's environment variables and redeploy. GA4 runs with Consent Mode v2 (`src/components/Analytics.astro`): storage is denied by default in the EEA, the UK and Switzerland until a visitor accepts the banner, and granted elsewhere. Custom events: `search`, `video_play`, `language_switch`; GA4's enhanced measurement adds page views, scrolls and outbound clicks.
+5. `middleware.ts` sends `/` to the visitor's language, using a saved choice first, then the browser language, then English.
 
 ## Credits
 

@@ -7,6 +7,7 @@ import '@fontsource-variable/vazirmatn';
 import '@fontsource-variable/noto-naskh-arabic';
 import '../styles/global.css';
 import Analytics from '@vercel/analytics/astro';
+import GoogleAnalytics from '../components/Analytics.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import SearchDialog from '../components/SearchDialog.astro';
@@ -127,19 +128,22 @@ const ogImage = new URL(image ?? '/og.png', site).toString();
     </main>
     <Footer locale={locale} path={switchPath ?? path} />
     <SearchDialog locale={locale} />
+    <GoogleAnalytics locale={locale} />
 
     <script>
       import '../scripts/translate';
     </script>
     <script>
       const root = document.documentElement;
-      document.querySelector('.theme-toggle')?.addEventListener('click', () => {
-        const dark = root.dataset.theme === 'dark';
-        root.dataset.theme = dark ? 'light' : 'dark';
-        try {
-          localStorage.setItem('theme', root.dataset.theme);
-        } catch {}
-      });
+      document.querySelectorAll('.theme-toggle').forEach((btn) =>
+        btn.addEventListener('click', () => {
+          const dark = root.dataset.theme === 'dark';
+          root.dataset.theme = dark ? 'light' : 'dark';
+          try {
+            localStorage.setItem('theme', root.dataset.theme);
+          } catch {}
+        }),
+      );
       // Remember an explicit language choice for the "/" redirect.
       document.querySelectorAll<HTMLAnchorElement>('[data-set-locale]').forEach((a) =>
         a.addEventListener('click', () => {

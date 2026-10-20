@@ -28,8 +28,11 @@ const s = t(locale);
 </div>
 
 <script>
+  import { track } from '../lib/analytics';
+
   document.querySelectorAll<HTMLElement>('.yt').forEach((box) => {
     box.querySelector('button')?.addEventListener('click', () => {
+      track('video_play', { video_id: box.dataset.yt, video_title: box.dataset.title });
       const f = document.createElement('iframe');
       f.src = `https://www.youtube-nocookie.com/embed/${box.dataset.yt}?autoplay=1&rel=0`;
       f.title = box.dataset.title ?? '';
