@@ -79,7 +79,7 @@ const videoLd = {
         {
           episodes.map((ep) => {
             const versions = versionsOf(ep);
-            const [main, other] = versions;
+            const [main] = versions;
             return (
               <li class="ep" id={`ep-${ep.n}`}>
                 <span class="ep__n num" aria-hidden="true">{n(ep.n)}</span>
@@ -91,11 +91,6 @@ const videoLd = {
                     {s.episode(n(ep.n))} · <time datetime={ep.date}>{date(locale, ep.date, 'month')}</time>
                   </p>
                   <h3 class="serif align-start" lang={main.lang} dir="auto" data-tr>{withoutEpisodeNo(main.title)}</h3>
-                  {other && (
-                    <p class="ep__alt serif align-start" lang={other.lang} dir="auto">
-                      {withoutEpisodeNo(other.title)}
-                    </p>
-                  )}
                   <p class="btn-row">
                     {versions.map((v) => (
                       <button class="btn" type="button" data-swap={v.id} data-title={v.title}>
@@ -223,11 +218,6 @@ const videoLd = {
   }
   .ep__text h3 {
     font-size: 1.25rem;
-    line-height: 1.6;
-  }
-  .ep__alt {
-    color: var(--ink-3);
-    font-size: 1rem;
     line-height: 1.6;
   }
   .ep__text .btn-row {

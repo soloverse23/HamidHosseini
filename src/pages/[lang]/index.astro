@@ -29,7 +29,7 @@ import {
   youtube,
   ytOrder,
 } from '../../lib/data';
-import { TIMELINE, TIMELINE_SPAN, featuredNote } from '../../lib/feed';
+import { TIMELINE_SPAN, contentLang, featuredNote, timeline } from '../../lib/feed';
 import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
 import { PRODUCTION_URL } from '../../lib/site';
@@ -48,7 +48,7 @@ const dirOf = (lang?: string) => (lang === 'fa' || lang === 'ar' ? 'rtl' : 'ltr'
 const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
 
 /* Hero: the newest written note */
-const feat = featuredNote();
+const feat = featuredNote(locale);
 const featTitle = feat ? titleLine(feat.text, 140) : '';
 const featBody = feat ? excerpt(strip(feat.text.slice(feat.text.indexOf('\n') + 1)), 520) : '';
 const featTopic = feat ? topicsOf(feat)[0] : undefined;
@@ -63,14 +63,17 @@ const surahName = (m: (typeof surahs)[number]) => (locale === 'fa' ? m.fa : loca
 const order = ytOrder(locale);
 const ep = episodes.find((e) => e[order[0]]) ?? episodes[0];
 const epVersions = ep ? order.flatMap((k) => (ep[k] ? [ep[k]] : [])) : [];
-const [epMain, epOther] = epVersions;
+const [epMain] = epVersions;
 
 /* Now: short videos */
-const shortPool = [...tiktok.items, ...shorts].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+const shortPool = [...tiktok.items, ...shorts]
+  .filter((v) => contentLang(v) === locale)
+  .sort((a, b) => b.date.localeCompare(a.date))
+  .slice(0, 4);
 
 /* Timeline: the first ten days; later windows load on demand */
-const first = TIMELINE[0];
-const next = TIMELINE[1];
+const first = timeline(locale)[0];
+const next = timeline(locale)[1];
 
 /* Index of sections */
 const sessionsTotal = LECTURES.reduce((a, l) => a + (lectureSessions[l.id]?.length ?? 0), 0);
@@ -205,7 +208,6 @@ const jsonLd = [
             </header>
             <YouTubePlayer locale={locale} id={epMain.id} title={epMain.title ?? ''} duration={epMain.media[0]?.duration} lang={epMain.lang} />
             <p class="ep__title x" lang={epMain.lang} dir={dirOf(epMain.lang)} data-tr>{withoutEpisodeNo(epMain.title)}</p>
-            {epOther && <p class="ep__alt x" lang={epOther.lang} dir={dirOf(epOther.lang)}>{withoutEpisodeNo(epOther.title)}</p>}
             <p class="ep__langs">
               {epVersions.map((v) => (
                 <a class="pill" href={v.url} rel="noopener" target="_blank"><Icon name="youtube" />{s.videos.langs[v.channel as YtLang]}</a>
@@ -215,6 +217,7 @@ const jsonLd = [
         )
       }
 
+      {shortPool.length > 0 && (
       <article class="panel panel--shorts">
         <header class="panel__head">
           <h3>{u.shortsTitle}</h3>
@@ -236,6 +239,7 @@ const jsonLd = [
           }
         </ul>
       </article>
+      )}
     </div>
   </section>
 
@@ -837,11 +841,6 @@ const jsonLd = [
   .ep__title {
     font-size: 1.0625rem;
     font-weight: 600;
-    line-height: 1.6;
-  }
-  .ep__alt {
-    font-size: 0.875rem;
-    color: var(--ink-3);
     line-height: 1.6;
   }
   .ep__langs {
