@@ -1,5 +1,9 @@
 /**
- * Telegram "ترجمه گروهی قرآن" posts → src/data/quran/fa.json
+ * Telegram "ترجمه گروهی قرآن" posts → src/data/quran/fa-telegram.json
+ *
+ * The site's text comes from the translation database (scripts/fetch/quran.ts
+ * → fa.json). This parse records which post proposed each verse and when, and
+ * is kept as a second copy to compare against (scripts/quran/diff.ts).
  *
  * Each translation post looks like:
  *   💢 ترجمهٔ پیشنهادی آیات ۷۷ تا ۸۳ سورهٔ توبه 💢
@@ -27,8 +31,9 @@ interface Surah {
 export interface TranslatedAyah {
   text: string;
   notes?: string[];
-  post: number;
-  date: string;
+  /** Telegram post that proposed the verse; absent for verses only in the database. */
+  post?: number;
+  date?: string;
 }
 export interface Translation {
   lang: string;
@@ -172,10 +177,10 @@ export async function buildPersianTranslation() {
     updatedAt: posts.at(-1)?.date ?? new Date().toISOString(),
     surahs: out,
   };
-  await writeFile(join(ROOT, 'src/data/quran/fa.json'), JSON.stringify(translation, null, 1) + '\n');
+  await writeFile(join(ROOT, 'src/data/quran/fa-telegram.json'), JSON.stringify(translation, null, 1) + '\n');
 
   const counts = Object.entries(out).map(([s, a]) => `${s}:${Object.keys(a).length}/${arabic[s].length}`);
-  console.log(`quran fa: ${counts.join('  ')}`);
+  console.log(`quran (telegram parse): ${counts.join('  ')}`);
   if (rejected.length) console.log(`  skipped ${rejected.length}: ${rejected.slice(0, 12).join(', ')}${rejected.length > 12 ? ' …' : ''}`);
   return translation;
 }

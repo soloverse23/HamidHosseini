@@ -10,13 +10,14 @@ A static site (Astro) in English, Romanian, Arabic, Persian and Urdu. It collect
 | YouTube (fa, ro, ar, ur, en channels) | RSS on every run + `yt-dlp` for the full list | `npm run fetch:youtube` |
 | TikTok `@islam.de.ce.si.cum` | `yt-dlp` on the public profile | `npm run fetch:tiktok` |
 | Instagram `@kalam_hamidhosseini` | Instagram API with a session cookie (see below) | `npm run fetch:instagram` |
-| Quran translation (fa) | built from the "ترجمه گروهی قرآن" Telegram posts | `npx tsx scripts/quran/from-telegram.ts` |
+| Quran translation (fa) | the group-translation database (read-only, `QURAN_API_URL`), linked to the "ترجمه گروهی قرآن" Telegram posts | `npx tsx scripts/fetch/quran.ts` |
 | Articles from kalaam.ir (his blog, 2003–2019) | WordPress REST API, one-off import (the blog is no longer updated) | `npm run fetch:kalaam` |
 
 `npm run fetch:all` runs everything. Results go to `src/data/feeds/*.json`, and images go to `public/media/` because the platforms' image links expire.
 
 - **Fetchers never delete anything.** If a source fails, the last good data stays on the site.
 - **Counts are written at most once a day.** A change in view counts alone doesn't create a commit, so the site isn't redeployed every 30 minutes.
+- **The Quran text comes from the translation database.** `src/data/quran/fa.json` holds its translation and notes. The Telegram parse (`fa-telegram.json`) only tells which post proposed each verse. If the database is down, or returns far fewer verses than before, the last copy stays. `npx tsx scripts/quran/diff.ts` lists where the two differ.
 - **Quran verses are checked against the Arabic text.** Each verse parsed from a Telegram post is matched against the Tanzil Arabic (`src/data/quran/arabic.json`). A post that quotes another surah can therefore never put a verse in the wrong place.
 
 ## Automatic updates

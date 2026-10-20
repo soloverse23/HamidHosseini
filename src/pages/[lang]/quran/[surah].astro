@@ -113,9 +113,11 @@ const title = `${s.quran.surah} ${localName(meta)}`;
                       </ul>
                     </details>
                   )}
-                  <a class="ayah__src meta" href={`https://t.me/hamidhossaini/${v.post}`} rel="noopener" target="_blank" dir={isRtl(locale) ? 'rtl' : 'ltr'}>
-                    {s.quran.proposedIn} #{plain(locale, v.post)} · {date(locale, v.date, 'short')}
-                  </a>
+                  {v.post && (
+                    <a class="ayah__src meta" href={`https://t.me/hamidhossaini/${v.post}`} rel="noopener" target="_blank" dir={isRtl(locale) ? 'rtl' : 'ltr'}>
+                      {s.quran.proposedIn} #{plain(locale, v.post)}{v.date && ` · ${date(locale, v.date, 'short')}`}
+                    </a>
+                  )}
                 </div>
               ) : (
                 <p class="ayah__missing meta">{s.quran.notTranslated}</p>

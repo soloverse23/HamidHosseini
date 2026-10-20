@@ -118,8 +118,9 @@ export interface SurahMeta {
 export interface TranslatedAyah {
   text: string;
   notes?: string[];
-  post: number;
-  date: string;
+  /** Telegram post that proposed it; absent for verses only in the translation database */
+  post?: number;
+  date?: string;
 }
 
 export const surahs = surahsJson as SurahMeta[];
@@ -139,6 +140,7 @@ export const quranNow = (() => {
   let best: { surah: number; ayah: number; date: string } | undefined;
   for (const [s, ayahs] of Object.entries(quranFa.surahs)) {
     for (const [a, v] of Object.entries(ayahs)) {
+      if (!v.date) continue;
       if (!best || v.date > best.date || (v.date === best.date && Number(a) > best.ayah))
         best = { surah: Number(s), ayah: Number(a), date: v.date };
     }
@@ -184,6 +186,7 @@ export const quranByPost = (() => {
   const map = new Map<string, { surah: number; from: number; to: number }>();
   for (const [surah, ayahs] of Object.entries(quranFa.surahs)) {
     for (const [a, v] of Object.entries(ayahs)) {
+      if (!v.post) continue;
       const key = String(v.post);
       const n = Number(a);
       const prev = map.get(key);

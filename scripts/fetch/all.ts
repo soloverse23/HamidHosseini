@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { buildPersianTranslation } from '../quran/from-telegram';
 import { ROOT } from './lib/store';
 import * as instagram from './instagram';
+import * as quran from './quran';
 import * as telegram from './telegram';
 import * as tiktok from './tiktok';
 import * as youtube from './youtube';
@@ -25,10 +26,17 @@ for (const [name, mod] of Object.entries(jobs)) {
   }
 }
 
+// Telegram parse first: the database fetch links each verse to its post with it.
 try {
   await buildPersianTranslation();
 } catch (err) {
-  failures.push(`quran: ${(err as Error).message}`);
+  failures.push(`quran (telegram parse): ${(err as Error).message}`);
+}
+try {
+  await quran.run();
+} catch (err) {
+  failures.push(`quran (database): ${(err as Error).message}`);
+  console.error('✗ quran:', (err as Error).message);
 }
 
 await writeFile(join(ROOT, '.fetch-failures.txt'), failures.join('\n'));
