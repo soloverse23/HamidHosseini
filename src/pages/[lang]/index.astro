@@ -13,7 +13,7 @@ import { ui } from '../../i18n/ui';
 import Base from '../../layouts/Base.astro';
 import {
   arabic,
-  episodes,
+  episodesIn,
   instagram,
   lectureSessions,
   notes,
@@ -64,9 +64,10 @@ const nowVerse = quranNow ? quranFa.surahs[quranNow.surah]?.[quranNow.ayah] : un
 const nowArabic = quranNow ? arabic[quranNow.surah]?.[quranNow.ayah - 1] : undefined;
 const surahName = (m: (typeof surahs)[number]) => (locale === 'fa' ? m.fa : locale === 'ar' ? m.ar : m.translit);
 
-/* Now: the newest episode in the reader's language, else the newest at all */
+/* Now: the newest episode that exists in the reader's language */
 const order = ytOrder(locale);
-const ep = episodes.find((e) => e[order[0]]) ?? episodes[0];
+const localeEps = episodesIn(locale);
+const ep = localeEps[0];
 const epVersions = ep ? order.flatMap((k) => (ep[k] ? [ep[k]] : [])) : [];
 const [epMain] = epVersions;
 
@@ -85,9 +86,11 @@ const sessionsTotal = LECTURES.reduce((a, l) => a + (lectureSessions[l.id]?.leng
 const sections = [
   { key: 'writings', title: s.sections.writings.title, count: BOOKS.length + ARTICLES.length + LECTURES.length, detail: s.books.sessions(n(sessionsTotal)) },
   { key: 'articles', title: s.sections.articles.title, count: blogArticles.length, detail: 'kalaam.ir' },
-  { key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` },
+  ...(locale === 'fa'
+    ? [{ key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` }]
+    : []),
   { key: 'notes', title: s.sections.notes.title, count: notes.length, detail: 'Telegram' },
-  { key: 'videos', title: s.sections.videos.title, count: youtube.items.length, detail: s.episode(n(episodes[0]?.n ?? 0)) },
+  { key: 'videos', title: s.sections.videos.title, count: youtube.items.length, detail: s.episode(n(localeEps[0]?.n ?? 0)) },
   { key: 'tiktok', title: s.sections.tiktok.title, count: tiktok.items.length, detail: 'TikTok' },
   { key: 'instagram', title: s.sections.instagram.title, count: instagram.items.length || undefined, detail: 'Instagram' },
 ];
@@ -231,31 +234,35 @@ const jsonLd = [
       <h2 id="now-title">{u.now}</h2>
     </div>
     <div class="now-grid">
-      <article class="panel panel--quran">
-        <header class="panel__head">
-          <h3>{s.sections.quran.title}</h3>
-          <a class="more" href={href(locale, 'quran')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
-        </header>
-        <p class="q-count num">{n(totalTranslated)}<span> / {n(6236)}</span></p>
-        <QuranMap locale={locale} compact />
-        {
-          nowSurah && quranNow && nowVerse && (
-            <a class="q-verse" href={verseHref(quranNow)}>
-              <span class="q-verse__label">
-                {u.latestVerse} · {surahName(nowSurah)} {n(nowSurah.n)}:{n(quranNow.ayah)}
-              </span>
-              {nowArabic && (
-                <span class="q-verse__ar clamp-2" lang="ar" dir="rtl">
-                  {nowArabic}
-                </span>
-              )}
-              <span class="q-verse__fa x clamp-3" lang="fa" dir="rtl">
-                {nowVerse.text}
-              </span>
-            </a>
-          )
-        }
-      </article>
+      {
+        locale === 'fa' && (
+          <article class="panel panel--quran">
+            <header class="panel__head">
+              <h3>{s.sections.quran.title}</h3>
+              <a class="more" href={href(locale, 'quran')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
+            </header>
+            <p class="q-count num">{n(totalTranslated)}<span> / {n(6236)}</span></p>
+            <QuranMap locale={locale} compact />
+            {
+              nowSurah && quranNow && nowVerse && (
+                <a class="q-verse" href={verseHref(quranNow)}>
+                  <span class="q-verse__label">
+                    {u.latestVerse} · {surahName(nowSurah)} {n(nowSurah.n)}:{n(quranNow.ayah)}
+                  </span>
+                  {nowArabic && (
+                    <span class="q-verse__ar clamp-2" lang="ar" dir="rtl">
+                      {nowArabic}
+                    </span>
+                  )}
+                  <span class="q-verse__fa x clamp-3" lang="fa" dir="rtl">
+                    {nowVerse.text}
+                  </span>
+                </a>
+              )
+            }
+          </article>
+        )
+      }
 
       {
         ep && epMain && (

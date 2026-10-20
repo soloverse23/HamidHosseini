@@ -219,7 +219,7 @@ const pageTitle = repeated ? `${postTitle}، ${date(locale, props.item.date)}` :
             <Icon name="telegram" /> {s.openOn('Telegram')}
           </a>
           {firstRef && lastRef && (
-            <a class="btn" href={href(locale, `quran/${firstRef.surah}#a${firstRef.ayah}`)}>
+            <a class="btn" href={href('fa', `quran/${firstRef.surah}#a${firstRef.ayah}`)}>
               <Icon name="book" /> {s.nav.quran} {num(locale, firstRef.surah)}:{num(locale, firstRef.ayah)}
               {lastRef.ayah !== firstRef.ayah ? `–${num(locale, lastRef.ayah)}` : ''}
             </a>

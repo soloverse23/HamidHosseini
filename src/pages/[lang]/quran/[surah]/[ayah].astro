@@ -45,6 +45,7 @@ const url = new URL(href('fa', `quran/${meta.n}/${ayah}`), Astro.site).toString(
 <Base
   locale={locale}
   path={`quran/${meta.n}/${ayah}`}
+  locales={['fa']}
   switchPath={`quran/${meta.n}#a${ayah}`}
   alternates={false}
   title={title}

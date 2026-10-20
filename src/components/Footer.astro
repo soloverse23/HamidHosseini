@@ -24,8 +24,9 @@ const s = t(locale);
 const u = ui(locale);
 const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
 // Every section, including the archives that the header folds into broader items.
+// Quran translation is Persian-only.
 const sections = [
-  ['quran', s.nav.quran],
+  ...(locale === 'fa' ? [['quran', s.nav.quran] as const] : []),
   ['topics', s.nav.topics],
   ['videos', s.nav.series],
   ['writings', s.nav.library],

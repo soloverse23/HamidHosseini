@@ -1,15 +1,14 @@
 ---
 // One episode of "Islam, why and how?": the video in the page's language,
 // the full transcript, chapters, the verses it mentions, the Telegram clip
-// and podcast that go with it, and the other language versions. Pages exist
-// in every language; only those with a version in their own language are
-// indexed and listed as alternates.
+// and podcast that go with it, and the other language versions. A page is
+// built only when this language has its own upload of the episode.
 import Icon from '../../../components/Icon.astro';
 import YouTubePlayer from '../../../components/YouTubePlayer.astro';
 import { LOCALES, isRtl, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
-import { episodes, notes, surahs, ytOrder, type Episode, type YtLang } from '../../../lib/data';
+import { episodesIn, notes, surahs, ytOrder, type Episode, type YtLang } from '../../../lib/data';
 import type { FeedItem } from '../../../lib/feed-types';
 import { date, duration, num } from '../../../lib/format';
 import { href } from '../../../lib/paths';
@@ -20,7 +19,10 @@ import { excerpt, itemTitle } from '../../../lib/text';
 import { chaptersOf, paragraphs, transcriptOf } from '../../../lib/transcripts';
 
 export function getStaticPaths() {
-  return LOCALES.flatMap((lang) => episodes.map((ep) => ({ params: { lang, n: String(ep.n) }, props: { ep } })));
+  // Only build a page when this language has its own upload of the episode.
+  return LOCALES.flatMap((lang) =>
+    episodesIn(lang).map((ep) => ({ params: { lang, n: String(ep.n) }, props: { ep } })),
+  );
 }
 
 const locale = Astro.params.lang as Locale;
@@ -29,11 +31,11 @@ const s = t(locale);
 const nf = (x: number) => num(locale, x);
 const order = ytOrder(locale);
 const versions = order.flatMap((k) => (ep[k] ? [ep[k]!] : []));
-const own = ep[locale as YtLang];
-const main = own ?? versions[0];
-const at = episodes.indexOf(ep);
-const newer = episodes[at - 1];
-const older = episodes[at + 1];
+const main = ep[locale as YtLang]!;
+const list = episodesIn(locale);
+const at = list.findIndex((e) => e.n === ep.n);
+const newer = list[at - 1];
+const older = list[at + 1];
 const series = s.topics['islam-why-how'];
 const title = withoutEpisodeNo(main.title) || s.episode(nf(ep.n));
 const transcript = transcriptOf(main.id);
@@ -45,7 +47,6 @@ const about = (main.text ?? '')
   .join('\n');
 const companions = locale === 'fa' ? notes.filter((x) => x.series === 'islam-why-how' && x.episode === ep.n) : [];
 const verses = [...new Map(citedVerses(`${about}\n${main.lang === 'fa' ? (transcript?.text ?? '') : ''}`).map((r) => [`${r.surah}:${r.ayah}`, r])).values()];
-const indexable = !!own;
 const locales = LOCALES.filter((l) => ep[l as YtLang]);
 const dirOf = (l?: string) => (isRtl(l) ? 'rtl' : 'ltr');
 const iso = (sec?: number) => (sec ? `PT${Math.floor(sec / 3600) ? `${Math.floor(sec / 3600)}H` : ''}${Math.floor((sec % 3600) / 60)}M${Math.floor(sec % 60)}S` : undefined);
@@ -63,9 +64,8 @@ const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => 
   imageAlt={title}
   ogType="article"
   published={main.date}
-  noindex={!indexable}
   locales={locales}
-  alternates={indexable}
+  alternates
   crumbs={[
     { name: s.sections.videos.title, path: 'videos' },
     { name: s.episode(nf(ep.n)), path: `videos/${ep.n}` },
@@ -110,7 +110,6 @@ const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => 
     <p class="meta">
       <time datetime={main.date}>{date(locale, main.date)}</time>
       {main.media[0]?.duration && <span class="num">{duration(main.media[0].duration)}</span>}
-      {!own && <span>{s.videos.langs[main.channel as YtLang]}</span>}
     </p>
 
     <YouTubePlayer locale={locale} id={main.id} title={main.title ?? ''} duration={main.media[0]?.duration} lang={main.lang} />
@@ -190,7 +189,7 @@ const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => 
     {
       transcript && (
         <section class="transcript" aria-labelledby="tr-h">
-          <details open={!!own}>
+          <details open>
             <summary>
               <h2 id="tr-h">{s.videos.transcript}</h2>
             </summary>

@@ -1,7 +1,7 @@
 ---
 import '@fontsource/amiri-quran/400.css';
 import Icon from '../../../components/Icon.astro';
-import { LOCALES, isRtl, type Locale } from '../../../i18n/locales';
+import { isRtl, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { arabic, noteById, quranFa, surahs, translatedCount } from '../../../lib/data';
@@ -12,7 +12,7 @@ import { date, num, plain } from '../../../lib/format';
 import { href } from '../../../lib/paths';
 
 export function getStaticPaths() {
-  return LOCALES.flatMap((lang) => surahs.map((m) => ({ params: { lang, surah: String(m.n) } })));
+  return surahs.map((m) => ({ params: { lang: 'fa', surah: String(m.n) } }));
 }
 
 const locale = Astro.params.lang as Locale;
@@ -24,8 +24,7 @@ const tr = quranFa.surahs[meta.n] ?? {};
 const done = translatedCount(meta.n);
 const prev = surahs[meta.n - 2];
 const next = surahs[meta.n];
-const localName = (m: typeof meta) => (locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? m.ar : m.translit);
-const subtitle = locale === 'en' ? meta.en : locale === 'ro' ? meta.translit : undefined;
+const localName = (m: typeof meta) => m.fa;
 const showBasmala = meta.n !== 1 && meta.n !== 9;
 const title = `${s.quran.surah} ${localName(meta)}`;
 const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) : undefined);
@@ -34,6 +33,8 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
 <Base
   locale={locale}
   path={`quran/${meta.n}`}
+  locales={['fa']}
+  alternates={false}
   title={title}
   crumbs={[
     { name: s.sections.quran.title, path: 'quran' },
@@ -60,12 +61,10 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
       <p class="surah__ar" lang="ar" dir="rtl">سُورَةُ {meta.ar}</p>
       <h1>{title}</h1>
       <p class="meta">
-        {subtitle && <span>{subtitle}</span>}
         <span>{s.quran.verses(n(meta.ayahs))}</span>
         <span>{meta.place === 'mecca' ? s.quran.mecca : s.quran.medina}</span>
         <span>{s.quran.translated(n(done), n(meta.ayahs))}</span>
       </p>
-      {locale !== 'fa' && done > 0 && <p class="note-lang">{s.quran.onlyPersian}</p>}
 
       <div class="surah__tools">
         <form class="jump" action="#" data-base={href(locale, 'quran')}>

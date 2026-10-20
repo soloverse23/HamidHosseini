@@ -1,6 +1,7 @@
 ---
-// "/" — Vercel middleware normally redirects before this page is served.
-// This static fallback does the same in the browser (and for local preview).
+// "/" — Vercel middleware normally redirects before this page is served,
+// using the visitor's IP country. This static fallback mirrors that for
+// local preview: saved choice first, then English (no IP geo in the browser).
 ---
 
 <!doctype html>
@@ -15,20 +16,13 @@
     <link rel="alternate" hreflang="ar" href="/ar/" />
     <link rel="alternate" hreflang="fa" href="/fa/" />
     <link rel="alternate" hreflang="ur" href="/ur/" />
+    <link rel="alternate" hreflang="x-default" href="/en/" />
     <script is:inline>
       (function () {
         var supported = ['en', 'ro', 'ar', 'fa', 'ur'];
         var m = document.cookie.match(/(?:^|; )locale=(\w+)/);
-        var pick = m && supported.indexOf(m[1]) > -1 ? m[1] : null;
-        if (!pick) {
-          var langs = navigator.languages || [navigator.language || 'en'];
-          for (var i = 0; i < langs.length && !pick; i++) {
-            var l = String(langs[i]).toLowerCase().slice(0, 2);
-            if (l === 'mo') l = 'ro';
-            if (supported.indexOf(l) > -1) pick = l;
-          }
-        }
-        location.replace('/' + (pick || 'en') + '/');
+        var pick = m && supported.indexOf(m[1]) > -1 ? m[1] : 'en';
+        location.replace('/' + pick + '/');
       })();
     </script>
     <noscript><meta http-equiv="refresh" content="0; url=/en/" /></noscript>

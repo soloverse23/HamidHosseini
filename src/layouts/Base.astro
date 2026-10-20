@@ -49,7 +49,9 @@ const {
   locale, title, description, path, image, jsonLd, noindex, switchPath,
   ogType = 'website', published, modified, imageAlt, crumbs, canonicalLocale, alternates = true, locales = LOCALES,
 } = Astro.props;
-const xDefault = path ? href(locales.includes('en') ? 'en' : locales[0], path) : '/';
+// x-default must be a real indexable page (never "/"), so crawlers are not
+// sent into the geo IP redirect. Prefer English when this page has it.
+const xDefault = href(locales.includes('en') ? 'en' : locales[0], path);
 const s = t(locale);
 const ogLocale = (l: Locale) => LOCALE_META[l].intl.split('-u-')[0].replace('-', '_');
 const { dir } = LOCALE_META[locale];

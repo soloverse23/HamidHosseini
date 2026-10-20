@@ -5,7 +5,8 @@ import YouTubePlayer from '../../components/YouTubePlayer.astro';
 import { type Locale } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
 import Base from '../../layouts/Base.astro';
-import { episodes, forReader, shorts, talks, YT_LANGS, ytOrder, type YtLang } from '../../lib/data';
+import { episodesIn, forReader, shorts, talksIn, ytOrder, type YtLang } from '../../lib/data';
+import { contentLang } from '../../lib/feed';
 import type { FeedItem } from '../../lib/feed-types';
 import { compact, date, duration, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
@@ -17,21 +18,23 @@ const locale = Astro.params.lang as Locale;
 const s = t(locale);
 const n = (x: number) => num(locale, x);
 
+// Only episodes and talks that exist in this language — no cross-language fallback.
+const episodes = episodesIn(locale);
+const talks = talksIn(locale);
 // The reader's own language first, then the ones they most likely also read.
 const order = ytOrder(locale);
 const versionsOf = (ep: (typeof episodes)[number]) => order.flatMap((k) => (ep[k] ? [ep[k]] : []));
 const langLabel = (v: FeedItem) => s.videos.langs[v.channel as YtLang];
 
 const channels = order.map((k) => CHANNELS.find((c) => c.id === `youtube-${k}`)!);
-const shortList: FeedItem[] = shorts.slice(0, 18);
+const shortList: FeedItem[] = shorts.filter((v) => contentLang(v) === locale).slice(0, 18);
 const iso = (sec?: number) => (sec ? `PT${Math.floor(sec / 3600) ? `${Math.floor(sec / 3600)}H` : ''}${Math.floor((sec % 3600) / 60)}M${Math.floor(sec % 60)}S` : undefined);
 const site = Astro.site!;
 const videoLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  itemListElement: episodes.slice(0, 40).flatMap((ep, i) =>
-    YT_LANGS.flatMap((k) => {
-      const v = ep[k];
+  itemListElement: episodes.slice(0, 40).flatMap((ep, i) => {
+      const v = ep[locale as YtLang];
       if (!v) return [];
       const thumb = v.media.find((m) => m.src)?.src;
       return [{
@@ -42,7 +45,7 @@ const videoLd = {
           name: v.title ?? `#${ep.n}`,
           description: v.text ? v.text.slice(0, 300) : (v.title ?? `#${ep.n}`),
           uploadDate: v.date,
-          inLanguage: v.lang ?? k,
+          inLanguage: v.lang ?? locale,
           duration: iso(v.media[0]?.duration),
           thumbnailUrl: thumb ? new URL(thumb, site).toString() : `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
           embedUrl: `https://www.youtube.com/embed/${v.id}`,
@@ -50,7 +53,6 @@ const videoLd = {
         },
       }];
     }),
-  ),
 };
 ---
 

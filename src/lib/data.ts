@@ -87,6 +87,10 @@ export const episodes: Episode[] = (() => {
   return [...map.values()].sort((a, b) => b.n - a.n);
 })();
 
+/** Episodes that have a version in the reader's language — never fall back to another tongue. */
+export const episodesIn = (locale: Locale) =>
+  isYtLang(locale) ? episodes.filter((ep) => ep[locale]) : [];
+
 export const otherTalks = ytVideos.filter((v) => !v.episode);
 
 /** The reader's own language first, then the ones they most likely also read. */
@@ -124,6 +128,10 @@ export const talks: FeedItem[][] = (() => {
   }
   return groups;
 })();
+
+/** Talk groups that include a version in the reader's language. */
+export const talksIn = (locale: Locale) =>
+  isYtLang(locale) ? talks.filter((g) => g.some((v) => v.channel === locale)) : [];
 
 /** Same key = same upload in another language: the episode number, or the talk group. */
 export const uploadKey = new Map<string, string>([

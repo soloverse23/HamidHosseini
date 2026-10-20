@@ -380,12 +380,14 @@ export function toHit(d: PFData, terms: string[], ctx: Ctx, full: boolean): Hit 
   const loc = ctx.locale;
   const pick = (prefix: string) => m[`${prefix}_${loc}`] ?? m[`${prefix}_en`] ?? m[`${prefix}_fa`];
   const internal = (path?: string) => (path ? localHref(loc, path) : d.url);
+  // Quran translation lives only under /fa/.
+  const quran = (path?: string) => (path ? localHref('fa', path) : d.url);
 
   switch (m.kind) {
     case 'ayah': {
       const surahName = loc === 'fa' || loc === 'ur' ? m.sfa : loc === 'ar' ? m.sar : m.str;
       return {
-        href: internal(m.path),
+        href: quran(m.path),
         external: false,
         type,
         kind: 'ayah',
@@ -399,7 +401,7 @@ export function toHit(d: PFData, terms: string[], ctx: Ctx, full: boolean): Hit 
     case 'surah': {
       const name = loc === 'fa' || loc === 'ur' ? m.fa : loc === 'ar' ? m.ar : m.tr;
       return {
-        href: internal(m.path),
+        href: quran(m.path),
         external: false,
         type,
         kind: 'surah',
@@ -477,7 +479,7 @@ export function toHit(d: PFData, terms: string[], ctx: Ctx, full: boolean): Hit 
     }
     default:
       return {
-        href: internal(m.path),
+        href: m.path?.startsWith('quran') ? quran(m.path) : internal(m.path),
         external: false,
         type,
         kind: 'page',
@@ -547,7 +549,7 @@ export function refHtml(ref: Ref, ctx: Ctx, goTo: string, id?: string): string {
   const n = (x: number) => new Intl.NumberFormat(ctx.intl, { useGrouping: false }).format(x);
   const name = ctx.locale === 'fa' ? m.fa : ctx.locale === 'ar' ? m.ar : m.translit;
   const where = ref.a ? `${ctx.labels.surah} ${name} · ${ctx.labels.verse} ${n(ref.a)}` : `${ctx.labels.surah} ${name}`;
-  const href = localHref(ctx.locale, `quran/${ref.s}${ref.a ? `#a${ref.a}` : ''}`);
+  const href = localHref('fa', `quran/${ref.s}${ref.a ? `#a${ref.a}` : ''}`);
   const role = id ? ` id="${id}" role="option" aria-selected="false"` : '';
   return `<li class="hit hit--jump"${role}>
   <a class="hit__link" href="${href}" tabindex="${id ? -1 : 0}">
