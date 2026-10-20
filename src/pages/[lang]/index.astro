@@ -236,7 +236,7 @@ const jsonLd = [
   </section>
 
   <!-- ============ Timeline ============ -->
-  <section class="wrap timeline" aria-labelledby="tl-title" data-locale={locale} data-intl={LOCALE_META[locale].intl}>
+  <section class="wrap timeline" id="latest" aria-labelledby="tl-title" data-locale={locale} data-intl={LOCALE_META[locale].intl}>
     <div class="tl-bar">
       <div class="tl-bar__title">
         <h2 id="tl-title">{u.fromAll}</h2>
@@ -837,6 +837,7 @@ const jsonLd = [
   }
   .ep__langs {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
   }
   .pill {

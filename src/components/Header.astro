@@ -25,17 +25,19 @@ const section = path.split('/')[0];
 const gloss = new Intl.DisplayNames([LOCALE_META[locale].intl.split('-u-')[0]], { type: 'language' });
 const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
 
-const NAV = ['writings', 'articles', 'quran', 'notes', 'videos', 'tiktok', 'instagram'] as const;
-const label: Record<string, string> = {
-  writings: s.nav.writings,
-  articles: s.nav.articles,
-  quran: s.nav.quran,
-  notes: s.nav.notes,
-  videos: s.nav.videos,
-  tiktok: s.nav.tiktok,
-  instagram: s.nav.instagram,
-  about: s.nav.about,
-};
+// Organised by what readers look for, not by platform: the platforms are
+// filters inside "Latest" and "Shorts". `match` lists the sections each item
+// stands for, for the current-page mark.
+const NAV = [
+  { key: 'quran', path: 'quran', match: ['quran'] },
+  { key: 'topics', path: 'topics', match: ['topics'] },
+  { key: 'series', path: 'videos', match: ['videos'] },
+  { key: 'library', path: 'writings', match: ['writings', 'articles'] },
+  { key: 'shorts', path: 'shorts', match: ['shorts', 'tiktok', 'instagram'] },
+  { key: 'latest', path: '#latest', match: ['notes'] },
+  { key: 'about', path: 'about', match: ['about'] },
+] as const;
+const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path}` : href(locale, path));
 ---
 
 <header class="site-header">
@@ -95,11 +97,11 @@ const label: Record<string, string> = {
       <nav class="primary" aria-label={s.contents}>
         <ol>
           {
-            [...NAV, 'about' as const].map((key, i) => (
+            NAV.map(({ key, path, match }, i) => (
               <li>
-                <a href={href(locale, key)} aria-current={section === key ? 'page' : undefined}>
+                <a href={navHref(path)} aria-current={(match as readonly string[]).includes(section) ? 'page' : undefined}>
                   <span class="primary__no num" aria-hidden="true">{key === 'about' ? '' : pad(i + 1)}</span>
-                  <span class="primary__label">{label[key]}</span>
+                  <span class="primary__label">{s.nav[key]}</span>
                   <Icon name="chevron" class="primary__chev flip" />
                 </a>
               </li>

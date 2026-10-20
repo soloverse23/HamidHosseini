@@ -1,0 +1,144 @@
+---
+// Every short clip in one place (TikTok, Instagram, YouTube Shorts), newest
+// first, with the platform as a filter rather than a section of its own.
+import Chapter from '../../components/Chapter.astro';
+import Icon from '../../components/Icon.astro';
+import { type Locale, isRtl } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import { ui } from '../../i18n/ui';
+import Base from '../../layouts/Base.astro';
+import { instagram, shorts, tiktok } from '../../lib/data';
+import { compact, date, num } from '../../lib/format';
+import { localePaths } from '../../lib/paths';
+import { clipTitle } from '../../lib/text';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const u = ui(locale);
+const items = [...tiktok.items, ...instagram.items, ...shorts].sort((a, b) => b.date.localeCompare(a.date));
+const platform = (source: string) => (source === 'youtube' ? 'youtube' : source === 'instagram' ? 'instagram' : 'tiktok');
+const counts = { tiktok: tiktok.items.length, instagram: instagram.items.length, youtube: shorts.length };
+---
+
+<Base locale={locale} path="shorts" crumbs={[{ name: s.nav.shorts, path: 'shorts' }]} title={s.nav.shorts} description={u.shortsLede}>
+  <div class="wrap">
+    <Chapter locale={locale} title={s.nav.shorts} lede={u.shortsLede}>
+      <span class="meta">{s.videosCount(num(locale, items.length))}</span>
+    </Chapter>
+
+    <p class="filters" role="group">
+      <button type="button" aria-pressed="true" data-filter="all">{u.all}</button>
+      {
+        (['tiktok', 'instagram', 'youtube'] as const)
+          .filter((k) => counts[k] > 0)
+          .map((k) => (
+            <button type="button" aria-pressed="false" data-filter={k}>
+              <Icon name={k} />
+              {k === 'tiktok' ? 'TikTok' : k === 'instagram' ? 'Instagram' : 'YouTube'}
+              <span class="meta num">{num(locale, counts[k])}</span>
+            </button>
+          ))
+      }
+    </p>
+
+    <ul class="sheet">
+      {
+        items.map((v) => {
+          const m = v.media.find((x) => x.src);
+          const title = clipTitle(v);
+          return (
+            <li data-platform={platform(v.source)}>
+              <a class="frame frame--9x16" href={v.url} rel="noopener" target="_blank" aria-label={title || date(locale, v.date)}>
+                {m?.src ? <img src={m.src} width={m.width} height={m.height} alt={title} loading="lazy" decoding="async" /> : null}
+                <span class="s-src">
+                  <Icon name={platform(v.source)} />
+                </span>
+                {v.views ? <span class="frame__badge">{compact(locale, v.views)}</span> : null}
+              </a>
+              {title && (
+                <p class="cap" lang={v.lang} dir={isRtl(v.lang) ? 'rtl' : 'ltr'}>
+                  {title}
+                </p>
+              )}
+              <p class="meta">
+                <time datetime={v.date}>{date(locale, v.date, 'short')}</time>
+              </p>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</Base>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filters [data-filter]');
+  buttons.forEach((b) =>
+    b.addEventListener('click', () => {
+      buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      const f = b.dataset.filter;
+      document.querySelectorAll<HTMLElement>('.sheet [data-platform]').forEach((li) => {
+        li.hidden = f !== 'all' && li.dataset.platform !== f;
+      });
+    }),
+  );
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block: var(--space-5);
+  }
+  .filters button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: none;
+    color: var(--ink-2);
+    font: inherit;
+    cursor: pointer;
+  }
+  .filters button[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .sheet {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: var(--space-5) var(--space-4);
+  }
+  .sheet li[hidden] {
+    display: none;
+  }
+  .sheet img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .s-src {
+    position: absolute;
+    inset-block-start: 0.4rem;
+    inset-inline-start: 0.4rem;
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 0.55);
+    color: #fff;
+  }
+  .cap {
+    margin-block-start: var(--space-2);
+    font-size: var(--step--1);
+    line-height: 1.5;
+  }
+</style>

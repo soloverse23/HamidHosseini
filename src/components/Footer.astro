@@ -20,14 +20,15 @@ const { locale, path = '' } = Astro.props;
 const s = t(locale);
 const u = ui(locale);
 const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
+// Every section, including the archives that the header folds into broader items.
 const sections = [
-  ['writings', s.nav.writings],
-  ['articles', s.nav.articles],
   ['quran', s.nav.quran],
+  ['topics', s.nav.topics],
+  ['videos', s.nav.series],
+  ['writings', s.nav.library],
+  ['articles', s.nav.articles],
   ['notes', s.nav.notes],
-  ['videos', s.nav.videos],
-  ['tiktok', s.nav.tiktok],
-  ['instagram', s.nav.instagram],
+  ['shorts', s.nav.shorts],
 ] as const;
 ---
 

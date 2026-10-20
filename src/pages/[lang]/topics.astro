@@ -1,0 +1,107 @@
+---
+// Subjects across the archive. Until the fixed topic list arrives, this
+// gathers the two existing groupings: the topics of the Telegram notes (from
+// his hashtags) and the subjects of the kalaam.ir articles. Both lead to
+// Persian content.
+import Chapter from '../../components/Chapter.astro';
+import { type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/strings';
+import { ui } from '../../i18n/ui';
+import Base from '../../layouts/Base.astro';
+import { CATEGORIES } from '../../data/articles';
+import { categoriesInUse, categoryCounts } from '../../lib/articles';
+import { notes } from '../../lib/data';
+import { num } from '../../lib/format';
+import { href, localePaths } from '../../lib/paths';
+import { TOPIC_KEYS, topicsOf } from '../../lib/topics';
+
+export const getStaticPaths = localePaths;
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const u = ui(locale);
+const noteCounts = Object.fromEntries(TOPIC_KEYS.map((k) => [k, notes.filter((n) => topicsOf(n).includes(k)).length]));
+const pick = (l: Partial<Record<Locale, string>> | undefined) => (l ? (l[locale] ?? l.en ?? l.fa ?? '') : '');
+---
+
+<Base locale={locale} path="topics" crumbs={[{ name: s.nav.topics, path: 'topics' }]} title={s.nav.topics} description={u.topicsLede}>
+  <div class="wrap">
+    <Chapter locale={locale} title={s.nav.topics} lede={u.topicsLede} />
+    <p class="meta interim">{u.topicsInterim}</p>
+
+    <section class="block" aria-labelledby="t-notes">
+      <h2 id="t-notes">{u.noteTopics}</h2>
+      <ul class="topics">
+        {
+          TOPIC_KEYS.filter((k) => noteCounts[k] > 0).map((k) => (
+            <li>
+              <a href={href('fa', `notes/topic/${k}`)}>
+                <span class="topics__name">{s.topics[k]}</span>
+                <span class="meta num">{num(locale, noteCounts[k])}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="block" aria-labelledby="t-articles">
+      <h2 id="t-articles">{u.articleTopics}</h2>
+      <ul class="topics">
+        {
+          categoriesInUse.map((k) => (
+            <li>
+              <a href={href(locale, `articles/topic/${k}`)}>
+                <span class="topics__name">{pick(CATEGORIES[k].title)}</span>
+                <span class="meta num">{num(locale, categoryCounts[k])}</span>
+                {CATEGORIES[k].summary && <span class="topics__sum">{pick(CATEGORIES[k].summary)}</span>}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .interim {
+    margin-block-end: var(--space-6);
+    max-width: var(--measure);
+  }
+  .block + .block {
+    margin-block-start: var(--space-7);
+  }
+  h2 {
+    font-size: var(--step-1);
+    margin-block-end: var(--space-4);
+  }
+  .topics {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: var(--space-3);
+  }
+  .topics a {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-1) var(--space-3);
+    height: 100%;
+    padding: var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .topics a:hover {
+    border-color: var(--accent);
+  }
+  .topics__name {
+    font-weight: 600;
+  }
+  .topics__sum {
+    grid-column: 1 / -1;
+    font-size: var(--step--1);
+    color: var(--ink-2);
+  }
+</style>
