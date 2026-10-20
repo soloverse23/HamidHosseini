@@ -32,6 +32,7 @@ import { TIMELINE_SPAN, contentLang, featuredNote, timeline } from '../../lib/fe
 import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
 import { PRODUCTION_URL } from '../../lib/site';
+import { verseHref } from '../../lib/quran-refs';
 import { foundationNode, personNode } from '../../lib/schema';
 import { CHANNELS } from '../../lib/social';
 import { withoutEpisodeNo } from '../../lib/series';
@@ -173,7 +174,7 @@ const jsonLd = [
         <QuranMap locale={locale} compact />
         {
           nowSurah && quranNow && nowVerse && (
-            <a class="q-verse" href={href(locale, `quran/${nowSurah.n}#a${quranNow.ayah}`)}>
+            <a class="q-verse" href={verseHref(quranNow)}>
               <span class="q-verse__label">
                 {u.latestVerse} · {surahName(nowSurah)} {n(nowSurah.n)}:{n(quranNow.ayah)}
               </span>

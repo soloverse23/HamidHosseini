@@ -85,7 +85,7 @@ for (const m of surahs) {
       body: `${ar} ${(v?.notes ?? []).join(' ')} ${m.fa} ${m.ar} ${m.translit}`,
       meta: {
         kind: 'ayah',
-        path: `quran/${m.n}#a${a}`,
+        path: v ? `quran/${m.n}/${a}` : `quran/${m.n}#a${a}`,
         s: m.n,
         a,
         sar: m.ar,

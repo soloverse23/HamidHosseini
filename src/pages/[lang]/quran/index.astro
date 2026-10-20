@@ -6,13 +6,18 @@ import { type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { quranNow, surahs, surahsStarted, totalTranslated, translatedCount } from '../../../lib/data';
-import { num } from '../../../lib/format';
+import { num, percent } from '../../../lib/format';
+import { verseHref } from '../../../lib/quran-refs';
 import { href, localePaths } from '../../../lib/paths';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
 const s = t(locale);
 const n = (x: number) => num(locale, x);
+// Surahs with translated verses first; the rest, mostly untranslated, folded away.
+const started = surahs.filter((m) => translatedCount(m.n) > 0);
+const rest = surahs.filter((m) => translatedCount(m.n) === 0);
+const pct = (totalTranslated / 6236) * 100;
 const localName = (m: (typeof surahs)[number]) =>
   locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? null : locale === 'ro' ? m.translit : `${m.translit} · ${m.en}`;
 ---
@@ -31,12 +36,16 @@ const localName = (m: (typeof surahs)[number]) =>
     <SearchField locale={locale} type="quran" class="page-search" />
 
     <section class="overview" aria-label={s.quran.progress}>
+      <div class="total" role="progressbar" aria-valuemin="0" aria-valuemax="6236" aria-valuenow={totalTranslated} aria-label={s.quran.progress}>
+        <span class="total__bar" style={`--p:${pct}%`} />
+        <span class="total__label">{s.quran.translated(n(totalTranslated), n(6236))} · {percent(locale, totalTranslated / 6236)}</span>
+      </div>
       <QuranMap locale={locale} />
       {
         quranNow && (
           <p class="meta">
             <span>{s.quran.now}</span>
-            <a href={href(locale, `quran/${quranNow.surah}#a${quranNow.ayah}`)}>
+            <a href={verseHref(quranNow)}>
               {localName(surahs[quranNow.surah - 1]) ?? surahs[quranNow.surah - 1].ar} {n(quranNow.surah)}:{n(quranNow.ayah)}
             </a>
           </p>
@@ -44,9 +53,10 @@ const localName = (m: (typeof surahs)[number]) =>
       }
     </section>
 
+    <h2 class="list-head">{s.quran.started}</h2>
     <ol class="surahs">
       {
-        surahs.map((m) => {
+        started.map((m) => {
           const done = translatedCount(m.n);
           return (
             <li class:list={{ started: done > 0 }}>
@@ -65,10 +75,65 @@ const localName = (m: (typeof surahs)[number]) =>
         })
       }
     </ol>
+
+    <details class="rest">
+      <summary>{s.quran.others(n(rest.length))}</summary>
+      <ol class="surahs">
+        {
+          rest.map((m) => {
+          const done = translatedCount(m.n);
+          return (
+            <li class:list={{ started: done > 0 }}>
+              <a href={href(locale, `quran/${m.n}`)}>
+                <span class="surahs__n num">{n(m.n)}</span>
+                <span class="surahs__ar" lang="ar">{m.ar}</span>
+                {localName(m) && <span class="surahs__name">{localName(m)}</span>}
+                <span class="surahs__meta meta">
+                  <span>{s.quran.verses(n(m.ayahs))}</span>
+                  <span>{m.place === 'mecca' ? s.quran.mecca : s.quran.medina}</span>
+                </span>
+                <span class="surahs__bar" style={`--p:${(done / m.ayahs) * 100}%`} aria-label={s.quran.translated(n(done), n(m.ayahs))} />
+              </a>
+            </li>
+          );
+          })
+        }
+      </ol>
+    </details>
   </div>
 </Base>
 
 <style>
+  .total {
+    display: grid;
+    gap: var(--space-2);
+    margin-block-end: var(--space-4);
+  }
+  .total__bar {
+    display: block;
+    height: 0.6rem;
+    border-radius: 999px;
+    background: linear-gradient(to left, var(--accent) var(--p), var(--paper-3) var(--p));
+  }
+  :global([dir='ltr']) .total__bar {
+    background: linear-gradient(to right, var(--accent) var(--p), var(--paper-3) var(--p));
+  }
+  .total__label {
+    font-size: var(--step--1);
+    color: var(--ink-2);
+  }
+  .list-head {
+    font-size: var(--step-1);
+    margin-block: var(--space-6) var(--space-3);
+  }
+  .rest {
+    margin-block-start: var(--space-6);
+  }
+  .rest summary {
+    cursor: pointer;
+    color: var(--accent);
+    margin-block-end: var(--space-3);
+  }
   .note-lang {
     max-width: 40rem;
     padding: var(--space-3) var(--space-4);

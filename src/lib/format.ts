@@ -33,6 +33,11 @@ export function year(locale: Locale, y: number): string {
   return num(locale, y).replace(/[,.\s]/g, '');
 }
 
+/** 0.213 → "21.3%" in the reader's digits and sign. */
+export function percent(locale: Locale, share: number): string {
+  return new Intl.NumberFormat(LOCALE_META[locale].intl, { style: 'percent', maximumFractionDigits: 1 }).format(share);
+}
+
 /** "2016–2017" in the reader's calendar and digits (۱۳۹۵–۱۳۹۶ for Persian). */
 export function yearRange(locale: Locale, [from, to]: [number, number?]): string {
   return to && to !== from ? `${year(locale, from)}–${year(locale, to)}` : year(locale, from);

@@ -10,6 +10,13 @@ const postDates = new Map(telegramItems.map((i) => [i.id, i.date]));
 // Posts with nothing to read are noindex on their page; keep them out of the sitemap too.
 const thinPosts = new Set(telegramItems.filter(isThin).map((i) => i.id));
 
+// Quran verse pages: the date of the post that proposed the verse.
+const verseDates = new Map(
+  Object.entries(JSON.parse(readFileSync(new URL('./src/data/quran/fa.json', import.meta.url), 'utf8')).surahs).flatMap(
+    ([s, ayahs]) => Object.entries(ayahs).map(([a, v]) => [`${s}/${a}`, v.date]),
+  ),
+);
+
 // kalaam.ir articles: last edit on the blog (stored as Tehran local time).
 const articleDates = new Map(
   JSON.parse(readFileSync(new URL('./src/data/kalaam.json', import.meta.url), 'utf8')).items.map((i) => [
@@ -48,6 +55,11 @@ export default defineConfig({
         if (/\/fa\/notes\//.test(item.url)) delete item.links;
         const post = item.url.match(/\/fa\/notes\/(\d+)\/$/);
         if (post) item.lastmod = postDates.get(post[1]);
+        const verse = item.url.match(/\/fa\/quran\/(\d+\/\d+)\/$/);
+        if (verse) {
+          delete item.links;
+          item.lastmod = verseDates.get(verse[1]);
+        }
         const article = item.url.match(/\/fa\/articles\/(\d+)\/$/);
         if (article) {
           delete item.links;

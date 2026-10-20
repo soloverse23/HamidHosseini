@@ -4,8 +4,9 @@ import Icon from '../../../components/Icon.astro';
 import { LOCALES, isRtl, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
-import { arabic, quranFa, surahs, translatedCount } from '../../../lib/data';
+import { arabic, noteById, quranFa, surahs, translatedCount } from '../../../lib/data';
 import { personRef } from '../../../lib/schema';
+import { richNote } from '../../../lib/quran-refs';
 import { date, num, plain } from '../../../lib/format';
 import { href } from '../../../lib/paths';
 
@@ -26,6 +27,7 @@ const localName = (m: typeof meta) => (locale === 'fa' || locale === 'ur' ? m.fa
 const subtitle = locale === 'en' ? meta.en : locale === 'ro' ? meta.translit : undefined;
 const showBasmala = meta.n !== 1 && meta.n !== 9;
 const title = `${s.quran.surah} ${localName(meta)}`;
+const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) : undefined);
 ---
 
 <Base
@@ -95,7 +97,7 @@ const title = `${s.quran.surah} ${localName(meta)}`;
           const v = tr[a];
           return (
             <li id={`a${a}`} class:list={['ayah', { 'ayah--none': !v }]}>
-              <a class="ayah__n num" href={`#a${a}`} aria-label={`${meta.n}:${a}`}>
+              <a class="ayah__n num" href={v ? href('fa', `quran/${meta.n}/${a}`) : `#a${a}`} aria-label={`${meta.n}:${a}`}>
                 {n(a)}
               </a>
               <p class="quran-ar ayah__ar" lang="ar">
@@ -109,7 +111,7 @@ const title = `${s.quran.surah} ${localName(meta)}`;
                       <summary>{s.quran.notes} ({n(v.notes.length)})</summary>
                       <ul>
                         {v.notes.map((x) => (
-                          <li>{x}</li>
+                          <li set:html={richNote(x, meta.n, localPost)} />
                         ))}
                       </ul>
                     </details>
