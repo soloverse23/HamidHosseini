@@ -1,0 +1,36 @@
+name: Backup
+
+# A weekly, self-contained copy of the whole archive (every fetched post,
+# video and clip, the Quran translation, the overrides and the stored
+# images) as a GitHub release. If a platform disappears, nothing is lost;
+# the git history is a second copy. Releases older than the last 12 are pruned.
+on:
+  schedule:
+    - cron: '23 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pack the archive
+        run: |
+          stamp=$(date -u +%Y-%m-%d)
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          tar -czf "archive-$stamp.tar.gz" src/data public/media public/files
+          ls -lh "archive-$stamp.tar.gz"
+      - name: Publish as a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "backup-$STAMP" "archive-$STAMP.tar.gz" \
+            --title "Archive backup $STAMP" \
+            --notes "Weekly backup of src/data, public/media and public/files. Restore by extracting at the repository root." \
+            --latest=false
+          gh release list --limit 100 --json tagName --jq '.[].tagName' | grep '^backup-' | sort -r | tail -n +13 |
+            while read -r tag; do gh release delete "$tag" --yes --cleanup-tag; done

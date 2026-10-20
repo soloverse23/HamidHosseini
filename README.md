@@ -49,6 +49,11 @@ The editor at **`/admin/`** (Sveltia CMS) edits the files below without touching
 - **Topics on the Notes page:** `src/lib/topics.ts` maps his hashtags to topics.
 - **Articles (kalaam.ir):** topics, series and the pages folded into their posts are in `src/data/articles.ts`. The import (`src/data/kalaam.json`) is cleaned HTML; `src/lib/articles.ts` builds what the `/articles/` pages and search use.
 
+## Search engines and backups
+
+- **IndexNow:** after each successful production deploy, `.github/workflows/indexnow.yml` sends the pages changed in the last two days (from the live sitemap) to IndexNow (Bing, Yandex and others). The key file is `public/5af46353cd129a93e179dfbe9543f5e0.txt`. By hand: `npx tsx scripts/indexnow.mts [url …]`.
+- **Backups:** `.github/workflows/backup.yml` publishes `src/data`, `public/media` and `public/files` every Monday as a GitHub release (`backup-YYYY-MM-DD`, the last 12 kept). Restore by extracting the archive at the repository root.
+
 ## Search
 
 The Astro integration `scripts/search/integration.ts` runs `scripts/search/build-index.ts` after every build. It writes ONE cross-language Pagefind index to `dist/pagefind/`: every Quran verse and surah, every note, video, clip, written work and section page. A reader on any language version therefore finds everything. Text is folded by `src/lib/search/normalize.ts` (vowel marks, Arabic/Persian ی ک, ZWNJ, digits, Latin diacritics). The browser folds queries the same way, so `الرحمن` finds `ٱلرَّحْمَٰنِ`. A word list in `dist/pagefind/vocab/` lets the browser reject unknown words and suggest spellings.
