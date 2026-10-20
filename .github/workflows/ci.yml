@@ -1,0 +1,29 @@
+name: Check
+
+# Type-checks the site, builds it and checks the output for SEO mistakes
+# (stale domain, canonicals, hreflang, JSON-LD, internal links, sitemap).
+# Content-sync commits are skipped: they only change data and Vercel builds them anyway.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request' || !startsWith(github.event.head_commit.message, 'content: sync')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm run check:seo

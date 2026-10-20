@@ -57,7 +57,11 @@ The Astro integration `scripts/search/integration.ts` runs `scripts/search/build
 npm install
 npm run dev            # http://localhost:4321
 npm run build          # static site + search index in dist/
+npm run check          # type check (astro check)
+npm run check:seo      # after a build: domain, canonicals, hreflang, JSON-LD, links, sitemap
 ```
+
+`.github/workflows/ci.yml` runs all three on every push and pull request (content-sync commits excepted).
 
 You need `yt-dlp` on your PATH (or at `~/.local/bin/yt-dlp`) for the YouTube and TikTok fetchers.
 
@@ -65,7 +69,7 @@ You need `yt-dlp` on your PATH (or at `~/.local/bin/yt-dlp`) for the YouTube and
 
 1. Push this folder to a GitHub repository.
 2. In Vercel, import the repository. Its settings are in `vercel.json`.
-3. Set the environment variable `SITE_URL` to the final domain, e.g. `https://hamidhosseini.com` (until then the production address `https://hamid-hosseini.vercel.app` is used). It's used for canonical links, the sitemap and social previews.
+3. Set the environment variable `SITE_URL` to the final domain, `https://www.hamidhosseini.site` (the same value is the fallback in `src/lib/site.ts`; `hamid-hosseini.vercel.app` redirects there). It's used for canonical links, the sitemap and social previews.
 4. `middleware.ts` sends `/` to the visitor's language, using a saved choice first, then the browser language, then English.
 
 ## Credits

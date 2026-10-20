@@ -22,6 +22,7 @@ import {
 } from '../../../lib/articles';
 import { date, num } from '../../../lib/format';
 import { href } from '../../../lib/paths';
+import { PRODUCTION_URL } from '../../../lib/site';
 
 type Props =
   | { kind: 'list'; topic?: CategoryKey; series?: SeriesKey; items: Article[] }
@@ -51,7 +52,7 @@ const n = (x: number) => num(locale, x);
 const pick = (l?: Localized) => (l ? (l[locale] ?? l.en ?? l.fa) : undefined);
 const catTitle = (k: CategoryKey) => pick(CATEGORIES[k].title)!;
 const listHref = (path = '') => href(locale, `articles/${path}`);
-const site = Astro.site ?? new URL('https://hamid-hosseini.vercel.app');
+const site = Astro.site ?? new URL(PRODUCTION_URL);
 const abs = (p: string) => new URL(p, site).toString();
 
 /** Group by year in the reader's calendar (solar hijri for Persian). */

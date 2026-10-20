@@ -32,6 +32,7 @@ import {
 import { TIMELINE, TIMELINE_SPAN, featuredNote } from '../../lib/feed';
 import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
+import { PRODUCTION_URL } from '../../lib/site';
 import { CHANNELS } from '../../lib/social';
 import { withoutEpisodeNo } from '../../lib/series';
 import { excerpt, firstLine } from '../../lib/text';
@@ -83,7 +84,7 @@ const sections = [
   { key: 'instagram', title: s.sections.instagram.title, count: instagram.items.length || undefined, detail: 'Instagram' },
 ];
 
-const origin = (Astro.site ?? new URL('https://hamid-hosseini.vercel.app')).origin;
+const origin = (Astro.site ?? new URL(PRODUCTION_URL)).origin;
 const jsonLd = [
   {
     '@context': 'https://schema.org',

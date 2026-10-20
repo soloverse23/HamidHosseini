@@ -27,7 +27,7 @@ interface Props {
   label?: string;
 }
 const { name, class: cls, label } = Astro.props;
-const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': 'true' };
+const a11y = label ? { role: 'img' as const, 'aria-label': label } : { 'aria-hidden': 'true' as const };
 ---
 
 <svg

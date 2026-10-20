@@ -75,6 +75,9 @@ const quranRefs =
       )
     : [];
 const firstRef = quranRefs[0];
+// The first page of the Persian list and of each Persian topic is a hub worth
+// indexing; later pages and the other locales' copies of the same posts are not.
+const hub = props.kind === 'list' && locale === 'fa' && props.page === 1;
 const lastRef = quranRefs.at(-1);
 
 const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^\p{L}\p{N}«(]+/u, ''), 90) : '';
@@ -87,7 +90,7 @@ const postTitle = props.kind === 'post' ? firstLine(props.item.text.replace(/^[^
       path={`notes/${slug}`}
       title={props.topic ? s.topics[props.topic] : s.sections.notes.title}
       description={s.sections.notes.lede}
-      noindex
+      noindex={!hub}
       alternates={false}
     >
       <div class="wrap">

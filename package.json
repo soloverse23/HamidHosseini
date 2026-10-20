@@ -11,7 +11,9 @@
     "fetch:tiktok": "tsx scripts/fetch/tiktok.ts",
     "fetch:instagram": "tsx scripts/fetch/instagram.ts",
     "fetch:kalaam": "tsx scripts/fetch/kalaam.ts",
-    "fetch:all": "tsx scripts/fetch/all.ts"
+    "fetch:all": "tsx scripts/fetch/all.ts",
+    "check:seo": "tsx scripts/check/seo.ts",
+    "check": "astro check"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
@@ -25,6 +27,7 @@
     "astro": "^5.18.2"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.11",
     "@types/sanitize-html": "^2.16.2",
     "cheerio": "^1.2.0",
     "fast-xml-parser": "^4.5.7",

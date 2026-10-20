@@ -36,7 +36,7 @@ const time = (iso: string) =>
   }).format(new Date(iso));
 const dirOf = (lang?: string) => (isRtl(lang) ? 'rtl' : 'ltr');
 // Opt-in for in-browser translation (src/scripts/translate.ts); never the Quran translation.
-const tr = (i: FeedItem) => (i.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' });
+const tr = (i: FeedItem) => (i.series === 'quran-translation' ? { translate: 'no' as const } : { 'data-tr': '' });
 const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
 const titleOf = (i: FeedItem) => {
   const doc = i.media.find((m) => m.title)?.title;

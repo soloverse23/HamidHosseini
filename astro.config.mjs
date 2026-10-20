@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import search from './scripts/search/integration.ts';
 import { readFileSync } from 'node:fs';
+import { PRODUCTION_URL } from './src/lib/site.ts';
 
 const postDates = new Map(
   JSON.parse(readFileSync(new URL('./src/data/feeds/telegram.json', import.meta.url), 'utf8')).items.map(
@@ -17,7 +18,7 @@ const articleDates = new Map(
   ]),
 );
 
-const SITE = process.env.SITE_URL ?? 'https://hamid-hosseini.vercel.app';
+const SITE = process.env.SITE_URL ?? PRODUCTION_URL;
 
 export default defineConfig({
   site: SITE,
@@ -32,20 +33,20 @@ export default defineConfig({
   integrations: [
     search(),
     sitemap({
-      // Individual Telegram posts are many and mirrored in five UIs; keep the
-      // sitemap to the Persian copy of each, which matches its content.
+      // Telegram posts are Persian and mirrored in five UIs; keep the sitemap to
+      // the Persian copy (posts, the list and its topics) and skip pagination.
       filter: (page) =>
-        !/\/(en|ro|ar|ur)\/notes\/\d+\/$/.test(page) &&
-        !/\/notes\/(page|topic)\//.test(page) &&
+        new URL(page).pathname !== '/' &&
+        !/\/404\/$/.test(page) &&
+        !/\/(en|ro|ar|ur)\/notes\//.test(page) &&
+        !/\/notes\/(.+\/)?page\//.test(page) &&
         !/\/search\/$/.test(page) &&
         !/\/timeline\//.test(page),
       serialize(item) {
         // Persian-only posts have no translated twins; drop the hreflang links.
+        if (/\/fa\/notes\//.test(item.url)) delete item.links;
         const post = item.url.match(/\/fa\/notes\/(\d+)\/$/);
-        if (post) {
-          delete item.links;
-          item.lastmod = postDates.get(post[1]);
-        }
+        if (post) item.lastmod = postDates.get(post[1]);
         const article = item.url.match(/\/fa\/articles\/(\d+)\/$/);
         if (article) {
           delete item.links;
