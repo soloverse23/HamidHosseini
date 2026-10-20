@@ -10,6 +10,13 @@ const postDates = new Map(telegramItems.map((i) => [i.id, i.date]));
 // Posts with nothing to read are noindex on their page; keep them out of the sitemap too.
 const thinPosts = new Set(telegramItems.filter(isThin).map((i) => i.id));
 
+// Episode pages are indexed only in languages that have that episode.
+const episodeLangs = new Set(
+  JSON.parse(readFileSync(new URL('./src/data/feeds/youtube.json', import.meta.url), 'utf8'))
+    .items.filter((i) => i.episode && i.channel && i.kind === 'video')
+    .map((i) => `${i.channel}/${i.episode}`),
+);
+
 // Quran verse pages: the date of the post that proposed the verse.
 const verseDates = new Map(
   Object.entries(JSON.parse(readFileSync(new URL('./src/data/quran/fa.json', import.meta.url), 'utf8')).surahs).flatMap(
@@ -49,6 +56,7 @@ export default defineConfig({
         !thinPosts.has(page.match(/\/fa\/notes\/(\d+)\/$/)?.[1]) &&
         !/\/notes\/(.+\/)?page\//.test(page) &&
         !/\/search\/$/.test(page) &&
+        !(/\/videos\/\d+\/$/.test(page) && !episodeLangs.has(page.match(/\/(\w\w)\/videos\/(\d+)\/$/).slice(1).join('/'))) &&
         !/\/timeline\//.test(page),
       serialize(item) {
         // Persian-only posts have no translated twins; drop the hreflang links.

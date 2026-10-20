@@ -8,7 +8,7 @@ import Base from '../../layouts/Base.astro';
 import { episodes, forReader, shorts, talks, YT_LANGS, ytOrder, type YtLang } from '../../lib/data';
 import type { FeedItem } from '../../lib/feed-types';
 import { compact, date, duration, num } from '../../lib/format';
-import { localePaths } from '../../lib/paths';
+import { href, localePaths } from '../../lib/paths';
 import { withoutEpisodeNo } from '../../lib/series';
 import { CHANNELS } from '../../lib/social';
 
@@ -90,7 +90,7 @@ const videoLd = {
                   <p class="eyebrow">
                     {s.episode(n(ep.n))} · <time datetime={ep.date}>{date(locale, ep.date, 'month')}</time>
                   </p>
-                  <h3 class="serif align-start" lang={main.lang} dir="auto" data-tr>{withoutEpisodeNo(main.title)}</h3>
+                  <h3 class="serif align-start" lang={main.lang} dir="auto" data-tr><a href={href(locale, `videos/${ep.n}`)}>{withoutEpisodeNo(main.title)}</a></h3>
                   <p class="btn-row">
                     {versions.map((v) => (
                       <button class="btn" type="button" data-swap={v.id} data-title={v.title}>
@@ -170,6 +170,10 @@ const videoLd = {
 </Base>
 
 <script>
+  // Episodes used to be anchors on this page (#ep-60); they have their own pages now.
+  const old = location.hash.match(/^#ep-(\d+)$/);
+  if (old) location.replace(`${location.pathname}${old[1]}/`);
+
   document.querySelectorAll<HTMLButtonElement>('[data-swap]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const box = btn.closest('.ep')?.querySelector<HTMLElement>('.ep__media .frame');
@@ -215,6 +219,13 @@ const videoLd = {
     display: grid;
     gap: var(--space-2);
     align-content: start;
+  }
+  .ep__text h3 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .ep__text h3 a:hover {
+    color: var(--accent);
   }
   .ep__text h3 {
     font-size: 1.25rem;

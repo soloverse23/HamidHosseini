@@ -11,15 +11,17 @@ import * as instagram from './instagram';
 import * as quran from './quran';
 import * as telegram from './telegram';
 import * as tiktok from './tiktok';
+import * as transcripts from './transcripts';
 import * as youtube from './youtube';
 
 const full = process.argv.includes('--full');
-const jobs = { telegram, youtube, tiktok, instagram } as const;
+// transcripts after youtube: it reads the videos youtube just stored.
+const jobs = { telegram, youtube, transcripts, tiktok, instagram } as const;
 const failures: string[] = [];
 
 for (const [name, mod] of Object.entries(jobs)) {
   try {
-    await mod.run({ full } as never);
+    await (mod.run as (opts: { full: boolean }) => Promise<unknown>)({ full });
   } catch (err) {
     failures.push(`${name}: ${(err as Error).message}`);
     console.error(`✗ ${name}:`, (err as Error).message);

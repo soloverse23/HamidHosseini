@@ -131,7 +131,7 @@ for (const n of notes) {
 /* ---------- Videos: YouTube, TikTok, Instagram ---------- */
 
 const onPage = new Map<string, string>();
-for (const ep of episodes) for (const v of YT_LANGS.map((k) => ep[k])) if (v) onPage.set(v.id, `videos#ep-${ep.n}`);
+for (const ep of episodes) for (const v of YT_LANGS.map((k) => ep[k])) if (v) onPage.set(v.id, `videos/${ep.n}`);
 for (const v of otherTalks) onPage.set(v.id, `videos#v-${v.id}`);
 for (const v of shorts.slice(0, 18)) onPage.set(v.id, `videos#v-${v.id}`);
 

@@ -141,7 +141,7 @@ const companionLabel = (c: FeedItem) =>
     (() => {
       const [i, ...others] = forReader(entry.versions, locale);
       const m = i.media[0];
-      const internal = i.episode ? href(locale, `videos#ep-${i.episode}`) : i.url;
+      const internal = i.episode ? href(locale, `videos/${i.episode}`) : i.url;
       const lang = s.videos.langs[i.channel as YtLang];
       const title = withoutEpisodeNo(i.title);
       return (

@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { guessLang, speechTitle, withoutTags } from '../../src/lib/text';
 import { saveImage } from './lib/media';
 import { ensureDir, fetchText, mergeFeed, readFeed, ROOT } from './lib/store';
-import { subtitles, ytdlpJson } from './lib/ytdlp';
+import { RateLimited, subtitles, ytdlpJson } from './lib/ytdlp';
 
 /** Subtitle downloads per run, so a first run on a long profile stays short. */
 const SUBS_PER_RUN = 20;
@@ -51,7 +51,10 @@ export async function run() {
     // subtitles) gives a real title, and is kept for search.
     let title: string | undefined;
     if (!withoutTags(text) && !titled.has(String(e.id)) && subsLeft-- > 0) {
-      const subs = await subtitles(`${PROFILE_URL}/video/${e.id}`, ['ron.*', 'ro.*', 'eng.*', 'en.*']);
+      const subs = await subtitles(`${PROFILE_URL}/video/${e.id}`, ['ron.*', 'ro.*', 'eng.*', 'en.*']).catch((err) => {
+        if (err instanceof RateLimited) subsLeft = 0;
+        else throw err;
+      });
       if (subs) {
         title = speechTitle(subs.text);
         await ensureDir(transcriptPath(String(e.id)));

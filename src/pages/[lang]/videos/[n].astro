@@ -1,0 +1,308 @@
+---
+// One episode of "Islam, why and how?": the video in the page's language,
+// the full transcript, chapters, the verses it mentions, the Telegram clip
+// and podcast that go with it, and the other language versions. Pages exist
+// in every language; only those with a version in their own language are
+// indexed and listed as alternates.
+import Icon from '../../../components/Icon.astro';
+import YouTubePlayer from '../../../components/YouTubePlayer.astro';
+import { LOCALES, isRtl, type Locale } from '../../../i18n/locales';
+import { t } from '../../../i18n/strings';
+import Base from '../../../layouts/Base.astro';
+import { episodes, notes, surahs, ytOrder, type Episode, type YtLang } from '../../../lib/data';
+import type { FeedItem } from '../../../lib/feed-types';
+import { date, duration, num } from '../../../lib/format';
+import { href } from '../../../lib/paths';
+import { citedVerses, verseHref } from '../../../lib/quran-refs';
+import { personRef } from '../../../lib/schema';
+import { withoutEpisodeNo } from '../../../lib/series';
+import { excerpt, itemTitle } from '../../../lib/text';
+import { chaptersOf, paragraphs, transcriptOf } from '../../../lib/transcripts';
+
+export function getStaticPaths() {
+  return LOCALES.flatMap((lang) => episodes.map((ep) => ({ params: { lang, n: String(ep.n) }, props: { ep } })));
+}
+
+const locale = Astro.params.lang as Locale;
+const { ep } = Astro.props as { ep: Episode };
+const s = t(locale);
+const nf = (x: number) => num(locale, x);
+const order = ytOrder(locale);
+const versions = order.flatMap((k) => (ep[k] ? [ep[k]!] : []));
+const own = ep[locale as YtLang];
+const main = own ?? versions[0];
+const at = episodes.indexOf(ep);
+const newer = episodes[at - 1];
+const older = episodes[at + 1];
+const series = s.topics['islam-why-how'];
+const title = withoutEpisodeNo(main.title) || s.episode(nf(ep.n));
+const transcript = transcriptOf(main.id);
+const chapters = chaptersOf(main.text);
+// The description, minus chapter lines, hashtags and bare links.
+const about = (main.text ?? '')
+  .split('\n')
+  .filter((l) => l.trim() && !/^\s*(\d{1,2}:)?\d{1,2}:\d{2}/.test(l) && !/^\s*(#\S+\s*)+$/.test(l) && !/^\s*https?:\/\/\S+\s*$/.test(l))
+  .join('\n');
+const companions = locale === 'fa' ? notes.filter((x) => x.series === 'islam-why-how' && x.episode === ep.n) : [];
+const verses = [...new Map(citedVerses(`${about}\n${main.lang === 'fa' ? (transcript?.text ?? '') : ''}`).map((r) => [`${r.surah}:${r.ayah}`, r])).values()];
+const indexable = !!own;
+const locales = LOCALES.filter((l) => ep[l as YtLang]);
+const dirOf = (l?: string) => (isRtl(l) ? 'rtl' : 'ltr');
+const iso = (sec?: number) => (sec ? `PT${Math.floor(sec / 3600) ? `${Math.floor(sec / 3600)}H` : ''}${Math.floor((sec % 3600) / 60)}M${Math.floor(sec % 60)}S` : undefined);
+const thumb = `https://i.ytimg.com/vi/${main.id}/hqdefault.jpg`;
+const pageUrl = new URL(href(locale, `videos/${ep.n}`), Astro.site).toString();
+const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => m.title)?.title || `#${c.id}`;
+---
+
+<Base
+  locale={locale}
+  path={`videos/${ep.n}`}
+  title={`${title} | ${series} ${nf(ep.n)}`}
+  description={excerpt(about || transcript?.text || title, 158)}
+  image={thumb}
+  imageAlt={title}
+  ogType="article"
+  published={main.date}
+  noindex={!indexable}
+  locales={locales}
+  alternates={indexable}
+  crumbs={[
+    { name: s.sections.videos.title, path: 'videos' },
+    { name: s.episode(nf(ep.n)), path: `videos/${ep.n}` },
+  ]}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    '@id': `${pageUrl}#video`,
+    name: main.title ?? title,
+    description: excerpt(about || transcript?.text || title, 4000),
+    uploadDate: main.date,
+    inLanguage: main.channel ?? main.lang,
+    duration: iso(main.media[0]?.duration),
+    thumbnailUrl: thumb,
+    embedUrl: `https://www.youtube.com/embed/${main.id}`,
+    contentUrl: main.url,
+    url: pageUrl,
+    author: personRef(Astro.site),
+    ...(transcript ? { transcript: transcript.text } : {}),
+    isPartOf: { '@type': 'CreativeWorkSeries', name: series, url: new URL(href(locale, 'videos'), Astro.site).toString() },
+    ...(chapters.length
+      ? {
+          hasPart: chapters.map((c, i) => ({
+            '@type': 'Clip',
+            name: c.label,
+            startOffset: c.at,
+            ...(chapters[i + 1] ? { endOffset: chapters[i + 1].at } : {}),
+            url: `${main.url}&t=${c.at}s`,
+          })),
+        }
+      : {}),
+    ...(main.views ? { interactionStatistic: { '@type': 'InteractionCounter', interactionType: 'https://schema.org/WatchAction', userInteractionCount: main.views } } : {}),
+  }}
+>
+  <article class="wrap episode">
+    <p class="crumb meta">
+      <a href={href(locale, 'videos')}>{series}</a>
+      <span class="num">{s.episode(nf(ep.n))}</span>
+    </p>
+
+    <h1 lang={main.channel} dir={dirOf(main.channel)}>{title}</h1>
+    <p class="meta">
+      <time datetime={main.date}>{date(locale, main.date)}</time>
+      {main.media[0]?.duration && <span class="num">{duration(main.media[0].duration)}</span>}
+      {!own && <span>{s.videos.langs[main.channel as YtLang]}</span>}
+    </p>
+
+    <YouTubePlayer locale={locale} id={main.id} title={main.title ?? ''} duration={main.media[0]?.duration} lang={main.lang} />
+
+    {
+      versions.length > 1 && (
+        <nav class="langs" aria-label={s.videos.alsoIn}>
+          <span class="meta">{s.videos.alsoIn}</span>
+          {versions
+            .filter((v) => v !== main)
+            .map((v) => (
+              <a class="pill" href={href(v.channel as Locale, `videos/${ep.n}`)} hreflang={v.channel}>
+                <Icon name="youtube" />
+                {s.videos.langs[v.channel as YtLang]}
+              </a>
+            ))}
+        </nav>
+      )
+    }
+
+    {
+      about && (
+        <div class="about" lang={main.channel} dir={dirOf(main.channel)}>
+          {about.split('\n').map((l) => <p>{l}</p>)}
+        </div>
+      )
+    }
+
+    {
+      chapters.length > 0 && (
+        <section aria-labelledby="ch-h">
+          <h2 id="ch-h">{s.videos.chapters}</h2>
+          <ol class="chapters" lang={main.channel} dir={dirOf(main.channel)}>
+            {chapters.map((c) => (
+              <li>
+                <a href={`${main.url}&t=${c.at}s`} rel="noopener" target="_blank">
+                  <span class="num">{duration(c.at) ?? '0:00'}</span> {c.label}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
+    {
+      verses.length > 0 && (
+        <section aria-labelledby="v-h">
+          <h2 id="v-h">{s.videos.citedVerses}</h2>
+          <p class="refs">
+            {verses.map((r) => (
+              <a class="pill" href={verseHref(r)}>
+                {surahs[r.surah - 1].fa} {nf(r.ayah)}
+              </a>
+            ))}
+          </p>
+        </section>
+      )
+    }
+
+    {
+      companions.length > 0 && (
+        <section aria-labelledby="tg-h">
+          <h2 id="tg-h">{s.videos.related}</h2>
+          <ul class="companions">
+            {companions.map((c) => (
+              <li>
+                <Icon name="telegram" />
+                <a href={href('fa', `notes/${c.id}`)}>{companionLabel(c)}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      transcript && (
+        <section class="transcript" aria-labelledby="tr-h">
+          <details open={!!own}>
+            <summary>
+              <h2 id="tr-h">{s.videos.transcript}</h2>
+            </summary>
+            {transcript.auto && <p class="meta">{s.videos.autoTranscript}</p>}
+            <div lang={main.channel} dir={dirOf(main.channel)} data-tr>
+              {paragraphs(transcript.text).map((p) => <p>{p}</p>)}
+            </div>
+          </details>
+        </section>
+      )
+    }
+
+    <nav class="ep-nav" aria-label={s.videos.allEpisodes}>
+      {older ? <a href={href(locale, `videos/${older.n}`)}><span class="meta">{s.videos.prevEp}</span><span>{s.episode(nf(older.n))}</span></a> : <span />}
+      <a class="all" href={href(locale, 'videos')}>{s.videos.allEpisodes}</a>
+      {newer ? <a class="next" href={href(locale, `videos/${newer.n}`)}><span class="meta">{s.videos.nextEp}</span><span>{s.episode(nf(newer.n))}</span></a> : <span />}
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .episode {
+    max-width: 52rem;
+    display: grid;
+    gap: var(--space-5);
+  }
+  .crumb a {
+    color: var(--accent);
+  }
+  h1 {
+    font-size: var(--step-3);
+    line-height: 1.3;
+  }
+  h2 {
+    font-size: var(--step-0);
+    margin-block-end: var(--space-3);
+  }
+  .langs,
+  .refs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .langs .pill,
+  .refs .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .about {
+    display: grid;
+    gap: var(--space-2);
+    color: var(--ink-2);
+    max-width: var(--measure);
+  }
+  .chapters,
+  .companions {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .chapters a,
+  .companions a {
+    color: var(--accent);
+  }
+  .chapters .num {
+    display: inline-block;
+    min-width: 3.5em;
+    color: var(--ink-3);
+  }
+  .companions li {
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+  }
+  .transcript summary {
+    cursor: pointer;
+    list-style: none;
+  }
+  .transcript summary h2 {
+    display: inline;
+  }
+  .transcript summary::after {
+    content: ' ▾';
+    color: var(--ink-3);
+  }
+  .transcript div {
+    display: grid;
+    gap: var(--space-3);
+    margin-block-start: var(--space-3);
+    max-width: var(--measure);
+    line-height: 1.9;
+  }
+  .ep-nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block-start: var(--space-4);
+    border-block-start: 1px solid var(--rule);
+  }
+  .ep-nav a {
+    display: grid;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .ep-nav .next {
+    text-align: end;
+  }
+  .ep-nav .all {
+    color: var(--accent);
+  }
+</style>

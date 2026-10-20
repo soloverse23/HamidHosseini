@@ -196,7 +196,7 @@ const jsonLd = [
           <article class="panel panel--episode">
             <header class="panel__head">
               <h3>{s.episode(n(ep.n))}</h3>
-              <a class="more" href={href(locale, `videos#ep-${ep.n}`)}>{s.sections.videos.title}<Icon name="chevron" class="flip" /></a>
+              <a class="more" href={href(locale, `videos/${ep.n}`)}>{s.sections.videos.title}<Icon name="chevron" class="flip" /></a>
             </header>
             <YouTubePlayer locale={locale} id={epMain.id} title={epMain.title ?? ''} duration={epMain.media[0]?.duration} lang={epMain.lang} />
             <p class="ep__title x" lang={epMain.lang} dir={dirOf(epMain.lang)} data-tr>{withoutEpisodeNo(epMain.title)}</p>

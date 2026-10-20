@@ -33,7 +33,7 @@ const link =
   item.source === 'telegram'
     ? href('fa', `notes/${item.id}`)
     : item.source === 'youtube' && item.episode
-      ? href(locale, `videos#ep-${item.episode}`)
+      ? href(locale, `videos/${item.episode}`)
       : item.url;
 const external = link.startsWith('http');
 const thumb = item.media.find((m) => m.src);

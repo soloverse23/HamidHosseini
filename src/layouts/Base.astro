@@ -37,6 +37,8 @@ interface Props {
   canonicalLocale?: Locale;
   /** Emit hreflang alternates. Turn off for content that is only indexed in one locale. */
   alternates?: boolean;
+  /** Locales that have their own version of this page (default: all) */
+  locales?: Locale[];
   /** Ask search engines not to index this page (listing pages that duplicate content) */
   noindex?: boolean;
   /** Path used by the language switcher when this page exists in one locale only */
@@ -45,8 +47,9 @@ interface Props {
 
 const {
   locale, title, description, path, image, jsonLd, noindex, switchPath,
-  ogType = 'website', published, modified, imageAlt, crumbs, canonicalLocale, alternates = true,
+  ogType = 'website', published, modified, imageAlt, crumbs, canonicalLocale, alternates = true, locales = LOCALES,
 } = Astro.props;
+const xDefault = path ? href(locales.includes('en') ? 'en' : locales[0], path) : '/';
 const s = t(locale);
 const ogLocale = (l: Locale) => LOCALE_META[l].intl.split('-u-')[0].replace('-', '_');
 const { dir } = LOCALE_META[locale];
@@ -81,8 +84,8 @@ const ogImage = new URL(image ?? '/og.png', site).toString();
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
     <link rel="canonical" href={canonical} />
-    {alternates && LOCALES.map((l) => <link rel="alternate" hreflang={l} href={new URL(href(l, path), site).toString()} />)}
-    {alternates && <link rel="alternate" hreflang="x-default" href={new URL(path ? href('en', path) : '/', site).toString()} />}
+    {alternates && locales.map((l) => <link rel="alternate" hreflang={l} href={new URL(href(l, path), site).toString()} />)}
+    {alternates && <link rel="alternate" hreflang="x-default" href={new URL(xDefault, site).toString()} />}
     <link rel="alternate" type="application/rss+xml" title={s.name} href="/rss.xml" />
     <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
     <meta name="author" content={s.name} />
@@ -96,7 +99,7 @@ const ogImage = new URL(image ?? '/og.png', site).toString();
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:locale" content={ogLocale(locale)} />
-    {alternates && LOCALES.filter((l) => l !== locale).map((l) => <meta property="og:locale:alternate" content={ogLocale(l)} />)}
+    {alternates && locales.filter((l) => l !== locale).map((l) => <meta property="og:locale:alternate" content={ogLocale(l)} />)}
     <meta property="og:image:alt" content={imageAlt ?? s.name} />
     {!image && <meta property="og:image:width" content="1200" />}
     {!image && <meta property="og:image:height" content="630" />}
