@@ -12,7 +12,6 @@ import { t } from '../../i18n/strings';
 import { ui } from '../../i18n/ui';
 import Base from '../../layouts/Base.astro';
 import {
-  CHANNEL_URLS,
   arabic,
   episodes,
   instagram,
@@ -33,6 +32,7 @@ import { TIMELINE_SPAN, contentLang, featuredNote, timeline } from '../../lib/fe
 import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
 import { PRODUCTION_URL } from '../../lib/site';
+import { foundationNode, personNode } from '../../lib/schema';
 import { CHANNELS } from '../../lib/social';
 import { withoutEpisodeNo } from '../../lib/series';
 import { clipTitle, excerpt, itemTitle } from '../../lib/text';
@@ -104,17 +104,8 @@ const jsonLd = [
       'query-input': 'required name=search_term_string',
     },
   },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    '@id': `${origin}/#person`,
-    name: s.name,
-    alternateName: ['سید حمید حسینی', 'Hamid Hosseini'],
-    url: `${origin}/${locale}/`,
-    jobTitle: 'Islamic scholar',
-    knowsLanguage: ['fa', 'ro', 'ar', 'ur', 'en'],
-    sameAs: Object.values(CHANNEL_URLS),
-  },
+  personNode(Astro.site),
+  foundationNode(Astro.site),
 ];
 ---
 

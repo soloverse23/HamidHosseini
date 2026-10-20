@@ -12,6 +12,7 @@ import { LOCALES, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { notes, noteTitleCount, quranFa, telegram } from '../../../lib/data';
+import { personRef } from '../../../lib/schema';
 import type { FeedItem } from '../../../lib/feed-types';
 import { compact, date, num, plain } from '../../../lib/format';
 import { notesByDay } from '../../../lib/feed';
@@ -198,7 +199,7 @@ const pageTitle = repeated ? `${postTitle}، ${date(locale, props.item.date)}` :
         inLanguage: props.item.lang ?? 'fa',
         url: props.item.url,
         mainEntityOfPage: new URL(href('fa', `notes/${slug}`), Astro.site).toString(),
-        author: { '@type': 'Person', name: 'Seyed Hamid Hosseini', url: new URL('/fa/', Astro.site).toString() },
+        author: personRef(Astro.site),
         ...(props.item.media.find((m) => m.src?.startsWith('/'))
           ? { image: new URL(props.item.media.find((m) => m.src?.startsWith('/'))!.src!, Astro.site).toString() }
           : {}),

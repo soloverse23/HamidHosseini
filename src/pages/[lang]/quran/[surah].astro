@@ -5,6 +5,7 @@ import { LOCALES, isRtl, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { arabic, quranFa, surahs, translatedCount } from '../../../lib/data';
+import { personRef } from '../../../lib/schema';
 import { date, num, plain } from '../../../lib/format';
 import { href } from '../../../lib/paths';
 
@@ -42,7 +43,7 @@ const title = `${s.quran.surah} ${localName(meta)}`;
     position: meta.n,
     inLanguage: ['ar', 'fa'],
     isPartOf: { '@type': 'Book', name: 'القرآن الكريم', alternateName: 'The Quran' },
-    translator: { '@type': 'Person', name: 'Seyed Hamid Hosseini' },
+    translator: personRef(Astro.site),
   }}
   description={`${title}. ${s.quran.translated(n(done), n(meta.ayahs))}`}
 >

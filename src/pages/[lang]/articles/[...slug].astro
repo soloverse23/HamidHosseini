@@ -23,6 +23,7 @@ import {
 import { date, num } from '../../../lib/format';
 import { href } from '../../../lib/paths';
 import { PRODUCTION_URL } from '../../../lib/site';
+import { personRef } from '../../../lib/schema';
 
 type Props =
   | { kind: 'list'; topic?: CategoryKey; series?: SeriesKey; items: Article[] }
@@ -113,8 +114,8 @@ const jsonLd = item
       mainEntityOfPage: abs(href('fa', `articles/${item.id}`)),
       isBasedOn: item.source,
       ...(item.image ? { image: abs(item.image.src) } : {}),
-      author: { '@type': 'Person', '@id': `${site.origin}/#person`, name: 'سید حمید حسینی', alternateName: 'Seyed Hamid Hosseini', url: abs('/fa/') },
-      publisher: { '@type': 'Person', '@id': `${site.origin}/#person`, name: 'سید حمید حسینی' },
+      author: personRef(site),
+      publisher: personRef(site),
       ...(series
         ? { isPartOf: { '@type': 'CreativeWorkSeries', name: series.title.fa, url: abs(href('fa', `articles/series/${series.key}`)) }, position: item.series!.index + 1 }
         : {}),

@@ -10,6 +10,8 @@ import { href, localePaths } from '../../lib/paths';
 import { CHANNELS } from '../../lib/social';
 import about from '../../data/content/about.json';
 import { PROJECTS } from '../../data/projects';
+import { excerpt } from '../../lib/text';
+import { foundationNode, personId, personNode } from '../../lib/schema';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
@@ -60,7 +62,18 @@ const sources: Record<Locale, string[]> = {
 };
 ---
 
-<Base locale={locale} path="about" crumbs={[{ name: s.sections.about.title, path: 'about' }]} title={s.sections.about.title}>
+<Base
+  locale={locale}
+  path="about"
+  crumbs={[{ name: s.sections.about.title, path: 'about' }]}
+  title={s.sections.about.title}
+  description={excerpt(bio, 160)}
+  jsonLd={[
+    { '@context': 'https://schema.org', '@type': 'ProfilePage', mainEntity: { '@id': personId(Astro.site) }, inLanguage: locale },
+    personNode(Astro.site),
+    foundationNode(Astro.site),
+  ]}
+>
   <div class="wrap about">
     <Chapter locale={locale} title={s.name} />
 
