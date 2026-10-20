@@ -143,8 +143,8 @@ const en = {
     channels: 'Channels',
     contact: 'Contact',
     contactTelegram: 'Personal Telegram',
-    placeholder:
-      'A short biography will appear here. In the meantime, his own description of the channel reads: “Notes and suggestions on the path of awareness. Your critique and opinion are welcome.”',
+    projects: 'Foundation and projects',
+    openApp: 'Open the app',
     tv: 'Television',
     tvText:
       'In 2016–2017 he gave a weekly series of talks, “The Ethics of Servitude” (32 sessions), on the television programme Aftab-e Sharghi. The notes for every session are listed under Writings.',
@@ -356,8 +356,8 @@ const ro: Strings = {
     channels: 'Canale',
     contact: 'Contact',
     contactTelegram: 'Telegram personal',
-    placeholder:
-      'Aici va apărea o scurtă biografie. Până atunci, descrierea canalului, în cuvintele sale: „Note și sugestii pe calea conștientizării. Critica și părerea voastră sunt binevenite.”',
+    projects: 'Fundația și proiectele',
+    openApp: 'Deschide aplicația',
     tv: 'Televiziune',
     tvText:
       'În 2016–2017 a susținut o serie săptămânală de prelegeri, „Etica slujirii” (32 de întâlniri), în emisiunea de televiziune Aftab-e Sharghi. Notele fiecărei întâlniri se găsesc la Scrieri.',
@@ -565,8 +565,8 @@ const ar: Strings = {
     channels: 'القنوات',
     contact: 'التواصل',
     contactTelegram: 'تيليغرام الشخصي',
-    placeholder:
-      'ستظهر هنا سيرة مختصرة. وإلى ذلك الحين، هذا وصفه لقناته: «ملاحظات واقتراحات في طريق الوعي. نقدكم ورأيكم موضع ترحيب.»',
+    projects: 'المؤسسة والمشاريع',
+    openApp: 'افتح التطبيق',
     tv: 'التلفزيون',
     tvText: 'ألقى في عامي 2016–2017 سلسلة محاضرات أسبوعية بعنوان «أخلاق العبودية» (32 جلسة) في البرنامج التلفزيوني «آفتاب شرقي». مذكرات كل جلسة مدرجة في قسم المؤلفات.',
     press: 'الصحافة',
@@ -773,8 +773,8 @@ const fa: Strings = {
     channels: 'کانال‌ها',
     contact: 'ارتباط',
     contactTelegram: 'تلگرام شخصی',
-    placeholder:
-      'زندگی‌نامهٔ کوتاه به‌زودی در اینجا قرار می‌گیرد. توصیف کانال به قلم خودشان: «یادداشت‌ها و پیشنهادهایی در مسیر آگاهی. نقد و نظرتان به دیدهٔ منّت.»',
+    projects: 'بنیاد و طرح‌ها',
+    openApp: 'ورود به سامانه',
     tv: 'تلویزیون',
     tvText: 'در سال‌های ۱۳۹۵ و ۱۳۹۶ مباحث هفتگی «اخلاق بندگی» (۳۲ جلسه) را در برنامهٔ تلویزیونی «آفتاب شرقی» ارائه کرد. مستندات هر جلسه در بخش نوشته‌ها آمده است.',
     press: 'رسانه‌ها',
@@ -982,8 +982,8 @@ const ur: Strings = {
     channels: 'چینلز',
     contact: 'رابطہ',
     contactTelegram: 'ذاتی ٹیلی گرام',
-    placeholder:
-      'یہاں ایک مختصر سوانح شامل کی جائے گی۔ تب تک، چینل کا تعارف ان کے اپنے الفاظ میں: “آگاہی کی راہ میں یادداشتیں اور تجاویز۔ آپ کی تنقید اور رائے کا خیر مقدم ہے۔”',
+    projects: 'فاؤنڈیشن اور منصوبے',
+    openApp: 'ایپ کھولیں',
     tv: 'ٹیلی وژن',
     tvText:
       '2016–2017 میں انہوں نے ٹیلی وژن پروگرام “آفتابِ شرقی” میں “اخلاقِ بندگی” کے عنوان سے ہفتہ وار گفتگوؤں کا سلسلہ (32 نشستیں) پیش کیا۔ ہر نشست کے نوٹس تحریریں کے حصے میں درج ہیں۔',

@@ -8,12 +8,16 @@ import { CHANNEL_URLS, instagram, notes, telegram, tiktok, youtube } from '../..
 import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
 import { CHANNELS } from '../../lib/social';
+import about from '../../data/content/about.json';
+import { PROJECTS } from '../../data/projects';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
 const s = t(locale);
 const n = (x: number) => num(locale, x);
 const c = (x?: number) => (x ? compact(locale, x) : '');
+const pick = (l: Partial<Record<Locale, string>>) => l[locale] ?? l.en ?? l.fa ?? '';
+const bio = pick(about.bio);
 
 const channels = [
   { icon: 'telegram', name: telegram.profiles.main?.name ?? 'کلام', handle: '@hamidhossaini', url: CHANNEL_URLS.telegram, lang: 'fa', followers: telegram.profiles.main?.followers, items: notes.length, since: notes.at(-1)?.date, page: 'notes' },
@@ -62,7 +66,7 @@ const sources: Record<Locale, string[]> = {
 
     <div class="about__grid">
       <div class="stack about__text">
-        <p class="lede">{s.about.placeholder}</p>
+        {bio.split('\n\n').map((para, i) => <p class:list={{ lede: i === 0 }}>{para}</p>)}
         <p><a href={href('fa', 'articles/2141524168')}>{s.articles.bio} →</a></p>
         <h2>{s.about.tv}</h2>
         <p>{s.about.tvText} <a href={href(locale, 'writings#ethics-of-servitude')}>{s.nav.writings} →</a></p>
@@ -75,6 +79,24 @@ const sources: Record<Locale, string[]> = {
         </a>
       </aside>
     </div>
+
+    <section class="block" id="projects" aria-labelledby="projects-title">
+      <div class="section-title"><h2 id="projects-title">{s.about.projects}</h2></div>
+      <ul class="projects">
+        {
+          PROJECTS.map((p) => (
+            <li class="project">
+              <h3><a href={p.url} rel="noopener" target="_blank">{pick(p.name)}</a></h3>
+              <p>{pick(p.description)}</p>
+              <p class="meta">
+                <a href={p.url} rel="noopener" target="_blank" dir="ltr">{new URL(p.url).host}</a>
+                {p.appUrl && <a href={p.appUrl} rel="noopener" target="_blank">{s.about.openApp}</a>}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
 
     <section class="block" aria-labelledby="channels">
       <div class="section-title"><h2 id="channels">{s.about.channels}</h2></div>
@@ -111,6 +133,42 @@ const sources: Record<Locale, string[]> = {
 </Base>
 
 <style>
+  .projects {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5);
+  }
+  @media (min-width: 48rem) {
+    .projects {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .project {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    padding-block-start: var(--space-3);
+    border-block-start: 1px solid var(--rule);
+  }
+  .project h3 {
+    font-size: var(--step-1);
+  }
+  .project h3 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .project h3 a:hover {
+    color: var(--accent);
+  }
+  .project .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .project .meta a {
+    color: var(--accent);
+  }
   .about__grid {
     display: grid;
     gap: var(--space-7);

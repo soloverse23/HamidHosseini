@@ -154,47 +154,9 @@ const label: Record<string, string> = {
   .topbar__inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: var(--space-4);
     min-height: 2.5rem;
-  }
-  .social {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    list-style: none;
-    padding: 0;
-    margin-inline-start: calc(-1 * var(--space-2));
-  }
-  .social__link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem var(--space-2);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--ink-2);
-    --icon-cut: var(--paper-2);
-  }
-  .social__link :global(svg) {
-    width: 1rem;
-    height: 1rem;
-    transition: color 0.15s;
-  }
-  .social__link:hover {
-    color: var(--ink);
-    background: var(--paper);
-    --icon-cut: var(--paper);
-  }
-  .social__link:hover :global(svg) {
-    color: var(--brand);
-  }
-  :global(:root[data-theme='dark']) .is-tiktok:hover :global(svg) {
-    color: var(--ink);
-  }
-  .social__n {
-    font-size: 0.75rem;
-    letter-spacing: 0.01em;
   }
   .topbar__end {
     display: flex;
@@ -542,12 +504,6 @@ const label: Record<string, string> = {
     }
   }
   @media (max-width: 34rem) {
-    .social__n {
-      display: none;
-    }
-    .social {
-      gap: 0;
-    }
     .plate :global(.plate__mark) {
       width: 28px;
       height: 28px;

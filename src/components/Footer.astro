@@ -1,6 +1,7 @@
 ---
 // A colophon, as at the end of a book: an ornament, the nameplate, the
 // contents again, every channel with its live numbers, and the languages.
+import { PROJECTS } from '../data/projects';
 import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { ui } from '../i18n/ui';
@@ -106,6 +107,10 @@ const sections = [
               </li>
             ))
           }
+        </ul>
+        <h2 class="f-head f-head--more">{s.about.projects}</h2>
+        <ul class="f-list">
+          {PROJECTS.map((p) => <li><a href={p.url} rel="noopener" target="_blank">{p.name[locale] ?? p.name.en}</a></li>)}
         </ul>
         <h2 class="f-head f-head--more">{u.more}</h2>
         <ul class="f-list">

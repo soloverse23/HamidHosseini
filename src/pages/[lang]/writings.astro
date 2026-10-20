@@ -53,13 +53,11 @@ function sessionRows(l: LectureSeries, sessions: Session[]): { slot: number; ses
   <div class="wrap">
     <Chapter locale={locale} no={1} title={s.sections.writings.title} lede={s.sections.writings.lede} />
 
+    {/* Hidden until the list of books arrives, rather than an empty placeholder. */}
+    {BOOKS.length > 0 && (
     <section aria-labelledby="books" class="block">
       <div class="section-title"><h2 id="books">{s.books.books}</h2></div>
-      {
-        BOOKS.length === 0 ? (
-          <p class="empty">{s.books.empty}</p>
-        ) : (
-          <ul class="books">
+      <ul class="books">
             {BOOKS.map((b) => {
               const { original, gloss } = titles(b);
               return (
@@ -88,9 +86,8 @@ function sessionRows(l: LectureSeries, sessions: Session[]): { slot: number; ses
               );
             })}
           </ul>
-        )
-      }
     </section>
+    )}
 
     <section aria-labelledby="articles" class="block">
       <div class="section-title"><h2 id="articles">{s.books.articles}</h2></div>
