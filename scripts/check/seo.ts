@@ -47,7 +47,7 @@ function exists(pathname: string): boolean {
   return fileSet.has(`${p}index.html`);
 }
 
-const pathOf = (url: string) => (url.startsWith(origin) ? new URL(url).pathname : undefined);
+const pathOf = (url: string) => (url.startsWith(origin) ? decodeURIComponent(new URL(url).pathname) : undefined);
 
 // ---- 1. Stale domain anywhere in text output ----
 for (const f of files) {

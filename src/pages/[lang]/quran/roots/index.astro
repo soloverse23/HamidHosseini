@@ -1,0 +1,108 @@
+---
+// The glossary: every root explained in the translation notes, A to Y.
+import Chapter from '../../../../components/Chapter.astro';
+import { type Locale } from '../../../../i18n/locales';
+import { t } from '../../../../i18n/strings';
+import Base from '../../../../layouts/Base.astro';
+import { num } from '../../../../lib/format';
+import { firstLetter, ROOTS, rootSlug } from '../../../../lib/glossary';
+import { href } from '../../../../lib/paths';
+
+export const getStaticPaths = () => [{ params: { lang: 'fa' } }];
+const locale = Astro.params.lang as Locale;
+const s = t(locale);
+const groups = new Map<string, typeof ROOTS>();
+for (const e of ROOTS) (groups.get(firstLetter(e)) ?? groups.set(firstLetter(e), []).get(firstLetter(e))!).push(e);
+---
+
+<Base
+  locale={locale}
+  path="quran/roots"
+  switchPath="quran"
+  alternates={false}
+  title={s.quran.roots}
+  description={s.quran.rootsLede}
+  crumbs={[
+    { name: s.sections.quran.title, path: 'quran' },
+    { name: s.quran.roots, path: 'quran/roots' },
+  ]}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTermSet',
+    name: s.quran.roots,
+    description: s.quran.rootsLede,
+    inLanguage: 'fa',
+    hasDefinedTerm: ROOTS.map((e) => ({ '@type': 'DefinedTerm', name: e.root, url: new URL(href('fa', `quran/roots/${rootSlug(e)}`), Astro.site).toString() })),
+  }}
+>
+  <div class="wrap">
+    <Chapter locale={locale} title={s.quran.roots} lede={s.quran.rootsLede}>
+      <span class="meta">{num(locale, ROOTS.length)}</span>
+    </Chapter>
+    <nav class="letters" aria-label={s.quran.roots}>
+      {[...groups.keys()].map((l) => <a href={`#l-${l}`} lang="ar">{l}</a>)}
+    </nav>
+    {
+      [...groups].map(([letter, entries]) => (
+        <section class="group" id={`l-${letter}`}>
+          <h2 lang="ar">{letter}</h2>
+          <ul>
+            {entries.map((e) => (
+              <li>
+                <a href={href('fa', `quran/roots/${rootSlug(e)}`)} lang="ar">{e.root}</a>
+                <span class="meta num">{num(locale, e.definitions.length + e.mentions.length)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .letters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block: var(--space-5);
+    font-family: var(--font-quran);
+    font-size: 1.3rem;
+  }
+  .letters a {
+    min-width: 2rem;
+    text-align: center;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .group {
+    padding-block: var(--space-4);
+    border-block-start: 1px solid var(--rule);
+  }
+  .group h2 {
+    font-family: var(--font-quran);
+    font-size: 1.8rem;
+    color: var(--accent);
+  }
+  .group ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    gap: var(--space-2) var(--space-4);
+  }
+  .group li {
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+  }
+  .group a {
+    font-family: var(--font-quran);
+    font-size: 1.35rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .group a:hover {
+    color: var(--accent);
+  }
+</style>

@@ -53,6 +53,13 @@ const localName = (m: (typeof surahs)[number]) =>
       }
     </section>
 
+    {locale === 'fa' && (
+      <p class="glossary-link">
+        <a class="link-arrow" href={href('fa', 'quran/roots')}>{s.quran.roots} →</a>
+        <span class="meta">{s.quran.rootsLede}</span>
+      </p>
+    )}
+
     <h2 class="list-head">{s.quran.started}</h2>
     <ol class="surahs">
       {
@@ -121,6 +128,11 @@ const localName = (m: (typeof surahs)[number]) =>
   .total__label {
     font-size: var(--step--1);
     color: var(--ink-2);
+  }
+  .glossary-link {
+    display: grid;
+    gap: var(--space-1);
+    margin-block-start: var(--space-6);
   }
   .list-head {
     font-size: var(--step-1);

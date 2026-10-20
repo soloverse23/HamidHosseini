@@ -6,6 +6,7 @@ import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { arabic, noteById, quranFa, surahs, translatedCount } from '../../../lib/data';
 import { personRef } from '../../../lib/schema';
+import { linkRoots } from '../../../lib/glossary';
 import { richNote } from '../../../lib/quran-refs';
 import { date, num, plain } from '../../../lib/format';
 import { href } from '../../../lib/paths';
@@ -111,7 +112,7 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
                       <summary>{s.quran.notes} ({n(v.notes.length)})</summary>
                       <ul>
                         {v.notes.map((x) => (
-                          <li set:html={richNote(x, meta.n, localPost)} />
+                          <li set:html={linkRoots(richNote(x, meta.n, localPost))} />
                         ))}
                       </ul>
                     </details>

@@ -1,0 +1,137 @@
+---
+// One root: each note that explains it (with its verse), and the verses whose
+// notes refer back to that explanation.
+import '@fontsource/amiri-quran/400.css';
+import { type Locale } from '../../../../i18n/locales';
+import { t } from '../../../../i18n/strings';
+import Base from '../../../../layouts/Base.astro';
+import { arabic, noteById, quranFa, surahs } from '../../../../lib/data';
+import { num } from '../../../../lib/format';
+import { linkRoots, ROOTS, rootSlug, type RootEntry } from '../../../../lib/glossary';
+import { href } from '../../../../lib/paths';
+import { richNote, verseHref } from '../../../../lib/quran-refs';
+import { personRef } from '../../../../lib/schema';
+import { excerpt } from '../../../../lib/text';
+
+export function getStaticPaths() {
+  return ROOTS.map((e) => ({ params: { lang: 'fa', root: rootSlug(e) }, props: { e } }));
+}
+
+const locale = Astro.params.lang as Locale;
+const { e } = Astro.props as { e: RootEntry };
+const s = t(locale);
+const n = (x: number) => num(locale, x);
+const slug = rootSlug(e);
+const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) : undefined);
+const name = (r: { surah: number; ayah: number }) => `${surahs[r.surah - 1].fa} ${n(r.ayah)}`;
+const title = s.quran.rootTitle(e.root);
+const url = new URL(href('fa', `quran/roots/${slug}`), Astro.site).toString();
+---
+
+<Base
+  locale={locale}
+  path={`quran/roots/${slug}`}
+  switchPath="quran"
+  alternates={false}
+  title={title}
+  description={excerpt(e.definitions[0].text, 158)}
+  crumbs={[
+    { name: s.sections.quran.title, path: 'quran' },
+    { name: s.quran.roots, path: 'quran/roots' },
+    { name: e.root, path: `quran/roots/${slug}` },
+  ]}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    '@id': url,
+    name: e.root,
+    description: e.definitions.map((d) => d.text).join('\n'),
+    inLanguage: 'fa',
+    url,
+    author: personRef(Astro.site),
+    inDefinedTermSet: { '@type': 'DefinedTermSet', name: s.quran.roots, url: new URL(href('fa', 'quran/roots'), Astro.site).toString() },
+  }}
+>
+  <article class="wrap root">
+    <p class="crumb meta">
+      <a href={href(locale, 'quran')}>{s.sections.quran.title}</a>
+      <a href={href(locale, 'quran/roots')}>{s.quran.roots}</a>
+    </p>
+    <h1><span lang="ar">{title}</span></h1>
+
+    {
+      e.definitions.map((d) => (
+        <section class="def">
+          <p class="def__at meta">
+            {s.quran.explainedAt} <a href={verseHref(d)}>{s.quran.surah} {name(d)}</a>
+          </p>
+          <p class="def__ar quran-ar" lang="ar" dir="rtl">{arabic[d.surah][d.ayah - 1]}</p>
+          <p class="def__tr">{quranFa.surahs[d.surah][d.ayah].text}</p>
+          <p class="def__note" set:html={linkRoots(richNote(d.text, d.surah, localPost), slug)} />
+        </section>
+      ))
+    }
+
+    {
+      e.mentions.length > 0 && (
+        <section class="mentions">
+          <h2>{s.quran.referredAt}</h2>
+          <p>
+            {e.mentions.map((m) => (
+              <a class="pill" href={verseHref(m)}>
+                {name(m)}
+              </a>
+            ))}
+          </p>
+        </section>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .root {
+    max-width: 48rem;
+    display: grid;
+    gap: var(--space-5);
+  }
+  .crumb a {
+    color: var(--accent);
+  }
+  h1 {
+    font-size: var(--step-3);
+  }
+  .def {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    border-block-start: 1px solid var(--rule);
+  }
+  .def__at a,
+  .def__note :global(a) {
+    color: var(--accent);
+  }
+  .def__ar {
+    font-family: var(--font-quran);
+    font-size: 1.5rem;
+    line-height: 2;
+  }
+  .def__tr {
+    color: var(--ink-2);
+  }
+  .def__note {
+    padding: var(--space-3) var(--space-4);
+    border-inline-start: 3px solid var(--accent);
+    background: var(--paper-2);
+    line-height: 1.9;
+  }
+  .mentions h2 {
+    font-size: var(--step-0);
+    margin-block-end: var(--space-3);
+  }
+  .mentions p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>
