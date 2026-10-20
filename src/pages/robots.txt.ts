@@ -1,7 +1,7 @@
 import type { APIContext } from 'astro';
 
 // Everything public is welcome, including AI crawlers: the point of the site is
-// to be found, cited and quoted. Only the search UI and the redirect stub are hidden.
+// to be found, cited and quoted. Only the search UI and the editor are hidden.
 const AI_AGENTS = [
   'GPTBot', 'OAI-SearchBot', 'ChatGPT-User',
   'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'anthropic-ai',
@@ -16,8 +16,9 @@ export function GET({ site }: APIContext) {
     'User-agent: *',
     'Allow: /',
     'Disallow: /*/search/',
+    'Disallow: /admin/',
     '',
-    ...AI_AGENTS.flatMap((a) => [`User-agent: ${a}`, 'Allow: /', 'Disallow: /*/search/', '']),
+    ...AI_AGENTS.flatMap((a) => [`User-agent: ${a}`, 'Allow: /', 'Disallow: /*/search/', 'Disallow: /admin/', '']),
     `Sitemap: ${origin}/sitemap-index.xml`,
     `# LLM-friendly summary: ${origin}/llms.txt`,
     '',

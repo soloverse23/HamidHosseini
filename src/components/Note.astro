@@ -8,7 +8,7 @@ import { compact, date, duration } from '../lib/format';
 import { noteById } from '../lib/data';
 import { href } from '../lib/paths';
 import { topicsOf } from '../lib/topics';
-import { excerpt, titleLine } from '../lib/text';
+import { excerpt, itemTitle } from '../lib/text';
 import Icon from './Icon.astro';
 import TelegramPlayer from './TelegramPlayer.astro';
 
@@ -27,7 +27,7 @@ const quran = item.series === 'quran-translation';
 const images = item.media.filter((m) => (m.kind === 'image' || m.kind === 'video') && m.src);
 const video = item.media.find((m) => m.kind === 'video');
 const docs = item.media.filter((m) => m.kind === 'audio' || m.kind === 'document');
-const title = titleLine(item.text, 110) || docs[0]?.title || '';
+const title = itemTitle(item, 110) || docs[0]?.title || '';
 const rest = item.text.slice(item.text.indexOf('\n') + 1);
 const topics = topicsOf(item);
 const permalink = href('fa', `notes/${item.id}`);

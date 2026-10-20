@@ -90,7 +90,7 @@ for (const f of files.filter((f) => f.endsWith('.html'))) {
   }
   pages.set(path, page);
 
-  const stub = path === '/' || path === '/404.html';
+  const stub = path === '/' || path === '/404.html' || path.startsWith('/admin/');
   if (!stub) {
     if (!page.canonical) error('missing canonical', path);
     else if (!page.canonical.startsWith(`${origin}/`)) error('canonical off-domain', `${path} → ${page.canonical}`);

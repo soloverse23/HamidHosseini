@@ -186,6 +186,8 @@ const isOwn = (n: FeedItem) =>
  */
 export function featuredNote(locale: Locale): FeedItem | undefined {
   if (locale !== 'fa') return undefined;
+  const pinned = notes.find((n) => n.pinned);
+  if (pinned) return pinned;
   return notes.find(
     (n) =>
       n.text.length > 400 &&

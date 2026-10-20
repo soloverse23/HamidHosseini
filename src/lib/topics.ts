@@ -15,9 +15,12 @@ export const TOPICS = {
 export type TopicKey = keyof typeof TOPICS;
 export const TOPIC_KEYS = Object.keys(TOPICS) as TopicKey[];
 
+const isTopic = (k: string): k is TopicKey => (TOPIC_KEYS as string[]).includes(k);
+
 export function topicsOf(item: FeedItem): TopicKey[] {
   const tags = new Set(item.tags ?? []);
-  const found = TOPIC_KEYS.filter((k) => TOPICS[k].some((t) => tags.has(t)));
+  const found = TOPIC_KEYS.filter((k) => TOPICS[k].some((t) => tags.has(t)) || item.topics?.includes(k));
+  for (const k of item.topics ?? []) if (isTopic(k) && !found.includes(k)) found.push(k);
   if (item.series === 'quran-translation' && !found.includes('quran-translation')) found.unshift('quran-translation');
   if (item.series === 'islam-why-how' && !found.includes('islam-why-how')) found.unshift('islam-why-how');
   return found;

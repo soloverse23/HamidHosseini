@@ -17,6 +17,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as pagefind from 'pagefind';
 import { ARTICLES, BOOKS, LECTURES, type Localized } from '../../src/data/writings';
+import about from '../../src/data/content/about.json';
 import { LOCALES } from '../../src/i18n/locales';
 import { t } from '../../src/i18n/strings';
 import {
@@ -267,7 +268,7 @@ for (const key of SECTIONS) {
   const per = LOCALES.map((l) => {
     const s = t(l);
     const sec = s.sections[key] as { title: string; lede?: string };
-    const extra = key === 'about' ? [s.about.placeholder, s.about.tvText, s.name] : [s.nav[key]];
+    const extra = key === 'about' ? [about.bio[l] ?? '', s.about.tvText, s.name] : [s.nav[key]];
     return { l, title: sec.title, lede: sec.lede, extra };
   });
   records.push({

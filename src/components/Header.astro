@@ -87,7 +87,7 @@ const label: Record<string, string> = {
       <Mark size={34} class="plate__mark" />
     </a>
 
-    <nav class="primary" aria-label={s.contents}>
+    <nav class="primary" id="primary-nav" aria-label={s.contents}>
       <ol>
         {
           NAV.map((key, i) => (
@@ -109,18 +109,30 @@ const label: Record<string, string> = {
       </ol>
     </nav>
 
-    <a
-      class="search-btn"
-      href={href(locale, 'search')}
-      data-search-open
-      aria-label={s.search.label}
-      aria-keyshortcuts="Meta+K Control+K /"
-      aria-current={section === 'search' ? 'page' : undefined}
-    >
-      <Icon name="search" />
-      <span class="search-btn__text">{s.search.open}</span>
-      <span class="search-btn__keys" aria-hidden="true"><span class="kbd" data-mod-key>Ctrl</span><span class="kbd">K</span></span>
-    </a>
+    <div class="mainbar__actions">
+      <button
+        class="icon-btn menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="primary-nav"
+        aria-label={u.menu}
+      >
+        <Icon name="menu" class="i-menu" />
+        <Icon name="close" class="i-close" />
+      </button>
+      <a
+        class="search-btn"
+        href={href(locale, 'search')}
+        data-search-open
+        aria-label={s.search.label}
+        aria-keyshortcuts="Meta+K Control+K /"
+        aria-current={section === 'search' ? 'page' : undefined}
+      >
+        <Icon name="search" />
+        <span class="search-btn__text">{s.search.open}</span>
+        <span class="search-btn__keys" aria-hidden="true"><span class="kbd" data-mod-key>Ctrl</span><span class="kbd">K</span></span>
+      </a>
+    </div>
   </div>
 </header>
 
@@ -135,6 +147,39 @@ const label: Record<string, string> = {
         menu.open = false;
         menu.querySelector('summary')?.focus();
       }
+    });
+  }
+
+  // Mobile hamburger menu: the same nav list, shown as a dropdown below the
+  // header on narrow screens (see the max-width: 62rem styles below).
+  const menuBtn = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const primaryNav = document.getElementById('primary-nav');
+  if (menuBtn && primaryNav) {
+    const setOpen = (open: boolean) => {
+      menuBtn.setAttribute('aria-expanded', String(open));
+      primaryNav.toggleAttribute('data-open', open);
+    };
+    menuBtn.addEventListener('click', () => setOpen(menuBtn.getAttribute('aria-expanded') !== 'true'));
+    primaryNav.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) setOpen(false);
+    });
+    document.addEventListener('click', (e) => {
+      if (
+        menuBtn.getAttribute('aria-expanded') === 'true' &&
+        !primaryNav.contains(e.target as Node) &&
+        !menuBtn.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menuBtn.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+        menuBtn.focus();
+      }
+    });
+    window.matchMedia('(min-width: 62rem)').addEventListener('change', (e) => {
+      if (e.matches) setOpen(false);
     });
   }
 </script>
@@ -414,8 +459,25 @@ const label: Record<string, string> = {
     height: 2px;
     background: var(--accent);
   }
-  .search-btn {
+  .mainbar__actions {
     grid-area: search;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .menu-toggle {
+    display: none;
+  }
+  .menu-toggle :global(.i-close) {
+    display: none;
+  }
+  .menu-toggle[aria-expanded='true'] :global(.i-menu) {
+    display: none;
+  }
+  .menu-toggle[aria-expanded='true'] :global(.i-close) {
+    display: block;
+  }
+  .search-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -477,30 +539,48 @@ const label: Record<string, string> = {
   }
   @media (max-width: 62rem) {
     .mainbar {
+      position: relative;
       grid-template-columns: 1fr auto;
-      grid-template-areas:
-        'plate search'
-        'nav nav';
+      grid-template-areas: 'plate search';
       gap: 0 var(--space-3);
-      padding-block-start: var(--space-3);
       min-height: 0;
     }
-    .primary {
-      justify-self: stretch;
-      overflow-x: auto;
-      scrollbar-width: none;
-      margin-inline: calc(-1 * var(--gutter));
-      padding-inline: var(--gutter);
-      margin-block-start: var(--space-2);
+    .menu-toggle {
+      display: grid;
     }
-    .primary::-webkit-scrollbar {
+    /* The nav list becomes a dropdown panel under the header, opened by
+       the hamburger button (see the script above). */
+    .primary {
       display: none;
+      grid-column: 1 / -1;
+      position: absolute;
+      z-index: 25;
+      inset-inline: 0;
+      inset-block-start: 100%;
+      max-height: calc(100vh - 100%);
+      overflow-y: auto;
+      background: var(--paper);
+      border-block-end: 1px solid var(--rule);
+      box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.35);
+      padding-block: var(--space-2);
+    }
+    .primary[data-open] {
+      display: block;
+    }
+    .primary ol {
+      flex-direction: column;
+      gap: 0;
+      padding-inline: var(--gutter);
     }
     .primary a {
-      padding-block: var(--space-2) var(--space-3);
+      padding: var(--space-3) var(--space-2);
+      border-radius: var(--radius);
     }
     .primary a[aria-current='page']::after {
-      inset-block-end: 0;
+      content: none;
+    }
+    .primary a[aria-current='page'] {
+      color: var(--accent);
     }
   }
   @media (max-width: 34rem) {

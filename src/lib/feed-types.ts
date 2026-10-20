@@ -36,6 +36,12 @@ export interface FeedItem {
   title?: string;
   /** Plain text, used for search, excerpts and RSS */
   text: string;
+  /** Short summary written by hand (src/lib/overrides.ts) */
+  summary?: string;
+  /** Topic keys assigned by hand, in addition to those from hashtags */
+  topics?: string[];
+  /** Featured on the home page (set by hand) */
+  pinned?: boolean;
   /** Sanitised HTML (Telegram only) */
   html?: string;
   media: MediaRef[];

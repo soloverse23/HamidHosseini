@@ -1,7 +1,7 @@
 import rss from '@astrojs/rss';
 import type { APIContext } from 'astro';
 import { latest } from '../lib/data';
-import { excerpt, titleLine } from '../lib/text';
+import { excerpt, itemTitle } from '../lib/text';
 
 export function GET(context: APIContext) {
   const items = latest(60);
@@ -10,7 +10,7 @@ export function GET(context: APIContext) {
     description: 'Notes, Quran translation and talks from Telegram, YouTube and more.',
     site: context.site!,
     items: items.map((i) => ({
-      title: i.title ?? (titleLine(i.text, 100) || i.source),
+      title: i.title ?? (itemTitle(i, 100) || i.source),
       link: i.source === 'telegram' ? `/fa/notes/${i.id}/` : i.url,
       pubDate: new Date(i.date),
       description: excerpt(i.text, 400),

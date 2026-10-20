@@ -1,0 +1,205 @@
+# Sveltia CMS (https://github.com/sveltia/sveltia-cms), served at /admin/.
+# Sign in with a GitHub personal access token that can write to the repo
+# (Contents: read and write). Every save is a commit on main, and Vercel
+# redeploys. The content sync never writes to these folders, so edits stay.
+
+backend:
+  name: github
+  repo: soloverse23/HamidHosseini
+  branch: main
+  commit_messages:
+    create: 'edit: add {{collection}} “{{slug}}”'
+    update: 'edit: update {{collection}} “{{slug}}”'
+    delete: 'edit: remove {{collection}} “{{slug}}”'
+    uploadMedia: 'edit: upload “{{path}}”'
+    deleteMedia: 'edit: delete “{{path}}”'
+
+site_url: https://www.hamidhosseini.site
+display_url: https://www.hamidhosseini.site
+media_folder: public/media/uploads
+public_folder: /media/uploads
+
+collections:
+  - name: posts
+    label: Telegram posts
+    label_singular: Telegram post
+    description: Corrections and additions for single Telegram posts. Create an entry with the post number (the last part of t.me/hamidhossaini/3297).
+    folder: src/data/overrides/posts
+    format: json
+    extension: json
+    create: true
+    delete: true
+    identifier_field: id
+    slug: '{{fields.id}}'
+    summary: '#{{id}} {{title}}'
+    sortable_fields: [id]
+    fields:
+      - { label: Post number, name: id, widget: string, pattern: ['^\d+$', 'Digits only, e.g. 3297'] }
+      - { label: Title, name: title, widget: string, required: false, hint: Shown instead of the first line of the post. }
+      - { label: Summary, name: summary, widget: text, required: false, hint: One or two sentences for cards, search results and search engines. }
+      - { label: Corrected text, name: text, widget: text, required: false, hint: The whole post with corrections. Leave empty to keep the original. }
+      - label: Topics
+        name: topics
+        widget: select
+        multiple: true
+        required: false
+        hint: Added to the topics found from hashtags.
+        options:
+            - quran-translation
+            - islam-why-how
+            - tafsir
+            - hadith
+            - beliefs
+            - ethics
+            - talks
+            - reminders
+      - { label: Pinned on the home page, name: pinned, widget: boolean, required: false, default: false, hint: Shown as the featured note ahead of the newest one. Pin one post at a time. }
+      - { label: Hidden, name: hidden, widget: boolean, required: false, default: false, hint: Keep this post off the site. }
+
+  - name: videos
+    label: YouTube videos
+    label_singular: YouTube video
+    description: Corrections for YouTube videos. Use the video id (the part after watch?v=).
+    folder: src/data/overrides/videos
+    format: json
+    extension: json
+    create: true
+    delete: true
+    identifier_field: id
+    slug: '{{fields.id}}'
+    summary: '{{id}} {{title}}'
+    fields:
+      - { label: Video id, name: id, widget: string }
+      - { label: Title, name: title, widget: string, required: false, hint: Shown instead of the first line of the text. }
+      - { label: Summary, name: summary, widget: text, required: false, hint: One or two sentences for cards, search results and search engines. }
+      - label: Topics
+        name: topics
+        widget: select
+        multiple: true
+        required: false
+        hint: Added to the topics found from hashtags.
+        options:
+              - quran-translation
+              - islam-why-how
+              - tafsir
+              - hadith
+              - beliefs
+              - ethics
+              - talks
+              - reminders
+      - { label: Hidden, name: hidden, widget: boolean, required: false, default: false, hint: Keep this item off the site. }
+
+  - name: clips
+    label: Short clips
+    label_singular: Short clip
+    description: Titles and corrections for TikTok, Instagram and YouTube Shorts. Use the id from the link.
+    folder: src/data/overrides/clips
+    format: json
+    extension: json
+    create: true
+    delete: true
+    identifier_field: id
+    slug: '{{fields.id}}'
+    summary: '{{id}} {{title}}'
+    fields:
+      - { label: Clip id, name: id, widget: string }
+      - { label: Title, name: title, widget: string, required: false, hint: Shown instead of the first line of the text. }
+      - { label: Summary, name: summary, widget: text, required: false, hint: One or two sentences for cards, search results and search engines. }
+      - label: Topics
+        name: topics
+        widget: select
+        multiple: true
+        required: false
+        hint: Added to the topics found from hashtags.
+        options:
+              - quran-translation
+              - islam-why-how
+              - tafsir
+              - hadith
+              - beliefs
+              - ethics
+              - talks
+              - reminders
+      - { label: Hidden, name: hidden, widget: boolean, required: false, default: false, hint: Keep this item off the site. }
+
+  - name: books
+    label: Books
+    label_singular: Book
+    description: Each book appears under Writings, newest first.
+    folder: src/data/content/books
+    format: json
+    extension: json
+    create: true
+    delete: true
+    identifier_field: id
+    slug: '{{fields.id}}'
+    summary: '{{year}} · {{title.fa}}{{title.ro}}'
+    media_folder: /public/media/books
+    public_folder: /media/books
+    fields:
+      - { label: Id, name: id, widget: string, pattern: ['^[a-z0-9-]+$', 'Lowercase Latin letters, digits and hyphens'], hint: 'Used in the link, e.g. keshti-nejat' }
+      - { label: Year (Gregorian), name: year, widget: number, value_type: int }
+      - label: Original language
+        name: lang
+        widget: select
+        options: [fa, ro, ar, ur, en]
+        default: fa
+      - label: Title
+        name: title
+        widget: object
+        hint: The title in the original language is required; the others are glosses for readers who do not read it.
+        fields: &langs
+          - { label: فارسی, name: fa, widget: string, required: false }
+          - { label: Română, name: ro, widget: string, required: false }
+          - { label: العربية, name: ar, widget: string, required: false }
+          - { label: اردو, name: ur, widget: string, required: false }
+          - { label: English, name: en, widget: string, required: false }
+      - { label: Publisher, name: venue, widget: object, required: false, fields: *langs }
+      - label: Summary
+        name: summary
+        widget: object
+        required: false
+        fields:
+          - { label: فارسی, name: fa, widget: text, required: false }
+          - { label: Română, name: ro, widget: text, required: false }
+          - { label: العربية, name: ar, widget: text, required: false }
+          - { label: اردو, name: ur, widget: text, required: false }
+          - { label: English, name: en, widget: text, required: false }
+      - { label: Cover, name: cover, widget: image, required: false }
+      - label: Links
+        name: links
+        widget: list
+        required: false
+        summary: '{{kind}} {{url}}'
+        fields:
+          - label: Kind
+            name: kind
+            widget: select
+            options:
+              - { label: Read online, value: read }
+              - { label: eBook, value: ebook }
+              - { label: PDF, value: pdf }
+              - { label: Buy, value: buy }
+              - { label: Telegram post, value: telegram }
+          - { label: URL, name: url, widget: string }
+          - { label: Label, name: label, widget: string, required: false, hint: 'For “Buy”: the shop name' }
+
+  - name: pages
+    label: Pages
+    files:
+      - name: about
+        label: About
+        file: src/data/content/about.json
+        format: json
+        fields:
+          - { label: Draft, name: draft, widget: boolean, required: false, hint: Untick once the biography is final. }
+          - label: Biography
+            name: bio
+            widget: object
+            hint: Paragraphs separated by an empty line.
+            fields:
+              - { label: فارسی, name: fa, widget: text, required: false }
+              - { label: Română, name: ro, widget: text, required: false }
+              - { label: العربية, name: ar, widget: text, required: false }
+              - { label: اردو, name: ur, widget: text, required: false }
+              - { label: English, name: en, widget: text, required: false }

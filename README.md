@@ -36,7 +36,13 @@ Until the secret is set, the Instagram page shows the profile link. Individual p
 
 ## Editing content by hand
 
-- **Books, articles, lecture series:** `src/data/writings.ts`. Add a book to `BOOKS`. It takes a title in the original language, optional cover and summary, and links of kind `read`, `ebook`, `pdf` or `buy`. Put covers in `public/media/books/` and PDFs in `public/files/`.
+The editor at **`/admin/`** (Sveltia CMS) edits the files below without touching code. Sign in with a GitHub personal access token that can write to this repository (fine-grained, *Contents: read and write*). Each save is a commit on `main`, and Vercel redeploys within a minute or two.
+
+- **Corrections to posts, videos and clips:** `src/data/overrides/{posts,videos,clips}/<id>.json`, applied in `src/lib/overrides.ts`. A file can set a title, a summary, topics, corrected text, `pinned` (featured on the Persian home page) or `hidden`. The fetchers never write here, so edits survive every sync and every full re-read.
+- **Books:** one file per book in `src/data/content/books/`, in the shape of `Work` (`src/data/writings.ts`). Covers go in `public/media/books/`, PDFs in `public/files/`.
+- **Biography:** `src/data/content/about.json`, five languages.
+- **Foundation, Alif, Muin:** `src/data/projects.ts`.
+- **Articles, lecture series:** `src/data/writings.ts`.
 - **Quran translations in other languages:** add `src/data/quran/<lang>.json` in the same shape as `fa.json`, then show it in `src/pages/[lang]/quran/[surah].astro`.
 - **Biography, press:** the strings `about.*` in `src/i18n/strings.ts`, one block per language.
 - **UI text:** `src/i18n/strings.ts`.

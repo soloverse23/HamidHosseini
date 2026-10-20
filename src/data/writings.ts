@@ -1,12 +1,14 @@
 // Books, articles, interviews and lecture series.
 //
-// To add a book, append to BOOKS. Every field except `title.fa` (or another
-// original-language title) is optional; links render as buttons in this order:
-// read → ebook → pdf → buy.
+// Books come from src/data/content/books/ (edited in the CMS). Every field
+// except the original-language title is optional; links render as buttons in
+// this order: read → ebook → pdf → buy.
 //
 // Titles in other languages are descriptive glosses for readers who don't
 // read the original; the original title is always shown first.
 
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Locale } from '../i18n/locales';
 
 export type Localized = Partial<Record<Locale, string>>;
@@ -48,23 +50,19 @@ export interface LectureSeries {
 
 const tg = (id: number): WorkLink => ({ kind: 'telegram', url: `https://t.me/hamidhossaini/${id}` });
 
-export const BOOKS: Work[] = [
-  // {
-  //   id: 'example',
-  //   type: 'book',
-  //   year: 2025,
-  //   lang: 'ro',
-  //   title: { ro: 'Titlul cărții', en: 'Book title' },
-  //   venue: { ro: 'Editura …' },
-  //   summary: { ro: '…', en: '…' },
-  //   cover: '/media/books/example.webp',
-  //   links: [
-  //     { kind: 'ebook', url: 'https://…' },
-  //     { kind: 'pdf', url: '/files/example.pdf' },
-  //     { kind: 'buy', url: 'https://…', label: 'Libris' },
-  //   ],
-  // },
-];
+/**
+ * Books are edited in the CMS (/admin/): one JSON file per book in
+ * src/data/content/books/, in the shape of `Work` without `type`. Covers go
+ * in public/media/books/, PDFs in public/files/. Newest first.
+ */
+export const BOOKS: Work[] = (() => {
+  const dir = join(process.cwd(), 'src/data/content/books');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => ({ type: 'book' as const, links: [], ...JSON.parse(readFileSync(join(dir, f), 'utf8')) }) as Work)
+    .sort((a, b) => b.year - a.year);
+})();
 
 export const ARTICLES: Work[] = [
   {

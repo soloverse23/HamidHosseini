@@ -71,6 +71,10 @@ export function titleLine(text: string, max = 120): string {
   return line ? excerpt(line, max) : '';
 }
 
+/** Title of a feed item: one set by hand, else its first line with something to say. */
+export const itemTitle = (item: { title?: string; text: string }, max = 120) =>
+  item.title ? excerpt(item.title, max) : titleLine(item.text, max);
+
 /** Posts with nothing to read (a bare image, a channel plug): kept on the site, not offered to search engines. */
 export function isThin(item: { text: string; media: { title?: string }[] }): boolean {
   return !titleLine(cleanDisplay(item.text)) && !item.media.some((m) => m.title);
