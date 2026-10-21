@@ -1,7 +1,7 @@
 ---
 import '@fontsource/amiri-quran/400.css';
 import Icon from '../../../components/Icon.astro';
-import { isRtl, type Locale } from '../../../i18n/locales';
+import { LOCALES, isRtl, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { arabic, noteById, quranFa, surahs, translatedCount } from '../../../lib/data';
@@ -12,7 +12,7 @@ import { date, num, plain } from '../../../lib/format';
 import { href } from '../../../lib/paths';
 
 export function getStaticPaths() {
-  return surahs.map((m) => ({ params: { lang: 'fa', surah: String(m.n) } }));
+  return LOCALES.flatMap((lang) => surahs.map((m) => ({ params: { lang, surah: String(m.n) } })));
 }
 
 const locale = Astro.params.lang as Locale;
@@ -24,7 +24,8 @@ const tr = quranFa.surahs[meta.n] ?? {};
 const done = translatedCount(meta.n);
 const prev = surahs[meta.n - 2];
 const next = surahs[meta.n];
-const localName = (m: typeof meta) => m.fa;
+const localName = (m: typeof meta) => (locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? m.ar : m.translit);
+const subtitle = locale === 'en' ? meta.en : locale === 'ro' ? meta.translit : undefined;
 const showBasmala = meta.n !== 1 && meta.n !== 9;
 const title = `${s.quran.surah} ${localName(meta)}`;
 const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) : undefined);
@@ -33,8 +34,6 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
 <Base
   locale={locale}
   path={`quran/${meta.n}`}
-  locales={['fa']}
-  alternates={false}
   title={title}
   crumbs={[
     { name: s.sections.quran.title, path: 'quran' },
@@ -58,13 +57,15 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
     </p>
 
     <header class="surah__head">
-      <p class="surah__ar" lang="ar" dir="rtl">سُورَةُ {meta.ar}</p>
+      <p class="surah__ar" lang="ar" dir="rtl" translate="no">سُورَةُ {meta.ar}</p>
       <h1>{title}</h1>
       <p class="meta">
+        {subtitle && <span>{subtitle}</span>}
         <span>{s.quran.verses(n(meta.ayahs))}</span>
         <span>{meta.place === 'mecca' ? s.quran.mecca : s.quran.medina}</span>
         <span>{s.quran.translated(n(done), n(meta.ayahs))}</span>
       </p>
+      {locale !== 'fa' && done > 0 && <p class="note-lang">{s.quran.onlyPersian}</p>}
 
       <div class="surah__tools">
         <form class="jump" action="#" data-base={href(locale, 'quran')}>
@@ -88,7 +89,7 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
       </div>
     </header>
 
-    {showBasmala && <p class="basmala quran-ar" lang="ar">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>}
+    {showBasmala && <p class="basmala quran-ar" lang="ar" translate="no">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>}
 
     <ol class="ayahs">
       {
@@ -100,16 +101,18 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
               <a class="ayah__n num" href={v ? href('fa', `quran/${meta.n}/${a}`) : `#a${a}`} aria-label={`${meta.n}:${a}`}>
                 {n(a)}
               </a>
-              <p class="quran-ar ayah__ar" lang="ar">
+              <p class="quran-ar ayah__ar" lang="ar" translate="no">
                 {text} <span class="ayah__end">﴿{num('ar', a)}﴾</span>
               </p>
               {v ? (
-                <div class="ayah__tr" lang="fa" dir="rtl">
-                  <p>{v.text}</p>
+                <div class="ayah__tr">
+                  <div lang="fa" dir="rtl" data-tr>
+                    <p>{v.text}</p>
+                  </div>
                   {v.notes && v.notes.length > 0 && (
                     <details class="ayah__notes">
                       <summary>{s.quran.notes} ({n(v.notes.length)})</summary>
-                      <ul>
+                      <ul lang="fa" dir="rtl" data-tr>
                         {v.notes.map((x) => (
                           <li set:html={linkRoots(richNote(x, meta.n, localPost))} />
                         ))}

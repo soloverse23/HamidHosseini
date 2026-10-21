@@ -219,7 +219,7 @@ const pageTitle = repeated ? `${postTitle}، ${date(locale, props.item.date)}` :
             <Icon name="telegram" /> {s.openOn('Telegram')}
           </a>
           {firstRef && lastRef && (
-            <a class="btn" href={href('fa', `quran/${firstRef.surah}#a${firstRef.ayah}`)}>
+            <a class="btn" href={href(locale, `quran/${firstRef.surah}#a${firstRef.ayah}`)}>
               <Icon name="book" /> {s.nav.quran} {num(locale, firstRef.surah)}:{num(locale, firstRef.ayah)}
               {lastRef.ayah !== firstRef.ayah ? `–${num(locale, lastRef.ayah)}` : ''}
             </a>
@@ -230,7 +230,7 @@ const pageTitle = repeated ? `${postTitle}، ${date(locale, props.item.date)}` :
           {props.newer ? (
             <a href={href(locale, `notes/${props.newer.id}`)}>
               <span class="meta">{s.prev}</span>
-              <span class="post__nav-title" lang={props.newer.lang} dir="auto" {...(props.newer.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
+              <span class="post__nav-title" lang={props.newer.lang} dir="auto" data-tr>
                 {itemTitle(props.newer, 70) || '…'}
               </span>
             </a>
@@ -240,7 +240,7 @@ const pageTitle = repeated ? `${postTitle}، ${date(locale, props.item.date)}` :
           {props.older ? (
             <a href={href(locale, `notes/${props.older.id}`)} class="post__nav-older">
               <span class="meta">{s.next}</span>
-              <span class="post__nav-title" lang={props.older.lang} dir="auto" {...(props.older.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
+              <span class="post__nav-title" lang={props.older.lang} dir="auto" data-tr>
                 {itemTitle(props.older, 70) || '…'}
               </span>
             </a>

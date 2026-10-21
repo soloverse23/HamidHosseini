@@ -8,9 +8,9 @@ import Base from '../../../layouts/Base.astro';
 import { quranNow, surahs, surahsStarted, totalTranslated, translatedCount } from '../../../lib/data';
 import { num, percent } from '../../../lib/format';
 import { verseHref } from '../../../lib/quran-refs';
-import { faOnlyPaths, href } from '../../../lib/paths';
+import { href, localePaths } from '../../../lib/paths';
 
-export const getStaticPaths = faOnlyPaths;
+export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
 const s = t(locale);
 const n = (x: number) => num(locale, x);
@@ -18,10 +18,11 @@ const n = (x: number) => num(locale, x);
 const started = surahs.filter((m) => translatedCount(m.n) > 0);
 const rest = surahs.filter((m) => translatedCount(m.n) === 0);
 const pct = (totalTranslated / 6236) * 100;
-const localName = (m: (typeof surahs)[number]) => m.fa;
+const localName = (m: (typeof surahs)[number]) =>
+  locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? null : locale === 'ro' ? m.translit : `${m.translit} · ${m.en}`;
 ---
 
-<Base locale={locale} path="quran" locales={['fa']} alternates={false} crumbs={[{ name: s.sections.quran.title, path: 'quran' }]} title={s.sections.quran.title} description={s.sections.quran.lede}>
+<Base locale={locale} path="quran" crumbs={[{ name: s.sections.quran.title, path: 'quran' }]} title={s.sections.quran.title} description={s.sections.quran.lede}>
   <div class="wrap">
     <Chapter locale={locale} no={3} title={s.sections.quran.title} lede={s.sections.quran.lede}>
       <span class="meta">
@@ -29,6 +30,8 @@ const localName = (m: (typeof surahs)[number]) => m.fa;
         <span>{n(surahsStarted)} {s.quran.surahs}</span>
       </span>
     </Chapter>
+
+    {locale !== 'fa' && <p class="note-lang">{s.quran.onlyPersian}</p>}
 
     <SearchField locale={locale} type="quran" class="page-search" />
 

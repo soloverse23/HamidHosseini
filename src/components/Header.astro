@@ -33,8 +33,7 @@ const pad = (i: number) => num(locale, i).padStart(2, locale === 'fa' ? '۰' : l
 // filters inside "Latest" and "Shorts". `match` lists the sections each item
 // stands for, for the current-page mark.
 const NAV = [
-  // Quran translation is Persian-only.
-  ...(locale === 'fa' ? [{ key: 'quran', path: 'quran', match: ['quran'] } as const] : []),
+  { key: 'quran', path: 'quran', match: ['quran'] },
   { key: 'topics', path: 'topics', match: ['topics'] },
   { key: 'series', path: 'videos', match: ['videos'] },
   { key: 'library', path: 'writings', match: ['writings', 'articles'] },

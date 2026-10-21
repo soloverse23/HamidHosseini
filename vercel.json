@@ -15,16 +15,6 @@
       ],
       "destination": "https://www.hamidhosseini.site/:path*",
       "permanent": true
-    },
-    {
-      "source": "/:lang(en|ro|ar|ur)/quran/",
-      "destination": "/fa/quran/",
-      "permanent": true
-    },
-    {
-      "source": "/:lang(en|ro|ar|ur)/quran/:path*",
-      "destination": "/fa/quran/:path*",
-      "permanent": true
     }
   ],
   "headers": [

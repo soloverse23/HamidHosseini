@@ -59,13 +59,16 @@ export default defineConfig({
         !(/\/videos\/\d+\/$/.test(page) && !episodeLangs.has(page.match(/\/(\w\w)\/videos\/(\d+)\/$/).slice(1).join('/'))) &&
         !/\/timeline\//.test(page),
       serialize(item) {
-        // Persian-only content has no translated twins; drop the hreflang links
-        // so the sitemap never invents /en/… mirrors that do not exist.
-        if (/\/fa\/notes\//.test(item.url) || /\/fa\/quran\//.test(item.url)) delete item.links;
+        // Persian-only content has no translated twins; drop the hreflang links.
+        if (/\/fa\/notes\//.test(item.url)) delete item.links;
+        if (/\/fa\/quran\/roots\//.test(item.url)) delete item.links;
         const post = item.url.match(/\/fa\/notes\/(\d+)\/$/);
         if (post) item.lastmod = postDates.get(post[1]);
         const verse = item.url.match(/\/fa\/quran\/(\d+\/\d+)\/$/);
-        if (verse) item.lastmod = verseDates.get(verse[1]);
+        if (verse) {
+          delete item.links;
+          item.lastmod = verseDates.get(verse[1]);
+        }
         const article = item.url.match(/\/fa\/articles\/(\d+)\/$/);
         if (article) {
           delete item.links;

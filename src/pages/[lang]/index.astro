@@ -86,9 +86,7 @@ const sessionsTotal = LECTURES.reduce((a, l) => a + (lectureSessions[l.id]?.leng
 const sections = [
   { key: 'writings', title: s.sections.writings.title, count: BOOKS.length + ARTICLES.length + LECTURES.length, detail: s.books.sessions(n(sessionsTotal)) },
   { key: 'articles', title: s.sections.articles.title, count: blogArticles.length, detail: 'kalaam.ir' },
-  ...(locale === 'fa'
-    ? [{ key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` }]
-    : []),
+  { key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` },
   { key: 'notes', title: s.sections.notes.title, count: notes.length, detail: 'Telegram' },
   { key: 'videos', title: s.sections.videos.title, count: youtube.items.length, detail: s.episode(n(localeEps[0]?.n ?? 0)) },
   { key: 'tiktok', title: s.sections.tiktok.title, count: tiktok.items.length, detail: 'TikTok' },
@@ -234,35 +232,31 @@ const jsonLd = [
       <h2 id="now-title">{u.now}</h2>
     </div>
     <div class="now-grid">
-      {
-        locale === 'fa' && (
-          <article class="panel panel--quran">
-            <header class="panel__head">
-              <h3>{s.sections.quran.title}</h3>
-              <a class="more" href={href(locale, 'quran')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
-            </header>
-            <p class="q-count num">{n(totalTranslated)}<span> / {n(6236)}</span></p>
-            <QuranMap locale={locale} compact />
-            {
-              nowSurah && quranNow && nowVerse && (
-                <a class="q-verse" href={verseHref(quranNow)}>
-                  <span class="q-verse__label">
-                    {u.latestVerse} · {surahName(nowSurah)} {n(nowSurah.n)}:{n(quranNow.ayah)}
-                  </span>
-                  {nowArabic && (
-                    <span class="q-verse__ar clamp-2" lang="ar" dir="rtl">
-                      {nowArabic}
-                    </span>
-                  )}
-                  <span class="q-verse__fa x clamp-3" lang="fa" dir="rtl">
-                    {nowVerse.text}
-                  </span>
-                </a>
-              )
-            }
-          </article>
-        )
-      }
+      <article class="panel panel--quran">
+        <header class="panel__head">
+          <h3>{s.sections.quran.title}</h3>
+          <a class="more" href={href(locale, 'quran')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
+        </header>
+        <p class="q-count num">{n(totalTranslated)}<span> / {n(6236)}</span></p>
+        <QuranMap locale={locale} compact />
+        {
+          nowSurah && quranNow && nowVerse && (
+            <a class="q-verse" href={verseHref(quranNow)}>
+              <span class="q-verse__label">
+                {u.latestVerse} · {surahName(nowSurah)} {n(nowSurah.n)}:{n(quranNow.ayah)}
+              </span>
+              {nowArabic && (
+                <span class="q-verse__ar clamp-2" lang="ar" dir="rtl" translate="no">
+                  {nowArabic}
+                </span>
+              )}
+              <span class="q-verse__fa x clamp-3" lang="fa" dir="rtl" data-tr>
+                {nowVerse.text}
+              </span>
+            </a>
+          )
+        }
+      </article>
 
       {
         ep && epMain && (

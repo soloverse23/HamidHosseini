@@ -35,8 +35,9 @@ const time = (iso: string) =>
     timeZone: 'Asia/Tehran',
   }).format(new Date(iso));
 const dirOf = (lang?: string) => (isRtl(lang) ? 'rtl' : 'ltr');
-// Opt-in for in-browser translation (src/scripts/translate.ts); never the Quran translation.
-const tr = (i: FeedItem) => (i.series === 'quran-translation' ? { translate: 'no' as const } : { 'data-tr': '' });
+// Opt-in for in-browser translation (src/scripts/translate.ts). Quran-translation
+// posts are included: Arabic quotes are protected before the text is sent.
+const trAttrs = { 'data-tr': '' };
 const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
 const titleOf = (i: FeedItem) => {
   const doc = i.media.find((m) => m.title)?.title;
@@ -83,11 +84,11 @@ const companionLabel = (c: FeedItem) =>
           </div>
           <div class:list={['card__main', { 'has-media': !!media }]}>
             <div class="card__text">
-              <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
+              <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...trAttrs}>
                 <a href={link}>{titleOf(i)}</a>
               </h3>
               {body && (
-                <p class="card__body x clamp-3" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
+                <p class="card__body x clamp-3" lang={i.lang} dir={dirOf(i.lang)} {...trAttrs}>
                   {body}
                 </p>
               )}
@@ -117,7 +118,7 @@ const companionLabel = (c: FeedItem) =>
               <Icon name="arrow" class="flip" />
             </a>
             {entry.verses && (
-              <a href={href('fa', `quran/${entry.verses.surah}#a${entry.verses.from}`)} class="card__chip">
+              <a href={href(locale, `quran/${entry.verses.surah}#a${entry.verses.from}`)} class="card__chip">
                 <Icon name="book" />
                 <span>{surahName(entry.verses.surah)}</span>
                 <bdi dir="ltr">
@@ -164,7 +165,7 @@ const companionLabel = (c: FeedItem) =>
             </a>
             <div class="card__text">
               {i.episode && <p class="card__kicker">{s.sections.videos.title} · {s.episode(num(locale, i.episode))}</p>}
-              <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
+              <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...trAttrs}>
                 <a href={internal}>{title}</a>
               </h3>
               {others.length > 0 && (
@@ -247,7 +248,7 @@ const companionLabel = (c: FeedItem) =>
         {!bare && <time datetime={entry.item.date}>{time(entry.item.date)}</time>}
       </div>
       <div class="card__main has-media">
-        <p class="card__body x clamp-4" lang={entry.item.lang} dir={dirOf(entry.item.lang)} {...tr(entry.item)}>
+        <p class="card__body x clamp-4" lang={entry.item.lang} dir={dirOf(entry.item.lang)} {...trAttrs}>
           {excerpt(entry.item.text, 280)}
         </p>
         {entry.item.media[0]?.src && (

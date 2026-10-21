@@ -17,8 +17,6 @@ interface Props {
 const { locale } = Astro.props;
 const s = t(locale);
 const page = href(locale, 'search');
-// Quran translation is Persian-only; hide that filter elsewhere.
-const types = locale === 'fa' ? TYPES : TYPES.filter((k) => k !== 'quran');
 ---
 
 <dialog
@@ -62,7 +60,7 @@ const types = locale === 'fa' ? TYPES : TYPES.filter((k) => k !== 'quran');
   <div class="sd__tabs" role="group" aria-label={s.search.title}>
     <button type="button" class="sd__tab" data-type="" aria-pressed="true">{s.search.all}<span class="num"></span></button>
     {
-      types.map((k) => (
+      TYPES.map((k) => (
         <button type="button" class="sd__tab" data-type={k} aria-pressed="false">
           {s.search.types[k]}
           <span class="num" />

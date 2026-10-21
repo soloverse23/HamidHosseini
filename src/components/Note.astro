@@ -21,9 +21,9 @@ const { locale, item, full = false } = Astro.props;
 const s = t(locale);
 const lang = item.lang ?? 'fa';
 const dir = isRtl(lang) ? 'rtl' : 'ltr';
-// Readers may machine-translate posts in their browser; never the Quran translation.
-const quran = item.series === 'quran-translation';
-
+// Quran-translation posts are Persian prose with quoted Arabic; machine
+// translation may run on the Persian. Vocalised Arabic is wrapped as
+// translate="no" by src/scripts/translate.ts before anything is sent.
 const images = item.media.filter((m) => (m.kind === 'image' || m.kind === 'video') && m.src);
 const video = item.media.find((m) => m.kind === 'video');
 const docs = item.media.filter((m) => m.kind === 'audio' || m.kind === 'document');
@@ -36,7 +36,7 @@ const permalink = href('fa', `notes/${item.id}`);
 // Quran verses (tanzil.net/#6:108) point at the local copies.
 const bodyHtml = (item.html ?? '')
   .replace(/href="https?:\/\/t\.me\/hamidhossaini\/(\d+)"/g, (m, id) => (noteById.has(id) ? `href="${href('fa', `notes/${id}`)}"` : m))
-  .replace(/href="https?:\/\/(?:www\.)?tanzil\.net\/[^"#]*#(\d{1,3}):(\d{1,3})"/g, (_, su, ay) => `href="${href('fa', `quran/${su}#a${ay}`)}"`)
+  .replace(/href="https?:\/\/(?:www\.)?tanzil\.net\/[^"#]*#(\d{1,3}):(\d{1,3})"/g, (_, su, ay) => `href="${href(locale, `quran/${su}#a${ay}`)}"`)
   .replace(/<a href="http/g, '<a target="_blank" rel="noopener" href="http');
 ---
 
@@ -48,7 +48,7 @@ const bodyHtml = (item.html ?? '')
     {topics.slice(0, 2).map((k) => <a class="tag" href={href(locale, `notes/topic/${k}`)}>{s.topics[k]}</a>)}
   </div>
 
-  <div class="note__body" lang={lang} dir={dir} data-tr={quran ? undefined : ''} translate={quran ? 'no' : undefined}>
+  <div class="note__body" lang={lang} dir={dir} data-tr>
     {
       item.forwardedFrom && (
         <p class="note__fwd meta" translate="no">

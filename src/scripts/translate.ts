@@ -1,11 +1,13 @@
 // In-browser translation of content that isn't in the reader's language.
 //
 // Content blocks opt in with `data-tr` plus their own `lang`. Anything under
-// `translate="no"` is left alone: the Quran pages, the group Quran translation
-// posts, and Quranic Arabic quoted inside a post (wrapped below before sending).
-// Nothing is sent until the reader agrees; the choice is remembered.
-// The text goes to Google's free web endpoint straight from the browser, so
-// each reader's own quota applies and the site needs no key or server.
+// `translate="no"` is left alone — notably the Arabic Quran text. Persian
+// prose (including the group Quran translation) may be machine-translated;
+// vocalised Arabic quoted inside a post is wrapped as translate="no" below
+// before anything is sent. Nothing is sent until the reader agrees; the
+// choice is remembered. The text goes to Google's free web endpoint straight
+// from the browser, so each reader's own quota applies and the site needs no
+// key or server.
 
 import { isLocale, isRtl, type Locale } from '../i18n/locales';
 import { TR_STRINGS } from '../i18n/translate';

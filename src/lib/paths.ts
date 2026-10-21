@@ -9,7 +9,4 @@ export function href(locale: Locale, path = ''): string {
 
 export const localePaths = () => LOCALES.map((lang) => ({ params: { lang } }));
 
-/** Content that exists only in Persian (Quran translation, …). */
-export const faOnlyPaths = () => [{ params: { lang: 'fa' as const } }];
-
 export const SITE_NAME = 'Hamid Hosseini';
