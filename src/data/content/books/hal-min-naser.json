@@ -1,0 +1,29 @@
+{
+  "id": "hal-min-naser",
+  "year": 2026,
+  "lang": "fa",
+  "title": {
+    "fa": "هَل مِن ناصِرٍ؟",
+    "ro": "„Este cineva care să ajute?”",
+    "ur": "کیا کوئی مددگار ہے؟",
+    "en": "“Is there anyone to help?”"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/hal-min-naser.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d9%87%d9%8e%d9%84-%d9%85%d9%90%d9%86-%d9%86%d8%a7%d8%b5%d9%90%d8%b1%d9%8d%d8%9f/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/hal-min-naser.pdf"
+    }
+  ]
+}

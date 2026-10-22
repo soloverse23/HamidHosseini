@@ -1,0 +1,30 @@
+{
+  "id": "monji-ye-mowud",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "منجی موعود، اشتراک‌ها و چالش‌ها",
+    "ro": "Salvatorul promis: puncte comune și provocări",
+    "ar": "المنقذ الموعود: المشتركات والتحديات",
+    "ur": "موعود نجات دہندہ: مشترکات اور چیلنج",
+    "en": "The Promised Saviour: Common Ground and Challenges"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/monji-ye-mowud.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d9%85%d9%86%d8%ac%db%8c-%d9%85%d9%88%d8%b9%d9%88%d8%af%d8%8c-%d8%a7%d8%b4%d8%aa%d8%b1%d8%a7%da%a9%d9%87%d8%a7-%d9%88-%da%86%d8%a7%d9%84%d8%b4%d9%87%d8%a7/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/monji-ye-mowud.pdf"
+    }
+  ]
+}

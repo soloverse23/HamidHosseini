@@ -1,0 +1,30 @@
+{
+  "id": "payam-avar-e-mehrabani",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "پیام‌آور مهربانی",
+    "ro": "Mesagerul bunătății",
+    "ar": "رسول الرحمة",
+    "ur": "مہربانی کا پیغمبر",
+    "en": "The Messenger of Kindness"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/payam-avar-e-mehrabani.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d9%be%db%8c%d8%a7%d9%85%d8%a2%d9%88%d8%b1-%d9%85%d9%87%d8%b1%d8%a8%d8%a7%d9%86%db%8c/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/payam-avar-e-mehrabani.pdf"
+    }
+  ]
+}

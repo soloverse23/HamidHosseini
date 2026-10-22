@@ -1,0 +1,30 @@
+{
+  "id": "fateme-kowsar-e-quran",
+  "year": 2026,
+  "lang": "fa",
+  "title": {
+    "fa": "فاطمه (علیهاالسلام)، کوثر قرآن",
+    "ro": "Fatima, Kawthar-ul Coranului",
+    "ar": "فاطمة (ع)، كوثر القرآن",
+    "ur": "فاطمہ (س)، قرآن کا کوثر",
+    "en": "Fatima, the Kawthar of the Quran"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/fateme-kowsar-e-quran.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d9%81%d8%a7%d8%b7%d9%85%d9%87-%d8%b9%d9%84%db%8c%d9%87%d8%a7%d8%a7%d9%84%d8%b3%d9%84%d8%a7%d9%85%d8%8c-%da%a9%d9%88%d8%ab%d8%b1-%d9%82%d8%b1%d8%a2%d9%86/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/fateme-kowsar-e-quran.pdf"
+    }
+  ]
+}

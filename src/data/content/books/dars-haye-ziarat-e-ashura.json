@@ -1,0 +1,30 @@
+{
+  "id": "dars-haye-ziarat-e-ashura",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "درس‌هایی از زیارت عاشورا",
+    "ro": "Lecții din Ziyarat-ul de Așura",
+    "ar": "دروس من زيارة عاشوراء",
+    "ur": "زیارتِ عاشورا کے درس",
+    "en": "Lessons from the Ziyarat of Ashura"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/dars-haye-ziarat-e-ashura.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d8%af%d8%b1%d8%b3%d9%87%d8%a7%db%8c%db%8c-%d8%a7%d8%b2-%d8%b2%db%8c%d8%a7%d8%b1%d8%aa-%d8%b9%d8%a7%d8%b4%d9%88%d8%b1%d8%a7/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/dars-haye-ziarat-e-ashura.pdf"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "sire-ye-akhlaghi-imam-hosein",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "سیره اخلاقی امام حسین (علیه‌السلام)",
+    "ro": "Conduita morală a Imamului Husayn",
+    "ar": "السيرة الأخلاقية للإمام الحسين (ع)",
+    "ur": "امام حسین (ع) کی اخلاقی سیرت",
+    "en": "The Moral Conduct of Imam Husayn"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/sire-ye-akhlaghi-imam-hosein.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d8%b3%db%8c%d8%b1%d9%87-%d8%a7%d8%ae%d9%84%d8%a7%d9%82%db%8c-%d8%a7%d9%85%d8%a7%d9%85-%d8%ad%d8%b3%db%8c%d9%86-%d8%b9%d9%84%db%8c%d9%87%d8%a7%d9%84%d8%b3%d9%84%d8%a7%d9%85/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/sire-ye-akhlaghi-imam-hosein.pdf"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "hosein-va-eslah-e-ommat",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "حسین (علیه‌السلام) و اصلاح امت",
+    "ro": "Husayn și îndreptarea comunității",
+    "ar": "الحسين (ع) وإصلاح الأمة",
+    "ur": "حسین (ع) اور اصلاحِ امت",
+    "en": "Husayn and the Reform of the Community"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/hosein-va-eslah-e-ommat.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d8%ad%d8%b3%db%8c%d9%86-%d8%b9%d9%84%db%8c%d9%87%d8%a7%d9%84%d8%b3%d9%84%d8%a7%d9%85-%d9%88-%d8%a7%d8%b5%d9%84%d8%a7%d8%ad-%d8%a7%d9%85%d8%aa/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/hosein-va-eslah-e-ommat.pdf"
+    }
+  ]
+}

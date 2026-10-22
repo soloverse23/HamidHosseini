@@ -1,0 +1,30 @@
+{
+  "id": "keshti-nejat",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "کشتی نجات",
+    "ro": "Corabia mântuirii",
+    "ar": "سفينة النجاة",
+    "ur": "کشتیِ نجات",
+    "en": "The Ark of Salvation"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/keshti-nejat.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d8%ad%d8%b3%db%8c%d9%86-%d8%b9%d9%84%db%8c%d9%87%d8%a7%d9%84%d8%b3%d9%84%d8%a7%d9%85%d8%8c-%da%a9%d8%b4%d8%aa%db%8c-%d9%86%d8%ac%d8%a7%d8%aa/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/keshti-nejat.pdf"
+    }
+  ]
+}

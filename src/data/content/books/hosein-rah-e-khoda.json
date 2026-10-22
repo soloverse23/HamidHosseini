@@ -1,0 +1,30 @@
+{
+  "id": "hosein-rah-e-khoda",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "حسین (علیه‌السلام)، راه خدا",
+    "ro": "Husayn, calea lui Dumnezeu",
+    "ar": "الحسين (ع)، سبيل الله",
+    "ur": "حسین (ع)، خدا کی راہ",
+    "en": "Husayn, the Path of God"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/hosein-rah-e-khoda.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d8%ad%d8%b3%db%8c%d9%86-%d8%b9%d9%84%db%8c%d9%87%d8%a7%d9%84%d8%b3%d9%84%d8%a7%d9%85%d8%8c-%d8%b1%d8%a7%d9%87-%d8%ae%d8%af%d8%a7/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/hosein-rah-e-khoda.pdf"
+    }
+  ]
+}

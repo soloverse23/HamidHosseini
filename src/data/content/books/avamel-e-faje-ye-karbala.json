@@ -1,0 +1,30 @@
+{
+  "id": "avamel-e-faje-ye-karbala",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "عوامل فاجعه کربلا",
+    "ro": "Cauzele tragediei de la Karbala",
+    "ar": "عوامل فاجعة كربلاء",
+    "ur": "سانحۂ کربلا کے اسباب",
+    "en": "The Causes of the Tragedy of Karbala"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/avamel-e-faje-ye-karbala.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d8%b9%d9%88%d8%a7%d9%85%d9%84-%d9%81%d8%a7%d8%ac%d8%b9%d9%87-%da%a9%d8%b1%d8%a8%d9%84%d8%a7/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/avamel-e-faje-ye-karbala.pdf"
+    }
+  ]
+}

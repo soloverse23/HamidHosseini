@@ -1,0 +1,30 @@
+{
+  "id": "sharh-e-makarem-al-akhlagh",
+  "year": 2025,
+  "lang": "fa",
+  "title": {
+    "fa": "شرح دعای مکارم‌الاخلاق",
+    "ro": "Comentariu la rugăciunea Makarim al-Akhlaq",
+    "ar": "شرح دعاء مكارم الأخلاق",
+    "ur": "دعائے مکارم الاخلاق کی شرح",
+    "en": "A Commentary on the Makarim al-Akhlaq Supplication"
+  },
+  "venue": {
+    "fa": "بنیاد امام علی (ع) بخارست",
+    "en": "Imam Ali Foundation, Bucharest",
+    "ro": "Fundația Imam Ali, București",
+    "ar": "مؤسسة الإمام علي (ع) في بوخارست",
+    "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
+  },
+  "cover": "/media/books/sharh-e-makarem-al-akhlagh.webp",
+  "links": [
+    {
+      "kind": "read",
+      "url": "https://biblioteca.imamali.ro/%d8%b4%d8%b1%d8%ad-%d8%af%d8%b9%d8%a7%db%8c-%d9%85%da%a9%d8%a7%d8%b1%d9%85%d8%a7%d9%84%d8%a7%d8%ae%d9%84%d8%a7%d9%82/?lang=fa"
+    },
+    {
+      "kind": "pdf",
+      "url": "/files/sharh-e-makarem-al-akhlagh.pdf"
+    }
+  ]
+}
