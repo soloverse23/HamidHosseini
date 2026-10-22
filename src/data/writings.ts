@@ -28,6 +28,8 @@ export interface Translation {
   year?: number;
   pages?: number;
   cover?: string;
+  /** The cover is artwork, not the plain text template: it can carry the slider */
+  designedCover?: boolean;
   pdf: string;
   /** Its page on the publisher's library */
   source?: string;
@@ -46,6 +48,10 @@ export interface Work {
   venue?: Localized;
   summary?: Localized;
   cover?: string;
+  /** Books: the cover is artwork, not the plain text template */
+  designedCover?: boolean;
+  /** Books: shown first, as the newest book */
+  featured?: boolean;
   links: WorkLink[];
   /** Books: translations by language, each with its own PDF */
   translations?: Partial<Record<Locale, Translation>>;
@@ -70,7 +76,8 @@ const tg = (id: number): WorkLink => ({ kind: 'telegram', url: `https://t.me/ham
 /**
  * Books are edited in the CMS (/admin/): one JSON file per book in
  * src/data/content/books/, in the shape of `Work` without `type`. Covers go
- * in public/media/books/, PDFs in public/files/. Newest first.
+ * in public/media/books/, PDFs in public/files/. The featured book first,
+ * then newest first.
  */
 export const BOOKS: Work[] = (() => {
   const dir = join(process.cwd(), 'src/data/content/books');
@@ -78,7 +85,7 @@ export const BOOKS: Work[] = (() => {
   return readdirSync(dir)
     .filter((f) => f.endsWith('.json'))
     .map((f) => ({ type: 'book' as const, links: [], ...JSON.parse(readFileSync(join(dir, f), 'utf8')) }) as Work)
-    .sort((a, b) => b.year - a.year);
+    .sort((a, b) => Number(!!b.featured) - Number(!!a.featured) || b.year - a.year);
 })();
 
 export const ARTICLES: Work[] = [

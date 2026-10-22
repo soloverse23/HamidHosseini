@@ -27,7 +27,7 @@ export function personNode(site?: URL) {
     image: `${o}/og.png`,
     jobTitle: 'Islamic scholar and writer',
     description:
-      'Muslim cleric and writer. Author of a Persian group translation of the Quran with notes on every verse, and of the video series “Islam, why and how?” in Persian, Romanian, Arabic, Urdu and English.',
+      'Muslim cleric and writer. Author of a reasoned Persian translation of the Quran with notes on every verse, and of the video series “Islam, why and how?” in Persian, Romanian, Arabic, Urdu and English.',
     knowsLanguage: ['fa', 'ar', 'ro', 'ur', 'en'],
     knowsAbout: ['Quran', 'Quran translation', 'Tafsir', 'Islamic ethics', 'Islamic theology', 'Hadith', 'Religion and reason'],
     affiliation: { '@id': foundationId(site) },

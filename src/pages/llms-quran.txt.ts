@@ -6,7 +6,7 @@ import { arabic, quranFa, surahs, totalTranslated } from '../lib/data';
 export function GET({ site }: APIContext) {
   const o = site!.origin;
   const out = [
-    '# Persian group translation of the Quran, by Seyed Hamid Hosseini (ترجمهٔ گروهی قرآن)',
+    '# Reasoned Persian translation of the Quran, by Seyed Hamid Hosseini (ترجمه مستدل قرآن)',
     '',
     `> ${totalTranslated} of 6,236 verses translated so far, each with notes explaining the choice of words. Translator: Seyed Hamid Hosseini (${o}/fa/about/). Arabic text: Tanzil Project (Uthmani). Cite each verse by its page URL.`,
     '',

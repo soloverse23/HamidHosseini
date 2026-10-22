@@ -2,7 +2,7 @@ import type { FeedItem } from './feed-types';
 
 // Topic filters for the Notes page, derived from the hashtags he uses.
 export const TOPICS = {
-  'quran-translation': ['#ترجمه_گروهی_قرآن', '#ترجمه'],
+  'quran-translation': ['#ترجمه_گروهی_قرآن', '#ترجمه_مستدل_قرآن', '#ترجمه'],
   'islam-why-how': ['#اسلام_چرا_چگونه'],
   tafsir: ['#تفسیر_سوره_عصر', '#تفسیر_موضوعی', '#تفسیر_موضوعی_قرآن', '#قرآن_ویدئو_صفحه', '#نیایش_قرآنی', '#قرآن'],
   hadith: ['#حدیث', '#صحیفه'],

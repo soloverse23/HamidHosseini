@@ -25,6 +25,7 @@
     "en": "A textbook of research methods for the transmitted (text-based) sciences"
   },
   "cover": "/media/books/amoozesh-e-pajoohesh.webp",
+  "designedCover": true,
   "links": [
     {
       "kind": "pdf",

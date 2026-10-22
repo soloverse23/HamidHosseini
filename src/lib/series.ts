@@ -15,7 +15,7 @@ interface SeriesRule {
 const RULES: SeriesRule[] = [
   {
     key: 'quran-translation',
-    match: /ترجم(ه|ة)\s*(ی\s*)?گروهی\s*(ی\s*)?قرآن|#ترجمه_گروهی|#ترجمه_قرآن/,
+    match: /ترجم(ه|ة)\s*(ی\s*)?(گروهی|مستدل)\s*(ی\s*)?قرآن|#ترجمه_گروهی|#ترجمه_مستدل|#ترجمه_قرآن/,
   },
   {
     key: 'islam-why-how',

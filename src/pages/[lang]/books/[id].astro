@@ -107,7 +107,7 @@ const heading = gloss ? `${edition.title} (${gloss})` : edition.title;
   <article class="book-page" style={`--tone: ${edition.tone}`}>
     <header class="hero">
       <div class="wrap hero__inner">
-        <div class="hero__cover" data-tilt-area>
+        <div class="hero__cover">
           <BookCover edition={edition} eager />
         </div>
         <div class="hero__body">
@@ -234,7 +234,7 @@ const heading = gloss ? `${edition.title} (${gloss})` : edition.title;
               <li>
                 <a class="edition" href={e.pdf} data-open-reader={e.lang}>
                   <span class="edition__cover" style={`--cover-h: 6.5rem; --cover-w: 5.5rem`}>
-                    <BookCover edition={e} tilt={false} />
+                    <BookCover edition={e} />
                   </span>
                   <span class="edition__text">
                     <span class="edition__lang">
@@ -265,7 +265,7 @@ const heading = gloss ? `${edition.title} (${gloss})` : edition.title;
             <h2 id="more">{s.books.more}</h2>
             <a href={`${href(locale, 'writings')}#books`}>{s.viewAll}</a>
           </div>
-          <ul class="more__row">
+          <ul class="more__row" data-drift>
             {others.map((b) => {
               const { edition: e, missing: m } = editionFor(b, locale);
               return (
@@ -291,6 +291,39 @@ const heading = gloss ? `${edition.title} (${gloss})` : edition.title;
     }
   </article>
 </Base>
+
+<script>
+  // The shelf of other books drifts on by itself, a book at a time, and
+  // comes back to the start at the end. It holds still while a reader is
+  // hovering, touching or tabbing through it, and when it is out of view.
+  const row = document.querySelector<HTMLElement>('[data-drift]');
+  if (row && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const forward = getComputedStyle(row).direction === 'rtl' ? -1 : 1;
+    let held = false;
+    let seen = false;
+    const step = () => {
+      if (held || !seen || document.hidden) return;
+      const at = Math.abs(row.scrollLeft);
+      if (at + row.clientWidth >= row.scrollWidth - 4) {
+        row.scrollTo({ left: 0, behavior: 'smooth' });
+        return;
+      }
+      const item = row.querySelector<HTMLElement>('li');
+      const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+      row.scrollBy({ left: forward * ((item?.offsetWidth ?? 160) + gap), behavior: 'smooth' });
+    };
+    const hold = () => (held = true);
+    const release = () => (held = false);
+    row.addEventListener('pointerenter', hold);
+    row.addEventListener('pointerleave', release);
+    row.addEventListener('touchstart', hold, { passive: true });
+    row.addEventListener('touchend', () => setTimeout(release, 4000));
+    row.addEventListener('focusin', hold);
+    row.addEventListener('focusout', release);
+    new IntersectionObserver(([e]) => (seen = e!.isIntersecting)).observe(row);
+    setInterval(step, 3000);
+  }
+</script>
 
 <style>
   .book-page {

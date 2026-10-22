@@ -1,0 +1,457 @@
+---
+// The top of the library: one full-width slide per book whose edition in the
+// reader's language has a designed cover, the featured book first. Each slide
+// is built from the cover itself: the book in 3D, and the cover blurred into
+// the light behind it. With one slide there is nothing to turn; with none
+// (no designed cover in this language) the slider is not drawn at all.
+import { editionFor, slidesFor, type Book } from '../lib/books';
+import { LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { num, year } from '../lib/format';
+import { href } from '../lib/paths';
+import BookCover from './BookCover.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const s = t(locale);
+const slides = slidesFor(locale);
+const pick = (l?: Partial<Record<Locale, string>>) => (l ? (l[locale] ?? l.en ?? Object.values(l)[0]) : undefined);
+const page = (b: Book) => href(locale, `books/${b.id}`);
+const many = slides.length > 1;
+---
+
+{
+  slides.length > 0 && (
+    <section
+      class="slider"
+      aria-roledescription="carousel"
+      aria-label={s.books.books}
+      data-slider
+      data-intl={LOCALE_META[locale].intl}
+    >
+      {slides.map((b, i) => {
+        const { edition } = editionFor(b, locale);
+        const summary = pick(b.summary);
+        return (
+          <article
+            class="slide"
+            data-slide
+            aria-roledescription="slide"
+            aria-label={s.books.slideOf(num(locale, i + 1), num(locale, slides.length))}
+            aria-hidden={i === 0 ? undefined : 'true'}
+            data-active={i === 0 ? '' : undefined}
+            style={`--tone: ${edition.tone}`}
+          >
+            <img class="slide__bg" src={edition.cover} alt="" aria-hidden="true" loading={i === 0 ? 'eager' : 'lazy'} />
+            <div class="wrap slide__inner">
+              <a class="slide__cover" href={page(b)} tabindex="-1" aria-hidden="true">
+                <BookCover edition={edition} eager={i === 0} flat />
+              </a>
+              <div class="slide__body">
+                <p class="slide__eyebrow">
+                  {b.featured && <span class="slide__flag">{s.books.latest}</span>}
+                  <span class="num">{year(locale, edition.year)}</span>
+                  {edition.pages && <span>{s.books.pages(num(locale, edition.pages))}</span>}
+                </p>
+                <h2 class="slide__title serif align-start" lang={edition.lang} dir="auto">
+                  <a href={page(b)}>{edition.title}</a>
+                </h2>
+                {!edition.original && <p class="slide__by">{edition.translator ? s.books.translatedBy(edition.translator) : s.books.translation}</p>}
+                {summary && <p class="slide__summary">{summary}</p>}
+                <p class="slide__actions">
+                  <a class="slide__read" href={`${page(b)}#read`} tabindex={i === 0 ? undefined : '-1'}>
+                    <Icon name="book" />
+                    {s.books.start}
+                  </a>
+                  <a class="slide__more" href={page(b)} tabindex={i === 0 ? undefined : '-1'}>
+                    {s.books.details}
+                    <Icon name="arrow" class="flip" />
+                  </a>
+                </p>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+
+      {many && (
+        <div class="slider__nav wrap">
+          <ol class="slider__dots">
+            {slides.map((_, i) => (
+              <li>
+                <button
+                  type="button"
+                  class="slider__dot"
+                  data-dot={i}
+                  aria-label={s.books.slideOf(num(locale, i + 1), num(locale, slides.length))}
+                  aria-current={i === 0 ? 'true' : undefined}
+                >
+                  <span></span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </section>
+  )
+}
+
+<script>
+  // Turns the slides: on its own every few seconds, by the dots,
+  // by swiping, and by the arrow keys. It holds still while a reader is
+  // pointing at it, has focus in it, or cannot see it.
+  const slider = document.querySelector<HTMLElement>('[data-slider]');
+  const slides = slider ? [...slider.querySelectorAll<HTMLElement>('[data-slide]')] : [];
+  if (slider && slides.length > 1) {
+    const dots = [...slider.querySelectorAll<HTMLButtonElement>('[data-dot]')];
+    const rtl = getComputedStyle(slider).direction === 'rtl';
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let at = 0;
+    let held = false;
+    let seen = true;
+    let timer = 0;
+
+    const go = (to: number) => {
+      at = (to + slides.length) % slides.length;
+      slides.forEach((el, i) => {
+        const on = i === at;
+        el.toggleAttribute('data-active', on);
+        el.setAttribute('aria-hidden', String(!on));
+        for (const a of el.querySelectorAll<HTMLElement>('a.slide__read, a.slide__more')) a.tabIndex = on ? 0 : -1;
+      });
+      dots.forEach((d, i) => (i === at ? d.setAttribute('aria-current', 'true') : d.removeAttribute('aria-current')));
+      schedule();
+    };
+    const schedule = () => {
+      clearTimeout(timer);
+      slider.toggleAttribute('data-paused', held || still);
+      if (!held && !still && seen && !document.hidden) timer = window.setTimeout(() => go(at + 1), 7000);
+    };
+
+    dots.forEach((d, i) => d.addEventListener('click', () => go(i)));
+    slider.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const forward = (e.key === 'ArrowRight') !== rtl;
+      go(at + (forward ? 1 : -1));
+    });
+
+    const hold = (on: boolean) => {
+      held = on;
+      schedule();
+    };
+    slider.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && hold(true));
+    slider.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && hold(false));
+    slider.addEventListener('focusin', () => hold(true));
+    slider.addEventListener('focusout', (e) => !slider.contains(e.relatedTarget as Node) && hold(false));
+    document.addEventListener('visibilitychange', schedule);
+    new IntersectionObserver(([e]) => {
+      seen = e!.isIntersecting;
+      schedule();
+    }).observe(slider);
+
+    // Swipe: towards the start of the line brings the next slide.
+    let start: { x: number; y: number } | undefined;
+    slider.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse') start = { x: e.clientX, y: e.clientY };
+    });
+    slider.addEventListener('pointerup', (e) => {
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      start = undefined;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) go(at + ((dx < 0) !== rtl ? 1 : -1));
+    });
+
+    schedule();
+  }
+</script>
+
+<style>
+  /* Full width under the header, whatever the column around it. */
+  .slider {
+    position: relative;
+    display: grid;
+    margin-inline: calc(50% - 50vw);
+    margin-block: calc(-1 * var(--space-7)) var(--space-7);
+    min-height: clamp(24rem, 62svh, 32rem);
+    overflow: hidden;
+    isolation: isolate;
+    color: #f4efe4;
+    background: #12110e;
+  }
+  .slide {
+    --cover-h: clamp(15rem, 44svh, 21rem);
+    --cover-w: 17rem;
+    grid-area: 1 / 1;
+    position: relative;
+    display: grid;
+    align-items: center;
+    padding-block: var(--space-6) calc(var(--space-6) + 1.5rem);
+    background: var(--tone);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.9s ease,
+      visibility 0s linear 0.9s;
+  }
+  .slide[data-active] {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.9s ease;
+    z-index: 1;
+  }
+  /* The cover again, blown up and blurred into light and colour. */
+  .slide__bg {
+    position: absolute;
+    inset: -12%;
+    width: 124%;
+    height: 124%;
+    max-width: none;
+    object-fit: cover;
+    filter: blur(48px) saturate(1.35);
+    opacity: 0.75;
+    transform: scale(1.08);
+    transition: transform 8s ease-out;
+    z-index: -1;
+  }
+  .slide[data-active] .slide__bg {
+    transform: scale(1);
+  }
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(to var(--shade-to, right), rgb(10 9 8 / 0.15), rgb(10 9 8 / 0.55) 55%, rgb(10 9 8 / 0.75)),
+      linear-gradient(to top, rgb(10 9 8 / 0.55), transparent 40%);
+  }
+  :root[dir='rtl'] .slide {
+    --shade-to: left;
+  }
+  .slide__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: var(--space-7);
+  }
+  .slide__cover {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(var(--cover-h) + var(--space-5));
+  }
+  .slide__cover :global(.b3d) {
+    transform: translateY(16px) scale(0.96);
+    opacity: 0;
+    transition:
+      transform 1s cubic-bezier(0.2, 0.75, 0.25, 1) 0.15s,
+      opacity 0.8s ease 0.15s;
+  }
+  .slide[data-active] .slide__cover :global(.b3d) {
+    transform: none;
+    opacity: 1;
+  }
+  .slide__body {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    max-width: 36rem;
+  }
+  .slide__body > * {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.7s ease,
+      transform 0.8s cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+  .slide[data-active] .slide__body > * {
+    opacity: 1;
+    transform: none;
+  }
+  .slide[data-active] .slide__body > :nth-child(2) {
+    transition-delay: 0.08s;
+  }
+  .slide[data-active] .slide__body > :nth-child(3) {
+    transition-delay: 0.16s;
+  }
+  .slide[data-active] .slide__body > :nth-child(n + 4) {
+    transition-delay: 0.24s;
+  }
+  .slide__eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    font-size: var(--step--1);
+    color: rgb(244 239 228 / 0.78);
+  }
+  .slide__eyebrow > span + span:not(.slide__flag)::before {
+    content: '·';
+    margin-inline-end: var(--space-3);
+    color: rgb(244 239 228 / 0.45);
+  }
+  .slide__flag {
+    padding: 0.15em 0.75em;
+    border-radius: 999px;
+    background: #f4efe4;
+    color: #1d1a15;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+  .slide__title {
+    font-size: clamp(2.25rem, 1.5rem + 2.6vw, 3.5rem);
+    line-height: 1.15;
+    justify-self: stretch;
+    text-shadow: 0 2px 30px rgb(0 0 0 / 0.35);
+  }
+  .slide__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .slide__by {
+    margin-block-start: calc(-1 * var(--space-2));
+    color: rgb(244 239 228 / 0.75);
+    font-size: var(--step--1);
+  }
+  .slide__summary {
+    font-size: var(--step-1);
+    line-height: 1.65;
+    color: rgb(244 239 228 / 0.92);
+  }
+  .slide__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    margin-block-start: var(--space-2);
+  }
+  .slide__read {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    padding: 0.85em 1.7em;
+    border-radius: 999px;
+    background: #f4efe4;
+    color: #1d1a15;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 14px 30px -14px rgb(0 0 0 / 0.7);
+    transition:
+      transform 0.15s,
+      background 0.15s;
+  }
+  .slide__read:hover {
+    background: #fff;
+    color: #1d1a15;
+    transform: translateY(-2px);
+  }
+  .slide__read :global(svg),
+  .slide__more :global(svg) {
+    width: 1.1em;
+    height: 1.1em;
+  }
+  .slide__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: #f4efe4;
+    font-weight: 500;
+    text-decoration: none;
+    border-block-end: 1px solid rgb(244 239 228 / 0.4);
+  }
+  .slide__more:hover {
+    color: #fff;
+    border-color: #fff;
+  }
+
+  /* ---------- Arrows and dots ---------- */
+  .slider__nav {
+    position: absolute;
+    inset-inline: 0;
+    bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    z-index: 2;
+  }
+  .slider__dots {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: var(--space-2);
+  }
+  .slider__dot {
+    display: block;
+    width: 2.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .slider__dot span {
+    display: block;
+    height: 3px;
+    border-radius: 3px;
+    background: rgb(244 239 228 / 0.3);
+    overflow: hidden;
+  }
+  .slider__dot span::after {
+    content: '';
+    display: block;
+    height: 100%;
+    inline-size: 0;
+    background: #f4efe4;
+  }
+  .slider__dot[aria-current] span::after {
+    inline-size: 100%;
+    animation: dot 7s linear;
+  }
+  .slider[data-paused] .slider__dot[aria-current] span::after {
+    animation: none;
+  }
+  @keyframes dot {
+    from {
+      inline-size: 0;
+    }
+  }
+
+  @media (max-width: 52rem) {
+    .slider {
+      min-height: 0;
+    }
+    .slide {
+      --cover-h: 12rem;
+      --cover-w: 10rem;
+      padding-block: var(--space-5) calc(var(--space-5) + 2rem);
+      align-items: start;
+    }
+    .slide::before {
+      background: linear-gradient(to bottom, rgb(10 9 8 / 0.1), rgb(10 9 8 / 0.6) 45%, rgb(10 9 8 / 0.8));
+    }
+    .slide__inner {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
+    .slide__title {
+      font-size: var(--step-3);
+    }
+    .slide__summary {
+      font-size: var(--step-0);
+    }
+    .slider__nav {
+      justify-content: center;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slide__bg {
+      transition: none;
+    }
+  }
+</style>

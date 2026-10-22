@@ -1,16 +1,19 @@
 ---
-// The books on the Writings page: the newest one up front, then the whole
-// shelf, which a reader can search, filter and reorder. Each book shows the
-// edition in the reader's language when it has been translated, and the
-// original otherwise, marked with its language. Books already opened in the
+// The books on the Writings page: the slider of designed covers up front,
+// then the whole shelf, which a reader can search and filter. Books in the
+// reader's language come first (originals and translations), then the rest,
+// each newest first. Each book shows the edition in the reader's language
+// when it has been translated, and the original otherwise, marked with its
+// language. Books already opened in the
 // reader show how far along the reader is, and come back in "Continue reading".
-import { books, editionFor, languageName, type Book } from '../lib/books';
+import { books, editionFor, languageName, shelfFor, type Book } from '../lib/books';
 import { LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { num, year } from '../lib/format';
 import { href } from '../lib/paths';
 import { normalize } from '../lib/search/normalize';
 import BookCover from './BookCover.astro';
+import BookSlider from './BookSlider.astro';
 import Icon from './Icon.astro';
 
 interface Props {
@@ -19,7 +22,6 @@ interface Props {
 const { locale } = Astro.props;
 const s = t(locale);
 
-const pick = (l?: Partial<Record<Locale, string>>) => (l ? (l[locale] ?? l.en ?? Object.values(l)[0]) : undefined);
 /** What this reader sees of a book: its edition, and a gloss of the title when that edition is in another language. */
 function view(b: Book) {
   const { edition, missing } = editionFor(b, locale);
@@ -27,62 +29,20 @@ function view(b: Book) {
   return { edition, missing, gloss };
 }
 const page = (b: Book) => href(locale, `books/${b.id}`);
-const featured = books[0];
+const shelf = shelfFor(locale);
 const totalPages = books.reduce((n, b) => n + (view(b).edition.pages ?? 0), 0);
 const inMine = books.filter((b) => !view(b).missing).length;
-const sorts = [
-  ['newest', s.books.newest],
-  ['oldest', s.books.oldest],
-  ['longest', s.books.longest],
-  ['shortest', s.books.shortest],
-] as const;
 ---
 
 {
-  featured && (
+  shelf.length > 0 && (
+    <>
+    <BookSlider locale={locale} />
     <section aria-labelledby="books" class="library">
       <div class="section-title">
         <h2 id="books">{s.books.books}</h2>
         {totalPages > 0 && <p class="meta">{s.books.pages(num(locale, totalPages))}</p>}
       </div>
-
-      {(() => {
-        const { edition, missing, gloss } = view(featured);
-        return (
-          <article class="feature" style={`--tone: ${edition.tone}`}>
-            <a class="feature__cover" href={page(featured)} tabindex="-1" aria-hidden="true">
-              <BookCover edition={edition} eager />
-            </a>
-            <div class="feature__body">
-              <p class="eyebrow feature__eyebrow">
-                {s.books.latest} · <span class="num">{year(locale, edition.year)}</span>
-                {missing && <> · {languageName(edition.lang, locale)}</>}
-              </p>
-              <h3 class="serif align-start" lang={edition.lang} dir="auto">
-                <a href={page(featured)}>{edition.title}</a>
-              </h3>
-              {gloss && <p class="gloss">{gloss}</p>}
-              {pick(featured.summary) && <p class="feature__summary">{pick(featured.summary)}</p>}
-              <p class="meta">
-                {pick(featured.venue) && <span>{pick(featured.venue)}</span>}
-                {edition.pages && <span>{s.books.pages(num(locale, edition.pages))}</span>}
-              </p>
-              <p class="btn-row">
-                <a class="btn btn--light" href={`${page(featured)}#read`} data-resume={edition.key}>
-                  <Icon name="book" />
-                  <span>{s.books.start}</span>
-                </a>
-                {edition.pdf && (
-                  <a class="btn btn--ghost" href={edition.pdf} download>
-                    <Icon name="file" />
-                    {s.books.download}
-                  </a>
-                )}
-              </p>
-            </div>
-          </article>
-        );
-      })()}
 
       <div class="resume" data-resume-row hidden>
         <h3 class="resume__title">{s.books.reading}</h3>
@@ -109,18 +69,11 @@ const sorts = [
             </div>
           )
         }
-        <div class="chips" role="group" aria-label={s.books.sortBy}>
-          {sorts.map(([key, label], i) => (
-            <button type="button" class="chip" data-sort={key} aria-pressed={i === 0 ? 'true' : 'false'}>
-              {label}
-            </button>
-          ))}
-        </div>
         <p class="meta tools__count" aria-live="polite" data-count data-template={s.books.shown('{a}', '{b}')}></p>
       </div>
 
       <ul class="shelf" data-shelf>
-        {books.map((b, i) => {
+        {shelf.map((b, i) => {
           const { edition, missing, gloss } = view(b);
           const haystack = normalize(
             [
@@ -137,8 +90,6 @@ const sorts = [
               id={b.id}
               data-q={haystack}
               data-year={b.year}
-              data-pages={edition.pages ?? 0}
-              data-order={i}
               data-mine={missing ? undefined : ''}
             >
               <a class="shelf__link" href={page(b)}>
@@ -181,6 +132,7 @@ const sorts = [
       </ul>
       <p class="shelf__empty" data-empty hidden>{s.books.noMatch}</p>
     </section>
+    </>
   )
 }
 
@@ -224,7 +176,6 @@ const sorts = [
     const find = document.querySelector<HTMLInputElement>('[data-find]')!;
     const count = document.querySelector<HTMLElement>('[data-count]')!;
     const empty = document.querySelector<HTMLElement>('[data-empty]')!;
-    let sort = 'newest';
     let onlyMine = false;
 
     const apply = () => {
@@ -236,38 +187,11 @@ const sorts = [
         li.hidden = !hit;
         if (hit) shown++;
       }
-      const key = (li: HTMLElement) =>
-        sort === 'newest'
-          ? Number(li.dataset.order)
-          : sort === 'oldest'
-            ? -Number(li.dataset.order)
-            : sort === 'longest'
-              ? -Number(li.dataset.pages)
-              : Number(li.dataset.pages);
-      const ordered = [...items].sort((a, b) => key(a) - key(b));
-      // Animate the reorder: remember where each card was, move it, then glide.
-      const before = new Map(ordered.map((li) => [li, li.getBoundingClientRect()]));
-      shelf.append(...ordered);
-      if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
-        for (const li of ordered) {
-          const a = before.get(li)!;
-          const b = li.getBoundingClientRect();
-          if (li.hidden || (!a.width && !a.height)) continue;
-          const dx = a.left - b.left;
-          const dy = a.top - b.top;
-          if (dx || dy) li.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.75,.25,1)' });
-        }
       count.textContent = count.dataset.template!.replace('{a}', n(shown)).replace('{b}', n(items.length));
       empty.hidden = shown > 0;
     };
 
     find.addEventListener('input', apply);
-    for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-sort]'))
-      btn.addEventListener('click', () => {
-        sort = btn.dataset.sort!;
-        for (const b of document.querySelectorAll('[data-sort]')) b.setAttribute('aria-pressed', String(b === btn));
-        apply();
-      });
     for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-only]'))
       btn.addEventListener('click', () => {
         onlyMine = btn.dataset.only === 'mine';
@@ -333,136 +257,6 @@ const sorts = [
 <style>
   .library .section-title .meta {
     margin: 0;
-  }
-
-  /* ---------- The newest book ---------- */
-  .feature {
-    --cover-h: 22rem;
-    --cover-w: 17rem;
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    align-items: center;
-    gap: var(--space-6);
-    padding: var(--space-7) var(--space-6);
-    margin-block-end: var(--space-6);
-    border-radius: 6px;
-    overflow: hidden;
-    isolation: isolate;
-    color: #f4efe4;
-    background:
-      radial-gradient(120% 90% at 20% 0%, rgb(255 255 255 / 0.16), transparent 60%),
-      radial-gradient(80% 120% at 100% 100%, rgb(0 0 0 / 0.4), transparent 70%),
-      var(--tone);
-  }
-  :root[dir='rtl'] .feature {
-    background:
-      radial-gradient(120% 90% at 80% 0%, rgb(255 255 255 / 0.16), transparent 60%),
-      radial-gradient(80% 120% at 0% 100%, rgb(0 0 0 / 0.4), transparent 70%),
-      var(--tone);
-  }
-  /* Grain, so the colour reads as paper rather than a flat fill. */
-  .feature::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    opacity: 0.18;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
-  }
-  .feature__cover {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    min-height: calc(var(--cover-h) + var(--space-4));
-  }
-  .feature__body {
-    display: grid;
-    gap: var(--space-3);
-    justify-items: start;
-    max-width: 34rem;
-  }
-  .feature__eyebrow {
-    color: rgb(244 239 228 / 0.75);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-size: 0.75rem;
-  }
-  :root[dir='rtl'] .feature__eyebrow {
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: var(--step--1);
-  }
-  .feature h3 {
-    font-size: var(--step-4);
-    line-height: 1.25;
-    justify-self: stretch;
-  }
-  .feature h3 a {
-    color: inherit;
-    text-decoration: none;
-  }
-  .feature h3 a:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-  }
-  .feature .gloss {
-    color: rgb(244 239 228 / 0.75);
-    font-size: var(--step-0);
-  }
-  .feature__summary {
-    font-size: var(--step-1);
-    line-height: 1.6;
-    color: rgb(244 239 228 / 0.92);
-  }
-  .feature .meta {
-    color: rgb(244 239 228 / 0.7);
-  }
-  .feature .meta > * + *::before {
-    color: rgb(244 239 228 / 0.45);
-  }
-  .feature .btn-row {
-    margin-block-start: var(--space-3);
-    gap: var(--space-3);
-  }
-  .btn--light {
-    background: #f4efe4;
-    border-color: #f4efe4;
-    color: #1d1a15;
-    padding: 0.7em 1.3em;
-    font-size: var(--step-0);
-  }
-  .btn--light:hover {
-    background: #fff;
-    border-color: #fff;
-    color: #1d1a15;
-  }
-  .btn--ghost {
-    color: #f4efe4;
-    border-color: rgb(244 239 228 / 0.45);
-    padding: 0.7em 1.3em;
-    font-size: var(--step-0);
-  }
-  .btn--ghost:hover {
-    color: #f4efe4;
-    border-color: #f4efe4;
-    background: rgb(255 255 255 / 0.08);
-  }
-  @media (max-width: 46rem) {
-    .feature {
-      --cover-h: 15rem;
-      --cover-w: 12rem;
-      grid-template-columns: 1fr;
-      padding: var(--space-6) var(--space-5);
-      text-align: start;
-    }
-    .feature h3 {
-      font-size: var(--step-3);
-    }
-    .feature__summary {
-      font-size: var(--step-0);
-    }
   }
 
   /* ---------- Continue reading ---------- */

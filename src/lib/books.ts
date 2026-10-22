@@ -15,6 +15,8 @@ export interface Edition {
   dir: 'ltr' | 'rtl';
   title: string;
   cover?: string;
+  /** The cover is artwork, not the plain text template */
+  designed: boolean;
   /** PDF served from this site, read in place */
   pdf?: string;
   pages?: number;
@@ -51,6 +53,7 @@ export const books: Book[] = await Promise.all(
       dir: LOCALE_META[b.lang].dir,
       title: b.title[b.lang] ?? Object.values(b.title)[0]!,
       cover: b.cover,
+      designed: !!b.designedCover,
       pdf: b.links.find((l) => l.kind === 'pdf' && l.url.startsWith('/'))?.url,
       pages: b.pages,
       year: b.year,
@@ -66,6 +69,7 @@ export const books: Book[] = await Promise.all(
           dir: LOCALE_META[lang].dir,
           title: t.title,
           cover: t.cover ?? b.cover,
+          designed: t.cover ? !!t.designedCover : !!b.designedCover,
           pdf: t.pdf,
           pages: t.pages,
           year: t.year ?? b.year,
@@ -84,6 +88,23 @@ export const books: Book[] = await Promise.all(
 export function editionFor(book: Book, locale: Locale): { edition: Edition; missing: boolean } {
   const own = book.editions.find((e) => e.lang === locale);
   return { edition: own ?? book.editions[0], missing: !own };
+}
+
+/**
+ * The shelf as a reader of `locale` sees it: books in their language first
+ * (originals and translations alike), then the rest; each part keeps the
+ * featured book first and then the newest.
+ */
+export function shelfFor(locale: Locale): Book[] {
+  return [...books.filter((b) => !editionFor(b, locale).missing), ...books.filter((b) => editionFor(b, locale).missing)];
+}
+
+/** Books whose edition in `locale` has a designed cover: the slides at the top of the shelf. */
+export function slidesFor(locale: Locale): Book[] {
+  return shelfFor(locale).filter((b) => {
+    const { edition, missing } = editionFor(b, locale);
+    return !missing && edition.designed && edition.cover;
+  });
 }
 
 /** "Persian", "persană", "الفارسية"… in the reader's language. */

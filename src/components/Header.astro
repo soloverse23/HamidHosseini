@@ -92,8 +92,12 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
   </div>
 
   <div class="wrap mainbar">
-    <a class="plate" href={href(locale)} aria-label={s.nav.home}>
+    <a class="plate" href={href(locale)} aria-label={`${s.name}: ${s.tagline}`}>
       <Mark size={34} class="plate__mark" />
+      <span class="plate__text">
+        <span class="plate__name">{s.name}</span>
+        <span class="plate__tag">{s.tagline}</span>
+      </span>
     </a>
 
     <!-- Wide screens: the nav sits inline and the rest is hidden (the menu
@@ -432,6 +436,7 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
   }
   .plate {
     grid-area: plate;
+    min-width: 0;
     display: inline-flex;
     align-items: center;
     gap: var(--space-3);
@@ -449,6 +454,32 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
   .plate:hover :global(.plate__mark) {
     transform: rotate(45deg);
   }
+  .plate__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .plate__name {
+    font-family: var(--font-serif);
+    font-size: 1.125rem;
+    line-height: 1.2;
+  }
+  :root[dir='rtl'] .plate__name {
+    font-family: var(--font-persian);
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .plate__tag {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--ink-3);
+  }
+  .plate__name,
+  .plate__tag {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   /* On wide screens the menu box is transparent: its nav is a grid item of
      the bar, and the sheet-only parts are hidden. */
   .menu {
@@ -461,7 +492,7 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
   }
   .primary {
     grid-area: nav;
-    justify-self: end;
+    justify-self: start;
     min-width: 0;
   }
   .primary ol {
@@ -577,6 +608,14 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
     }
   }
 
+  /* Mid-width screens: the full contents row needs the room, so the
+     nameplate is the mark alone. */
+  @media (max-width: 72rem) {
+    .plate__text {
+      display: none;
+    }
+  }
+
   /* ---------- Narrow screens: one bar and a menu sheet ----------
      Logo at the start edge; search, then the hamburger, at the end edge.
      Every offset is logical (inline-start/end), so the bar and the sheet
@@ -594,6 +633,9 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
     .plate :global(.plate__mark) {
       width: 30px;
       height: 30px;
+    }
+    .plate__text {
+      display: flex;
     }
     .mainbar__actions {
       gap: var(--space-1);

@@ -167,6 +167,8 @@ collections:
           - { label: اردو, name: ur, widget: text, required: false }
           - { label: English, name: en, widget: text, required: false }
       - { label: Cover, name: cover, widget: image, required: false }
+      - { label: Designed cover, name: designedCover, widget: boolean, required: false, hint: 'On when the cover is artwork rather than the plain text template; such books can lead the slider on the Writings page.' }
+      - { label: Newest book, name: featured, widget: boolean, required: false, hint: 'Show this book first, as the newest.' }
       - label: Links
         name: links
         widget: list
@@ -202,6 +204,7 @@ collections:
               - { label: Year, name: year, widget: number, value_type: int, required: false }
               - { label: Pages, name: pages, widget: number, value_type: int, required: false }
               - { label: Cover, name: cover, widget: image, required: false }
+              - { label: Designed cover, name: designedCover, widget: boolean, required: false }
               - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
               - { label: Library page, name: source, widget: string, required: false }
           - label: Română
@@ -215,6 +218,7 @@ collections:
               - { label: Year, name: year, widget: number, value_type: int, required: false }
               - { label: Pages, name: pages, widget: number, value_type: int, required: false }
               - { label: Cover, name: cover, widget: image, required: false }
+              - { label: Designed cover, name: designedCover, widget: boolean, required: false }
               - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
               - { label: Library page, name: source, widget: string, required: false }
           - label: العربية
@@ -228,6 +232,7 @@ collections:
               - { label: Year, name: year, widget: number, value_type: int, required: false }
               - { label: Pages, name: pages, widget: number, value_type: int, required: false }
               - { label: Cover, name: cover, widget: image, required: false }
+              - { label: Designed cover, name: designedCover, widget: boolean, required: false }
               - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
               - { label: Library page, name: source, widget: string, required: false }
           - label: اردو
@@ -241,6 +246,7 @@ collections:
               - { label: Year, name: year, widget: number, value_type: int, required: false }
               - { label: Pages, name: pages, widget: number, value_type: int, required: false }
               - { label: Cover, name: cover, widget: image, required: false }
+              - { label: Designed cover, name: designedCover, widget: boolean, required: false }
               - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
               - { label: Library page, name: source, widget: string, required: false }
           - label: فارسی
@@ -254,6 +260,7 @@ collections:
               - { label: Year, name: year, widget: number, value_type: int, required: false }
               - { label: Pages, name: pages, widget: number, value_type: int, required: false }
               - { label: Cover, name: cover, widget: image, required: false }
+              - { label: Designed cover, name: designedCover, widget: boolean, required: false }
               - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
               - { label: Library page, name: source, widget: string, required: false }
   - name: qa

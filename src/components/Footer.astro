@@ -46,6 +46,7 @@ const sections = [
     <div class="cols">
       <div class="col col--about">
         <p class="f-name">{s.name}</p>
+        <p class="f-tag">{s.tagline}</p>
         <p class="f-colophon">{u.colophon}</p>
         <p class="sync">
           <span class="sync__dot" aria-hidden="true"></span>
@@ -185,6 +186,10 @@ const sections = [
   :root[dir='rtl'] .f-name {
     font-weight: 700;
     line-height: 1.6;
+  }
+  .f-tag {
+    color: var(--ink-2);
+    line-height: 1.7;
   }
   .f-colophon {
     margin-block-start: var(--space-3);

@@ -1,6 +1,6 @@
 {
   "id": "keshti-nejat",
-  "year": 2025,
+  "year": 2026,
   "pages": 114,
   "lang": "fa",
   "title": {
@@ -18,6 +18,8 @@
     "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
   },
   "cover": "/media/books/keshti-nejat.webp",
+  "featured": true,
+  "designedCover": true,
   "links": [
     {
       "kind": "read",

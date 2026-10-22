@@ -18,6 +18,7 @@
     "ur": "امام علی (ع) فاؤنڈیشن، بخارسٹ"
   },
   "cover": "/media/books/namaz-e-qurani.webp",
+  "designedCover": true,
   "links": [
     {
       "kind": "read",
@@ -35,6 +36,7 @@
       "year": 2026,
       "pages": 74,
       "cover": "/media/books/namaz-e-qurani.en.webp",
+      "designedCover": true,
       "pdf": "/files/namaz-e-qurani.en.pdf",
       "source": "https://biblioteca.imamali.ro/quranic-prayer/?lang=en"
     },
@@ -44,6 +46,7 @@
       "year": 2026,
       "pages": 74,
       "cover": "/media/books/namaz-e-qurani.ro.webp",
+      "designedCover": true,
       "pdf": "/files/namaz-e-qurani.ro.pdf",
       "source": "https://biblioteca.imamali.ro/rugaciunea-coranica/"
     },
@@ -52,6 +55,7 @@
       "year": 2026,
       "pages": 60,
       "cover": "/media/books/namaz-e-qurani.ar.webp",
+      "designedCover": true,
       "pdf": "/files/namaz-e-qurani.ar.pdf",
       "source": "https://biblioteca.imamali.ro/الصلاة-القرآنية-2/?lang=ar"
     },
@@ -60,6 +64,7 @@
       "year": 2026,
       "pages": 66,
       "cover": "/media/books/namaz-e-qurani.ur.webp",
+      "designedCover": true,
       "pdf": "/files/namaz-e-qurani.ur.pdf",
       "source": "https://biblioteca.imamali.ro/قرآنی-نماز/?lang=ur"
     }

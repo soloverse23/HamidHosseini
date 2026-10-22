@@ -1,6 +1,5 @@
 ---
 import BookShelf from '../../components/BookShelf.astro';
-import Chapter from '../../components/Chapter.astro';
 import Icon from '../../components/Icon.astro';
 import { ARTICLES, BOOKS, LECTURES, type LectureSeries, type Localized, type Work, type WorkLink } from '../../data/writings';
 import { type Locale } from '../../i18n/locales';
@@ -52,7 +51,7 @@ function sessionRows(l: LectureSeries, sessions: Session[]): { slot: number; ses
 
 <Base locale={locale} path="writings" crumbs={[{ name: s.sections.writings.title, path: 'writings' }]} title={s.sections.writings.title} description={s.sections.writings.lede}>
   <div class="wrap">
-    <Chapter locale={locale} no={1} title={s.sections.writings.title} lede={s.sections.writings.lede} />
+    <h1 class="visually-hidden">{s.sections.writings.title}</h1>
 
     {BOOKS.length > 0 && <div class="block"><BookShelf locale={locale} /></div>}
 

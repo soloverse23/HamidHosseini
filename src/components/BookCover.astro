@@ -10,16 +10,16 @@ interface Props {
   edition: Edition;
   /** The first cover on the page: load it straight away */
   eager?: boolean;
-  /** Turn towards the pointer */
-  tilt?: boolean;
+  /** Face front, without the turn that shows its depth */
+  flat?: boolean;
 }
-const { edition, eager = false, tilt = true } = Astro.props;
+const { edition, eager = false, flat = false } = Astro.props;
 ---
 
 <span
   class="b3d"
   data-bind={edition.dir}
-  data-tilt={tilt ? '' : undefined}
+  data-flat={flat ? '' : undefined}
   style={`--tone: ${edition.tone}; --depth: ${thickness(edition.pages)}px`}
 >
   <span class="b3d__body">
@@ -60,9 +60,6 @@ const { edition, eager = false, tilt = true } = Astro.props;
     transform-style: preserve-3d;
     transform: translateY(var(--lift)) rotateX(var(--rx)) rotateY(var(--ry));
     transition: transform 0.55s cubic-bezier(0.2, 0.75, 0.25, 1);
-  }
-  .b3d[data-tracking] .b3d__body {
-    transition-duration: 0.12s;
   }
   .b3d__front {
     display: block;
@@ -172,39 +169,21 @@ const { edition, eager = false, tilt = true } = Astro.props;
     transition: transform 0.55s cubic-bezier(0.2, 0.75, 0.25, 1);
     z-index: -1;
   }
+  /* On hover the book only rises a little; it does not turn. */
   :global(a:hover) .b3d,
   :global(a:focus-visible) .b3d {
-    --ry: calc(var(--side) * -28deg);
-    --lift: -8px;
+    --lift: -6px;
+  }
+  .b3d[data-flat] {
+    --ry: 0deg !important;
+  }
+  .b3d[data-flat] :is(.b3d__pages, .b3d__spine) {
+    display: none;
   }
   @media (prefers-reduced-motion: reduce) {
     .b3d {
-      --ry: calc(var(--side) * -10deg) !important;
-      --rx: 0deg !important;
+      --lift: 0px !important;
     }
   }
 </style>
 
-<script>
-  // Lean the book towards the pointer while it is over the card.
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches || !matchMedia('(hover: hover)').matches;
-  if (!still) {
-    for (const book of document.querySelectorAll<HTMLElement>('.b3d[data-tilt]')) {
-      const card = book.closest<HTMLElement>('a, [data-tilt-area]') ?? book;
-      const side = book.dataset.bind === 'rtl' ? -1 : 1;
-      card.addEventListener('pointermove', (e) => {
-        const r = card.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width - 0.5;
-        const y = (e.clientY - r.top) / r.height - 0.5;
-        book.dataset.tracking = '';
-        book.style.setProperty('--ry', `${side * -22 + x * 26}deg`);
-        book.style.setProperty('--rx', `${-y * 10}deg`);
-      });
-      card.addEventListener('pointerleave', () => {
-        delete book.dataset.tracking;
-        book.style.removeProperty('--ry');
-        book.style.removeProperty('--rx');
-      });
-    }
-  }
-</script>

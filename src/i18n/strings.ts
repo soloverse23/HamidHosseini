@@ -2,7 +2,7 @@ import type { Locale } from './locales';
 
 const en = {
   name: 'Seyed Hamid Hosseini',
-  tagline: 'Notes and reflections on the path of awareness: the Quran, faith, ethics and reason',
+  tagline: 'Collected works, activities and connections',
   skip: 'Skip to content',
   nav: {
     home: 'Home',
@@ -130,6 +130,10 @@ const en = {
       `Hello! I would like to read the book “${t}” by Seyed Hamid Hosseini in English. Could it be translated? ${u}`,
     inMine: 'In English',
     all: 'All',
+    details: 'About the book',
+    slidePrev: 'Previous book',
+    slideNext: 'Next book',
+    slideOf: (a: string, b: string) => `Book ${a} of ${b}`,
     reader: {
       close: 'Close the book',
       prev: 'Previous page',
@@ -303,7 +307,7 @@ export type Strings = typeof en;
 const ro: Strings = {
   ...en,
   name: 'Seyed Hamid Hosseini',
-  tagline: 'Note și reflecții pe calea conștientizării: Coranul, credința, etica și rațiunea',
+  tagline: 'Opere, activități și legături',
   skip: 'Sari la conținut',
   nav: {
     home: 'Acasă',
@@ -430,6 +434,10 @@ const ro: Strings = {
     waText: (t, u) => `Bună ziua! Aș dori să citesc în română cartea „${t}” de Seyed Hamid Hosseini. Ar putea fi tradusă? ${u}`,
     inMine: 'În română',
     all: 'Toate',
+    details: 'Despre carte',
+    slidePrev: 'Cartea anterioară',
+    slideNext: 'Cartea următoare',
+    slideOf: (a, b) => `Cartea ${a} din ${b}`,
     reader: {
       close: 'Închide cartea',
       prev: 'Pagina anterioară',
@@ -602,7 +610,7 @@ const ro: Strings = {
 const ar: Strings = {
   ...en,
   name: 'السيد حميد الحسيني',
-  tagline: 'ملاحظات وتأملات في طريق الوعي: القرآن، والإيمان، والأخلاق، والعقل',
+  tagline: 'مجموعة الأعمال والأنشطة والتواصل',
   skip: 'انتقل إلى المحتوى',
   nav: {
     home: 'الرئيسية',
@@ -729,6 +737,10 @@ const ar: Strings = {
     waText: (t, u) => `السلام عليكم، أودّ قراءة كتاب «${t}» للسيد حميد الحسيني باللغة العربية. هل يمكن ترجمته؟ ${u}`,
     inMine: 'بالعربية',
     all: 'الكل',
+    details: 'عن الكتاب',
+    slidePrev: 'الكتاب السابق',
+    slideNext: 'الكتاب التالي',
+    slideOf: (a, b) => `الكتاب ${a} من ${b}`,
     reader: {
       close: 'إغلاق الكتاب',
       prev: 'الصفحة السابقة',
@@ -898,7 +910,7 @@ const ar: Strings = {
 const fa: Strings = {
   ...en,
   name: 'سید حمید حسینی',
-  tagline: 'یادداشت‌ها و پیشنهادهایی در مسیر آگاهی: قرآن، ایمان، اخلاق و خرد',
+  tagline: 'مجموعه آثار، فعالیت‌ها و ارتباطات',
   skip: 'رفتن به محتوا',
   nav: {
     home: 'خانه',
@@ -949,7 +961,7 @@ const fa: Strings = {
       lede: 'کتاب‌ها، مقاله‌ها، گفتگوها و جزوه‌های درسی، با پیوند خواندن، دریافت یا خرید.',
     },
     quran: {
-      title: 'ترجمهٔ گروهی قرآن',
+      title: 'ترجمه مستدل قرآن',
       lede: 'ترجمه‌ای آیه‌به‌آیه که از سال ۱۴۰۰ در کانال تلگرام به‌صورت عمومی نوشته شده و با نقد و نظر خوانندگان ویرایش می‌شود. هر آیه به پستی که در آن پیشنهاد شده پیوند دارد.',
     },
     notes: {
@@ -1025,6 +1037,10 @@ const fa: Strings = {
     waText: (t, u) => `سلام، می‌خواهم کتاب «${t}» از سید حمید حسینی را به فارسی بخوانم. آیا ترجمه‌اش ممکن است؟ ${u}`,
     inMine: 'به فارسی',
     all: 'همه',
+    details: 'دربارهٔ کتاب',
+    slidePrev: 'کتاب قبلی',
+    slideNext: 'کتاب بعدی',
+    slideOf: (a, b) => `کتاب ${a} از ${b}`,
     reader: {
       close: 'بستن کتاب',
       prev: 'صفحهٔ قبل',
@@ -1175,7 +1191,7 @@ const fa: Strings = {
     scoped: { quran: 'جستجو در قرآن، به عربی یا فارسی…', notes: 'جستجو در همهٔ یادداشت‌ها…', videos: 'جستجو در ویدئوها…', writings: 'جستجو در نوشته‌ها و مقاله‌ها…' },
   },
   topics: {
-    'quran-translation': 'ترجمهٔ گروهی قرآن',
+    'quran-translation': 'ترجمه مستدل قرآن',
     'islam-why-how': 'اسلام، چرا و چگونه؟',
     tafsir: 'تفسیر',
     hadith: 'حدیث',
@@ -1195,7 +1211,7 @@ const fa: Strings = {
 const ur: Strings = {
   ...en,
   name: 'سید حمید حسینی',
-  tagline: 'آگاہی کی راہ میں یادداشتیں اور غور و فکر: قرآن، ایمان، اخلاق اور عقل',
+  tagline: 'مجموعۂ آثار، سرگرمیاں اور رابطے',
   skip: 'مواد پر جائیں',
   nav: {
     home: 'صفحۂ اول',
@@ -1322,6 +1338,10 @@ const ur: Strings = {
     waText: (t, u) => `السلام علیکم، سید حمید حسینی کی کتاب «${t}» اردو میں پڑھنے کی درخواست ہے۔ کیا اس کا ترجمہ ہو سکتا ہے؟ ${u}`,
     inMine: 'اردو میں',
     all: 'سب',
+    details: 'کتاب کے بارے میں',
+    slidePrev: 'پچھلی کتاب',
+    slideNext: 'اگلی کتاب',
+    slideOf: (a, b) => `${b} میں سے کتاب ${a}`,
     reader: {
       close: 'کتاب بند کریں',
       prev: 'پچھلا صفحہ',
