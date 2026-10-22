@@ -97,7 +97,7 @@ const url = new URL(href('fa', `quran/${meta.n}/${ayah}`), Astro.site).toString(
       {ar} <span class="ayah__end">﴿{num('ar', ayah)}﴾</span>
     </p>
 
-    <blockquote class="verse__tr" lang="fa" dir="rtl" data-tr>
+    <blockquote class="verse__tr" lang="fa" dir="rtl" translate="no">
       <p>{v.text}</p>
     </blockquote>
 
@@ -105,7 +105,7 @@ const url = new URL(href('fa', `quran/${meta.n}/${ayah}`), Astro.site).toString(
       notes.length > 0 && (
         <section class="verse__notes" aria-labelledby="notes-h">
           <h2 id="notes-h">{s.quran.notes}</h2>
-          <ol lang="fa" dir="rtl" data-tr>
+          <ol lang="fa" dir="rtl" translate="no">
             {notes.map((html) => (
               <li set:html={html} />
             ))}

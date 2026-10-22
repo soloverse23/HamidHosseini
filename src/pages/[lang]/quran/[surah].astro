@@ -34,6 +34,8 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
 <Base
   locale={locale}
   path={`quran/${meta.n}`}
+  noindex={locale !== 'fa'}
+  alternates={false}
   title={title}
   crumbs={[
     { name: s.sections.quran.title, path: 'quran' },
@@ -106,13 +108,13 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
               </p>
               {v ? (
                 <div class="ayah__tr">
-                  <div lang="fa" dir="rtl" data-tr>
+                  <div lang="fa" dir="rtl" translate="no">
                     <p>{v.text}</p>
                   </div>
                   {v.notes && v.notes.length > 0 && (
                     <details class="ayah__notes">
                       <summary>{s.quran.notes} ({n(v.notes.length)})</summary>
-                      <ul lang="fa" dir="rtl" data-tr>
+                      <ul lang="fa" dir="rtl" translate="no">
                         {v.notes.map((x) => (
                           <li set:html={linkRoots(richNote(x, meta.n, localPost))} />
                         ))}

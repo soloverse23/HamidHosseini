@@ -67,8 +67,8 @@ const url = new URL(href('fa', `quran/roots/${slug}`), Astro.site).toString();
             {s.quran.explainedAt} <a href={verseHref(d)}>{s.quran.surah} {name(d)}</a>
           </p>
           <p class="def__ar quran-ar" lang="ar" dir="rtl" translate="no">{arabic[d.surah][d.ayah - 1]}</p>
-          <p class="def__tr" lang="fa" dir="rtl" data-tr>{quranFa.surahs[d.surah][d.ayah].text}</p>
-          <p class="def__note" lang="fa" dir="rtl" data-tr set:html={linkRoots(richNote(d.text, d.surah, localPost), slug)} />
+          <p class="def__tr" lang="fa" dir="rtl" translate="no">{quranFa.surahs[d.surah][d.ayah].text}</p>
+          <p class="def__note" lang="fa" dir="rtl" translate="no" set:html={linkRoots(richNote(d.text, d.surah, localPost), slug)} />
         </section>
       ))
     }

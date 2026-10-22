@@ -22,7 +22,7 @@ const localName = (m: (typeof surahs)[number]) =>
   locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? null : locale === 'ro' ? m.translit : `${m.translit} · ${m.en}`;
 ---
 
-<Base locale={locale} path="quran" crumbs={[{ name: s.sections.quran.title, path: 'quran' }]} title={s.sections.quran.title} description={s.sections.quran.lede}>
+<Base locale={locale} path="quran" noindex={locale !== 'fa'} alternates={false} crumbs={[{ name: s.sections.quran.title, path: 'quran' }]} title={s.sections.quran.title} description={s.sections.quran.lede}>
   <div class="wrap">
     <Chapter locale={locale} no={3} title={s.sections.quran.title} lede={s.sections.quran.lede}>
       <span class="meta">

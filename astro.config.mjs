@@ -55,6 +55,8 @@ export default defineConfig({
         new URL(page).pathname !== '/' &&
         !/\/404\/$/.test(page) &&
         !/\/(en|ro|ar|ur)\/notes\//.test(page) &&
+        // The Quran is indexed only in Persian; the other locales' copies are noindex.
+        !/\/(en|ro|ar|ur)\/quran\//.test(page) &&
         !thinPosts.has(page.match(/\/fa\/notes\/(\d+)\/$/)?.[1]) &&
         !/\/notes\/(.+\/)?page\//.test(page) &&
         !/\/search\/$/.test(page) &&
@@ -63,7 +65,7 @@ export default defineConfig({
       serialize(item) {
         // Persian-only content has no translated twins; drop the hreflang links.
         if (/\/fa\/notes\//.test(item.url)) delete item.links;
-        if (/\/fa\/quran\/roots\//.test(item.url)) delete item.links;
+        if (/\/fa\/quran\//.test(item.url)) delete item.links;
         const post = item.url.match(/\/fa\/notes\/(\d+)\/$/);
         if (post) item.lastmod = postDates.get(post[1]);
         const verse = item.url.match(/\/fa\/quran\/(\d+\/\d+)\/$/);

@@ -47,7 +47,7 @@ const vertical = item.kind === 'short' || item.source === 'tiktok';
       <time datetime={item.date}>{date(locale, item.date, 'short')}</time>
     </span>
     <span class="lrow__src meta"><Icon name={src.icon} /> {src.label}{item.episode ? ` · ${s.episode(num(locale, item.episode))}` : ''}</span>
-    <span class="lrow__text" lang={lang} dir="auto" data-tr>
+    <span class="lrow__text" lang={lang} dir="auto" {...(item.series === 'quran-translation' ? { translate: 'no' } : { 'data-tr': '' })}>
       <span class="lrow__title">{title}</span>
       {sub && sub !== title && <span class="lrow__sub">{sub}</span>}
     </span>
