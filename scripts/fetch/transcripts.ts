@@ -4,7 +4,7 @@
  * The spoken text of each talk makes the episode pages readable and
  * searchable. Uploaded subtitles are preferred over automatic ones. Each
  * video is tried once per run until it has a transcript; a run fetches at
- * most --limit (default 15) so the 30-minute sync stays short.
+ * most --limit (default 30) so the 6-hourly sync stays short.
  */
 import { readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -21,7 +21,7 @@ const LANGS: Record<string, string[]> = {
   en: ['en', 'en-.*', 'en.*'],
 };
 
-export async function run({ limit = 15 }: { limit?: number } = {}) {
+export async function run({ limit = 30 }: { limit?: number } = {}) {
   const have = new Set((await readdir(DIR).catch(() => [] as string[])).map((f) => f.replace(/\.json$/, '')));
   const videos = (await readFeed('youtube')).items
     .filter((v) => v.kind === 'video' && v.channel && !have.has(v.id))

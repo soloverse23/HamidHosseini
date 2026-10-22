@@ -1,116 +1,124 @@
 ---
 import Chapter from '../../components/Chapter.astro';
+import CollectionHead from '../../components/CollectionHead.astro';
+import EpisodeCard from '../../components/EpisodeCard.astro';
 import Icon from '../../components/Icon.astro';
+import SeriesCard from '../../components/SeriesCard.astro';
 import YouTubePlayer from '../../components/YouTubePlayer.astro';
 import { type Locale } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
 import Base from '../../layouts/Base.astro';
-import { episodesIn, forReader, shorts, talksIn, ytOrder, type YtLang } from '../../lib/data';
+import { collectionsFor } from '../../lib/collections';
+import { forReader, shorts, talksIn, type YtLang } from '../../lib/data';
 import { contentLang } from '../../lib/feed';
 import type { FeedItem } from '../../lib/feed-types';
-import { compact, date, duration, num } from '../../lib/format';
+import { compact, date, num } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
-import { withoutEpisodeNo } from '../../lib/series';
-import { CHANNELS } from '../../lib/social';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
 const s = t(locale);
-const n = (x: number) => num(locale, x);
 
-// Only episodes and talks that exist in this language — no cross-language fallback.
-const episodes = episodesIn(locale);
+const collections = collectionsFor(locale);
+const featured = collections.filter((c) => c.group === 'featured');
+const shelves = [
+  { key: 'study', title: s.videos.studyGroup, items: collections.filter((c) => c.group === 'study') },
+  { key: 'occasion', title: s.videos.occasionGroup, items: collections.filter((c) => c.group === 'occasion') },
+].filter((g) => g.items.length);
+// The newest upload of each of the other series, the four most recent of those.
+const latest = collections
+  .filter((c) => c.group !== 'featured')
+  .map((c) => ({ c, ep: c.episodes[0] }))
+  .sort((a, b) => b.ep.date.localeCompare(a.ep.date))
+  .slice(0, 4);
 const talks = talksIn(locale);
-// The reader's own language first, then the ones they most likely also read.
-const order = ytOrder(locale);
-const versionsOf = (ep: (typeof episodes)[number]) => order.flatMap((k) => (ep[k] ? [ep[k]] : []));
 const langLabel = (v: FeedItem) => s.videos.langs[v.channel as YtLang];
-
-const channels = order.map((k) => CHANNELS.find((c) => c.id === `youtube-${k}`)!);
 const shortList: FeedItem[] = shorts.filter((v) => contentLang(v) === locale).slice(0, 18);
+
 const iso = (sec?: number) => (sec ? `PT${Math.floor(sec / 3600) ? `${Math.floor(sec / 3600)}H` : ''}${Math.floor((sec % 3600) / 60)}M${Math.floor(sec % 60)}S` : undefined);
-const site = Astro.site!;
 const videoLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  itemListElement: episodes.slice(0, 40).flatMap((ep, i) => {
-      const v = ep[locale as YtLang];
-      if (!v) return [];
-      const thumb = v.media.find((m) => m.src)?.src;
-      return [{
-        '@type': 'ListItem',
-        position: i + 1,
-        item: {
-          '@type': 'VideoObject',
-          name: v.title ?? `#${ep.n}`,
-          description: v.text ? v.text.slice(0, 300) : (v.title ?? `#${ep.n}`),
-          uploadDate: v.date,
-          inLanguage: v.lang ?? locale,
-          duration: iso(v.media[0]?.duration),
-          thumbnailUrl: thumb ? new URL(thumb, site).toString() : `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
-          embedUrl: `https://www.youtube.com/embed/${v.id}`,
-          contentUrl: v.url,
-        },
-      }];
-    }),
+  itemListElement: featured
+    .flatMap((c) => c.episodes)
+    .slice(0, 40)
+    .map((ep, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'VideoObject',
+        name: ep.title || `#${ep.n}`,
+        description: ep.text ? ep.text.slice(0, 300) : ep.title || `#${ep.n}`,
+        uploadDate: ep.date,
+        inLanguage: ep.lang,
+        duration: iso(ep.duration),
+        thumbnailUrl: `https://i.ytimg.com/vi/${ep.id}/hqdefault.jpg`,
+        embedUrl: `https://www.youtube.com/embed/${ep.id}`,
+        contentUrl: ep.url,
+      },
+    })),
 };
 ---
 
-<Base locale={locale} path="videos" jsonLd={videoLd} crumbs={[{ name: s.sections.videos.title, path: 'videos' }]} title={s.sections.videos.title} description={s.sections.videos.lede}>
+<Base locale={locale} path="videos" jsonLd={videoLd} crumbs={[{ name: s.sections.series.title, path: 'videos' }]} title={s.sections.series.title} description={s.sections.series.lede}>
   <div class="wrap">
-    <Chapter locale={locale} no={5} title={s.sections.videos.title} lede={s.sections.videos.lede}>
-      {
-        channels.map((c) => (
-          <a class="link-arrow" href={c.url} rel="noopener" target="_blank">
-            <Icon name="youtube" />
-            <span lang={c.lang} dir="auto">{c.name}</span>
-            <span class="meta">
-              ({s.videos.langs[c.lang]}{c.followers ? ` · ${compact(locale, c.followers)}` : ''})
-            </span>
-          </a>
-        ))
-      }
-    </Chapter>
+    <Chapter locale={locale} title={s.sections.series.title} lede={s.sections.series.lede} />
 
-    <section aria-labelledby="eps">
-      <div class="section-title">
-        <h2 id="eps">{s.videos.episodes}</h2>
-        <span class="meta">{s.videos.loadNote}</span>
-      </div>
-      <ol class="eps">
-        {
-          episodes.map((ep) => {
-            const versions = versionsOf(ep);
-            const [main] = versions;
-            return (
-              <li class="ep" id={`ep-${ep.n}`}>
-                <span class="ep__n num" aria-hidden="true">{n(ep.n)}</span>
-                <div class="ep__media">
-                  <YouTubePlayer locale={locale} id={main.id} title={main.title ?? ''} duration={main.media[0]?.duration} lang={main.lang} />
-                </div>
-                <div class="ep__text">
-                  <p class="eyebrow">
-                    {s.episode(n(ep.n))} · <time datetime={ep.date}>{date(locale, ep.date, 'month')}</time>
-                  </p>
-                  <h3 class="serif align-start" lang={main.lang} dir="auto" data-tr><a href={href(locale, `videos/${ep.n}`)}>{withoutEpisodeNo(main.title)}</a></h3>
-                  <p class="btn-row">
-                    {versions.map((v) => (
-                      <button class="btn" type="button" data-swap={v.id} data-title={v.title}>
-                        <Icon name="play" /> {langLabel(v)}
-                        {v.media[0]?.duration && <span class="meta num">{duration(v.media[0].duration)}</span>}
-                      </button>
-                    ))}
-                    <a class="link-arrow" href={main.url} rel="noopener" target="_blank">
-                      YouTube <Icon name="external" />
-                    </a>
-                  </p>
-                </div>
+    {
+      featured.map((c) => (
+        <section class="feature" id={c.key} aria-labelledby={`${c.key}-title`}>
+          <CollectionHead locale={locale} c={c} linked />
+          <div class="strip-bar">
+            <h3>{s.videos.episodes}</h3>
+            <a class="link-arrow" href={href(locale, c.path)}>
+              {s.videos.viewSeries(num(locale, c.episodes.length))} <Icon name="arrow" class="flip" />
+            </a>
+          </div>
+          <ul class="strip">
+            {c.episodes.slice(1, 5).map((ep) => (
+              <li>
+                <EpisodeCard locale={locale} ep={ep} numbered={c.numbered} />
               </li>
-            );
-          })
-        }
-      </ol>
-    </section>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    {
+      latest.length > 0 && (
+        <section class="block" id="latest" aria-labelledby="latest-h">
+          <div class="section-title">
+            <h2 id="latest-h">{s.videos.latestVideos}</h2>
+          </div>
+          <ul class="strip">
+            {latest.map(({ c, ep }) => (
+              <li>
+                <EpisodeCard locale={locale} ep={ep} numbered={false} eyebrow={c.title} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      shelves.map((g) => (
+        <section class="block shelf" id={g.key} aria-labelledby={`${g.key}-h`}>
+          <div class="section-title">
+            <h2 id={`${g.key}-h`}>{g.title}</h2>
+            <span class="meta">{s.videos.episodesCount(num(locale, g.items.reduce((n, c) => n + c.episodes.length, 0)))}</span>
+          </div>
+          <ul class:list={['shelf__grid', g.key === 'occasion' && 'shelf__grid--small']}>
+            {g.items.map((c) => (
+              <li>
+                <SeriesCard locale={locale} c={c} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
 
     {
       talks.length > 0 && (
@@ -128,18 +136,17 @@ const videoLd = {
                     {v.title}
                   </p>
                   <p class="meta">
-                    <span>{langLabel(v)}</span>
                     <time datetime={v.date}>{date(locale, v.date, 'short')}</time>
+                    {others.length > 0 && (
+                      <span class="talks__langs">
+                        {others.map((o) => (
+                          <a id={`v-${o.id}`} href={o.url} rel="noopener" target="_blank">
+                            {langLabel(o)}
+                          </a>
+                        ))}
+                      </span>
+                    )}
                   </p>
-                  {others.length > 0 && (
-                    <p class="talks__langs">
-                      {others.map((o) => (
-                        <a class="link-arrow" id={`v-${o.id}`} href={o.url} rel="noopener" target="_blank">
-                          {langLabel(o)} <Icon name="external" />
-                        </a>
-                      ))}
-                    </p>
-                  )}
                 </li>
               );
             })}
@@ -153,6 +160,9 @@ const videoLd = {
         <section aria-labelledby="shorts" class="block">
           <div class="section-title">
             <h2 id="shorts">{s.videos.shorts}</h2>
+            <a class="link-arrow" href={href(locale, 'shorts')}>
+              {s.viewAll} <Icon name="arrow" class="flip" />
+            </a>
           </div>
           <ul class="shorts">
             {shortList.map((v) => (
@@ -175,86 +185,76 @@ const videoLd = {
   // Episodes used to be anchors on this page (#ep-60); they have their own pages now.
   const old = location.hash.match(/^#ep-(\d+)$/);
   if (old) location.replace(`${location.pathname}${old[1]}/`);
-
-  document.querySelectorAll<HTMLButtonElement>('[data-swap]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const box = btn.closest('.ep')?.querySelector<HTMLElement>('.ep__media .frame');
-      if (!box) return;
-      const f = document.createElement('iframe');
-      f.src = `https://www.youtube-nocookie.com/embed/${btn.dataset.swap}?autoplay=1&rel=0`;
-      f.title = btn.dataset.title ?? '';
-      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-      f.allowFullscreen = true;
-      f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0';
-      box.replaceChildren(f);
-      box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    });
-  });
 </script>
 
 <style>
-  .eps {
+  /* The featured series sits on its own panel, ahead of everything else. */
+  .feature {
+    padding: var(--space-6);
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: calc(var(--radius) * 3);
+  }
+  .feature + .feature {
+    margin-block-start: var(--space-6);
+  }
+  .strip-bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-block: var(--space-6) var(--space-4);
+    padding-block-end: var(--space-2);
+    border-block-end: 1px solid var(--rule-strong);
+  }
+  .strip-bar h3 {
+    font-size: var(--step-0);
+  }
+  .strip {
     list-style: none;
     padding: 0;
-  }
-  .ep {
     display: grid;
-    grid-template-columns: 3.5rem minmax(0, 20rem) minmax(0, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-5);
-    padding-block: var(--space-5);
-    border-block-end: 1px solid var(--rule);
-    scroll-margin-block-start: var(--space-5);
-    align-items: start;
-  }
-  .ep:target {
-    background: var(--paper-2);
-    box-shadow: 0 0 0 var(--space-3) var(--paper-2);
-  }
-  .ep__n {
-    font-family: var(--font-serif);
-    font-size: 2.25rem;
-    line-height: 1;
-    color: var(--accent);
-    text-align: end;
-  }
-  .ep__text {
-    display: grid;
-    gap: var(--space-2);
-    align-content: start;
-  }
-  .ep__text h3 a {
-    color: inherit;
-    text-decoration: none;
-  }
-  .ep__text h3 a:hover {
-    color: var(--accent);
-  }
-  .ep__text h3 {
-    font-size: 1.25rem;
-    line-height: 1.6;
-  }
-  .ep__text .btn-row {
-    align-items: center;
-    margin-block-start: var(--space-2);
-  }
-  .btn .meta {
-    font-size: 0.75rem;
   }
   @media (max-width: 52rem) {
-    .ep {
-      grid-template-columns: 2.5rem minmax(0, 1fr);
+    .feature {
+      padding: var(--space-4);
     }
-    .ep__n {
-      font-size: 1.75rem;
-    }
-    .ep__text {
-      grid-column: 2;
+    .strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
-
+  @media (max-width: 34rem) {
+    .strip {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-4);
+    }
+  }
   .block {
     margin-block-start: var(--space-8);
   }
+  .shelf__grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: var(--space-7) var(--space-5);
+  }
+  .shelf__grid--small {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+  @media (max-width: 34rem) {
+    .shelf__grid,
+    .shelf__grid--small {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-5) var(--space-3);
+    }
+  }
+
+  /* ---------- Other talks and shorts ---------- */
+
   .talks {
     list-style: none;
     padding: 0;
@@ -272,21 +272,26 @@ const videoLd = {
     line-height: 1.6;
   }
   .talks__langs {
-    display: flex;
+    display: inline-flex;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
-    font-size: var(--step--1);
+    gap: 0 var(--space-2);
   }
   .shorts {
     list-style: none;
-    padding: 0;
+    padding: 0 0 var(--space-3);
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-    gap: var(--space-5) var(--space-3);
+    grid-auto-flow: column;
+    grid-auto-columns: 9.5rem;
+    gap: var(--space-3);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
   }
   .shorts li {
     display: grid;
     gap: var(--space-2);
+    align-content: start;
+    scroll-snap-align: start;
   }
   .shorts .meta {
     font-size: 0.75rem;

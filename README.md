@@ -16,13 +16,13 @@ A static site (Astro) in English, Romanian, Arabic, Persian and Urdu. It collect
 `npm run fetch:all` runs everything. Results go to `src/data/feeds/*.json`, and images go to `public/media/` because the platforms' image links expire.
 
 - **Fetchers never delete anything.** If a source fails, the last good data stays on the site.
-- **Counts are written at most once a day.** A change in view counts alone doesn't create a commit, so the site isn't redeployed every 30 minutes.
+- **Counts are written at most once a day.** A change in view counts alone doesn't create a commit, so the site isn't redeployed on every run.
 - **The Quran text comes from the translation database.** `src/data/quran/fa.json` holds its translation and notes. The Telegram parse (`fa-telegram.json`) only tells which post proposed each verse. If the database is down, or returns far fewer verses than before, the last copy stays. `npx tsx scripts/quran/diff.ts` lists where the two differ.
 - **Quran verses are checked against the Arabic text.** Each verse parsed from a Telegram post is matched against the Tanzil Arabic (`src/data/quran/arabic.json`). A post that quotes another surah can therefore never put a verse in the wrong place.
 
 ## Automatic updates
 
-`.github/workflows/sync.yml` runs every 30 minutes. It fetches all sources and commits any changes. Vercel then rebuilds from that commit. If a source fails, the workflow opens a GitHub issue labelled `sync-failure`, or comments on the one already open. To force a full re-read, use **Actions → Sync content → Run workflow → full**.
+`.github/workflows/sync.yml` runs every 6 hours. It fetches all sources and commits any changes. Vercel then rebuilds from that commit. If a source fails, the workflow opens a GitHub issue labelled `sync-failure`, or comments on the one already open. To force a full re-read, use **Actions → Sync content → Run workflow → full**.
 
 ### Instagram
 

@@ -1,0 +1,239 @@
+---
+// The opening of a series: what it is, how much of it there is, where to
+// start, and the latest episode as its cover.
+import { LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import type { Collection } from '../lib/collections';
+import { compact, num, year } from '../lib/format';
+import { href } from '../lib/paths';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  c: Collection;
+  /** h1 on the series' own page, h2 inside the hub */
+  level?: 1 | 2;
+  /** Link the title to the series' own page */
+  linked?: boolean;
+}
+const { locale, c, level = 2, linked = false } = Astro.props;
+const s = t(locale);
+const n = (x: number) => num(locale, x);
+const H = level === 1 ? 'h1' : 'h2';
+
+const latest = c.episodes[0];
+const first = c.episodes[c.episodes.length - 1];
+const yearOf = (d: string) => year(locale, new Date(d).getUTCFullYear());
+const firstYear = c.started ? year(locale, c.started) : yearOf(first.date);
+const start = c.numbered ? first : latest;
+---
+
+<div class="col__head">
+  <div class="col__info">
+    <p class="eyebrow">{s.videos.kind}</p>
+    <H class="col__title serif" id={`${c.key}-title`}>{linked ? <a href={href(locale, c.path)}>{c.title}</a> : c.title}</H>
+    <p class="col__lede">{c.lede}</p>
+    <p class="meta col__stats">
+      <span>{s.videos.episodesCount(n(c.episodes.length))}</span>
+      {c.langs.length > 1 && <span>{s.videos.langsCount(n(c.langs.length))}</span>}
+      <span>{c.langs.length > 1 ? s.videos.since(firstYear) : s.videos.years(firstYear, yearOf(latest.date))}</span>
+    </p>
+    <p class="btn-row">
+      <a class="btn btn--primary" href={href(locale, start.path)}>
+        <Icon name="play" /> {c.numbered ? s.videos.startFirst : s.videos.watchLatest}
+      </a>
+      {
+        c.channel ? (
+          <a class="btn" href={c.channel.url} rel="noopener" target="_blank">
+            <Icon name="youtube" /> {s.videos.channel}
+            {c.channel.followers ? <span class="meta num">{compact(locale, c.channel.followers)}</span> : null}
+          </a>
+        ) : (
+          c.playlistUrl && (
+            <a class="btn" href={c.playlistUrl} rel="noopener" target="_blank">
+              <Icon name="youtube" /> {s.videos.playlist}
+            </a>
+          )
+        )
+      }
+    </p>
+    {
+      c.elsewhere.length > 0 && (
+        <p class="col__langs">
+          <span>{s.videos.alsoOn}:</span>
+          {c.elsewhere.map((ch) => (
+            <a href={ch.url} rel="noopener" target="_blank" lang={ch.lang} hreflang={ch.lang} dir={LOCALE_META[ch.lang].dir} title={ch.name}>
+              {LOCALE_META[ch.lang].label}
+            </a>
+          ))}
+        </p>
+      )
+    }
+  </div>
+
+  <a class="col__cover" href={href(locale, latest.path)}>
+    <img src={`https://i.ytimg.com/vi/${latest.id}/hqdefault.jpg`} width="480" height="360" alt="" decoding="async" fetchpriority="high" />
+    <span class="col__play" aria-hidden="true"><Icon name="play" /></span>
+    <span class="col__now">
+      <span class="col__now-label">
+        {s.videos.latestEp}
+        {c.numbered && <> · <span class="num">{n(latest.n)}</span></>}
+      </span>
+      <span class="col__now-title" lang={latest.lang} dir="auto" data-tr>{latest.title}</span>
+    </span>
+  </a>
+</div>
+
+<style>
+  .col__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: var(--space-6) var(--space-7);
+    align-items: center;
+  }
+  .col__info {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+  .col__title {
+    font-size: var(--step-4);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  .col__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .col__title a:hover {
+    color: var(--accent);
+  }
+  .col__lede {
+    color: var(--ink-2);
+    font-size: var(--step-0);
+    line-height: 1.8;
+    max-width: 34rem;
+  }
+  .col__stats {
+    margin-block-end: var(--space-2);
+  }
+  .col__info .btn {
+    padding: 0.6em 1.15em;
+  }
+  .col__info .btn .meta {
+    font-size: 0.75rem;
+  }
+  .col__langs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    margin-block-start: var(--space-2);
+  }
+  .col__langs a {
+    color: var(--ink-2);
+    text-decoration: none;
+    border-block-end: 1px solid var(--rule-strong);
+  }
+  .col__langs a:hover {
+    color: var(--accent);
+    border-color: currentColor;
+  }
+
+  .col__cover {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--paper-3);
+    color: #f7f3ec;
+    text-decoration: none;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 18px 40px -24px rgb(0 0 0 / 0.45);
+  }
+  .col__cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .col__cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(20 19 15 / 0.88), rgb(20 19 15 / 0.2) 55%, transparent);
+  }
+  .col__cover:hover img {
+    transform: scale(1.03);
+  }
+  .col__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -60%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: rgb(247 243 236 / 0.92);
+    color: #1d1a15;
+    transition: transform 0.2s ease;
+  }
+  .col__play :global(svg) {
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-inline-start: 0.15rem;
+  }
+  :global([dir='rtl']) .col__play :global(svg) {
+    margin-inline: 0 0.15rem;
+  }
+  .col__cover:hover .col__play {
+    transform: scale(1.06);
+  }
+  .col__now {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-5);
+  }
+  .col__now-label {
+    font-size: 0.8125rem;
+    opacity: 0.8;
+  }
+  .col__now-title {
+    font-size: var(--step-1);
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: start;
+  }
+
+  @media (max-width: 52rem) {
+    .col__head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .col__title {
+      font-size: var(--step-3);
+    }
+    .col__now {
+      padding: var(--space-4);
+    }
+    .col__now-title {
+      font-size: var(--step-0);
+    }
+    .col__play {
+      top: var(--space-4);
+      left: auto;
+      inset-inline-end: var(--space-4);
+      translate: none;
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+  }
+</style>

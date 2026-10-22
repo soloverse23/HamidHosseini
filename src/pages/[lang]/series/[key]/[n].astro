@@ -1,0 +1,195 @@
+---
+// One episode of a Persian series from the Imam Ali Foundation: the video,
+// its description, the episodes on either side, and the way back to the series.
+import EpisodeCard from '../../../../components/EpisodeCard.astro';
+import YouTubePlayer from '../../../../components/YouTubePlayer.astro';
+import type { Locale } from '../../../../i18n/locales';
+import { t } from '../../../../i18n/strings';
+import Base from '../../../../layouts/Base.astro';
+import { seriesPages, type Collection, type CollectionEpisode } from '../../../../lib/collections';
+import { date, duration, num } from '../../../../lib/format';
+import { href } from '../../../../lib/paths';
+import { personRef } from '../../../../lib/schema';
+import { excerpt } from '../../../../lib/text';
+
+export function getStaticPaths() {
+  return seriesPages().flatMap((c) =>
+    c.episodes.map((ep) => ({ params: { lang: 'fa', key: c.key, n: String(ep.n) }, props: { c, ep } })),
+  );
+}
+
+const locale = Astro.params.lang as Locale;
+const { c, ep } = Astro.props as { c: Collection; ep: CollectionEpisode };
+const s = t(locale);
+const nf = (x: number) => num(locale, x);
+const at = c.episodes.findIndex((e) => e.n === ep.n);
+const newer = c.episodes[at - 1];
+const older = c.episodes[at + 1];
+// Two on each side where there are, four in all.
+const from = Math.max(0, Math.min(at - 2, c.episodes.length - 5));
+const nearby = c.episodes.slice(from, from + 5).filter((e) => e !== ep).slice(0, 4);
+const label = c.numbered ? s.episode(nf(ep.n)) : (ep.occasion ?? date(locale, ep.date, 'month'));
+// The description, minus hashtags, bare links, chapter lines and the
+// channel's standing requests to like and subscribe.
+const boilerplate = /سابسکرایب|لایک کنید|هشتگ|Timestamps|زمان‌بندی بخش|^\W*سخنران\s*:|^[.…\s]+$/;
+const about = (ep.text ?? '')
+  .split('\n')
+  .filter(
+    (l) =>
+      l.trim() &&
+      !/^\s*(\d{1,2}:)?\d{1,2}:\d{2}/.test(l) &&
+      !/^\s*(#\S+\s*)+$/.test(l) &&
+      !/^\s*https?:\/\/\S+\s*$/.test(l) &&
+      !boilerplate.test(l),
+  )
+  .join('\n');
+const iso = (sec?: number) => (sec ? `PT${Math.floor(sec / 3600) ? `${Math.floor(sec / 3600)}H` : ''}${Math.floor((sec % 3600) / 60)}M${Math.floor(sec % 60)}S` : undefined);
+const thumb = `https://i.ytimg.com/vi/${ep.id}/hqdefault.jpg`;
+const pageUrl = new URL(href(locale, ep.path), Astro.site).toString();
+---
+
+<Base
+  locale={locale}
+  path={ep.path}
+  title={`${ep.title} | ${c.title}`}
+  description={excerpt(about || `${c.title}: ${ep.title}`, 158)}
+  image={thumb}
+  imageAlt={ep.title}
+  ogType="article"
+  published={ep.date}
+  locales={['fa']}
+  alternates={false}
+  switchPath="videos"
+  crumbs={[
+    { name: s.sections.series.title, path: 'videos' },
+    { name: c.title, path: c.path },
+    { name: label, path: ep.path },
+  ]}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    '@id': `${pageUrl}#video`,
+    name: ep.title,
+    description: excerpt(about || `${c.title}: ${ep.title}`, 4000),
+    uploadDate: ep.date,
+    inLanguage: 'fa',
+    duration: iso(ep.duration),
+    thumbnailUrl: thumb,
+    embedUrl: `https://www.youtube.com/embed/${ep.id}`,
+    contentUrl: ep.url,
+    url: pageUrl,
+    author: personRef(Astro.site),
+    isPartOf: { '@type': 'CreativeWorkSeries', name: c.title, url: new URL(href(locale, c.path), Astro.site).toString() },
+  }}
+>
+  <article class="wrap episode">
+    <p class="crumb meta">
+      <a href={href(locale, c.path)}>{c.title}</a>
+      <span>{label}</span>
+    </p>
+
+    <h1 lang="fa" dir="rtl">{ep.title}</h1>
+    <p class="meta">
+      <time datetime={ep.date}>{date(locale, ep.date)}</time>
+      {ep.duration && <span class="num">{duration(ep.duration)}</span>}
+    </p>
+
+    <YouTubePlayer locale={locale} id={ep.id} title={ep.title} duration={ep.duration} lang="fa" />
+
+    {
+      about && (
+        <div class="about" lang="fa" dir="rtl">
+          {about.split('\n').map((l) => <p>{l}</p>)}
+        </div>
+      )
+    }
+
+    <nav class="ep-nav" aria-label={s.videos.allEpisodes}>
+      {older ? <a href={href(locale, older.path)}><span class="meta">{s.videos.prevEp}</span><span>{c.numbered ? s.episode(nf(older.n)) : older.title}</span></a> : <span />}
+      <a class="all" href={href(locale, c.path)}>{s.videos.allEpisodes}</a>
+      {newer ? <a class="next" href={href(locale, newer.path)}><span class="meta">{s.videos.nextEp}</span><span>{c.numbered ? s.episode(nf(newer.n)) : newer.title}</span></a> : <span />}
+    </nav>
+  </article>
+
+  {
+    nearby.length > 0 && (
+      <section class="wrap nearby" aria-labelledby="near-h">
+        <div class="section-title">
+          <h2 id="near-h">{c.title}</h2>
+          <a class="link-arrow" href={href(locale, c.path)}>
+            {s.videos.episodesCount(nf(c.episodes.length))}
+          </a>
+        </div>
+        <ul class="nearby__grid">
+          {nearby.map((e) => (
+            <li>
+              <EpisodeCard locale={locale} ep={e} numbered={c.numbered} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .episode {
+    max-width: 52rem;
+    display: grid;
+    gap: var(--space-5);
+  }
+  .crumb a {
+    color: var(--accent);
+  }
+  h1 {
+    font-size: var(--step-3);
+    line-height: 1.4;
+  }
+  .about {
+    display: grid;
+    gap: var(--space-2);
+    color: var(--ink-2);
+    max-width: var(--measure);
+    line-height: 1.9;
+  }
+  .ep-nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block-start: var(--space-4);
+    border-block-start: 1px solid var(--rule);
+  }
+  .ep-nav a {
+    display: grid;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .ep-nav a > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ep-nav .next {
+    text-align: end;
+  }
+  .ep-nav .all {
+    color: var(--accent);
+  }
+  .nearby {
+    margin-block-start: var(--space-8);
+  }
+  .nearby__grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+  @media (max-width: 34rem) {
+    .nearby__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-4);
+    }
+  }
+</style>

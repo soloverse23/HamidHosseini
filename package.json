@@ -11,6 +11,7 @@
     "fetch:tiktok": "tsx scripts/fetch/tiktok.ts",
     "fetch:instagram": "tsx scripts/fetch/instagram.ts",
     "fetch:kalaam": "tsx scripts/fetch/kalaam.ts",
+    "fetch:playlists": "tsx scripts/fetch/playlists.ts",
     "fetch:all": "tsx scripts/fetch/all.ts",
     "check:seo": "tsx scripts/check/seo.ts",
     "check": "astro check"

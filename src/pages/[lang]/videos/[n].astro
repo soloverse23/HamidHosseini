@@ -67,7 +67,8 @@ const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => 
   locales={locales}
   alternates
   crumbs={[
-    { name: s.sections.videos.title, path: 'videos' },
+    { name: s.sections.series.title, path: 'videos' },
+    { name: series, path: 'series/islam-why-how' },
     { name: s.episode(nf(ep.n)), path: `videos/${ep.n}` },
   ]}
   jsonLd={{
@@ -85,7 +86,7 @@ const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => 
     url: pageUrl,
     author: personRef(Astro.site),
     ...(transcript ? { transcript: transcript.text } : {}),
-    isPartOf: { '@type': 'CreativeWorkSeries', name: series, url: new URL(href(locale, 'videos'), Astro.site).toString() },
+    isPartOf: { '@type': 'CreativeWorkSeries', name: series, url: new URL(href(locale, 'series/islam-why-how'), Astro.site).toString() },
     ...(chapters.length
       ? {
           hasPart: chapters.map((c, i) => ({
@@ -102,7 +103,7 @@ const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => 
 >
   <article class="wrap episode">
     <p class="crumb meta">
-      <a href={href(locale, 'videos')}>{series}</a>
+      <a href={href(locale, 'series/islam-why-how')}>{series}</a>
       <span class="num">{s.episode(nf(ep.n))}</span>
     </p>
 
@@ -204,7 +205,7 @@ const companionLabel = (c: FeedItem) => itemTitle(c, 90) || c.media.find((m) => 
 
     <nav class="ep-nav" aria-label={s.videos.allEpisodes}>
       {older ? <a href={href(locale, `videos/${older.n}`)}><span class="meta">{s.videos.prevEp}</span><span>{s.episode(nf(older.n))}</span></a> : <span />}
-      <a class="all" href={href(locale, 'videos')}>{s.videos.allEpisodes}</a>
+      <a class="all" href={href(locale, 'series/islam-why-how')}>{s.videos.allEpisodes}</a>
       {newer ? <a class="next" href={href(locale, `videos/${newer.n}`)}><span class="meta">{s.videos.nextEp}</span><span>{s.episode(nf(newer.n))}</span></a> : <span />}
     </nav>
   </article>

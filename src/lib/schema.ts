@@ -30,7 +30,11 @@ export function personNode(site?: URL) {
       'Muslim cleric and writer. Author of a reasoned Persian translation of the Quran with notes on every verse, and of the video series “Islam, why and how?” in Persian, Romanian, Arabic, Urdu and English.',
     knowsLanguage: ['fa', 'ar', 'ro', 'ur', 'en'],
     knowsAbout: ['Quran', 'Quran translation', 'Tafsir', 'Islamic ethics', 'Islamic theology', 'Hadith', 'Religion and reason'],
-    affiliation: { '@id': foundationId(site) },
+    birthDate: '1973',
+    affiliation: [
+      { '@id': foundationId(site) },
+      { '@type': 'CollegeOrUniversity', name: 'University of Quran and Hadith', alternateName: 'دانشگاه قرآن و حدیث', url: 'https://qhu.ac.ir' },
+    ],
     sameAs: [...new Set(Object.values(CHANNEL_URLS))],
   };
 }

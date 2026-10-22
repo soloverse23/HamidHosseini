@@ -1,0 +1,105 @@
+---
+// A series on a shelf: its latest episode as the cover, the name, a line
+// about it and how many episodes it has.
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import type { Collection } from '../lib/collections';
+import { num, year } from '../lib/format';
+import { href } from '../lib/paths';
+
+interface Props {
+  locale: Locale;
+  c: Collection;
+}
+const { locale, c } = Astro.props;
+const s = t(locale);
+const latest = c.episodes[0];
+const first = c.episodes[c.episodes.length - 1];
+const yearOf = (d: string) => year(locale, new Date(d).getUTCFullYear());
+const firstYear = c.started ? year(locale, c.started) : yearOf(first.date);
+---
+
+<a class="sc" href={href(locale, c.path)}>
+  <span class="sc__cover">
+    <img src={`https://i.ytimg.com/vi/${latest.id}/mqdefault.jpg`} width="320" height="180" alt="" loading="lazy" decoding="async" />
+    <span class="sc__count num">{s.videos.episodesCount(num(locale, c.episodes.length))}</span>
+  </span>
+  <span class="sc__title serif">{c.title}</span>
+  <span class="sc__lede">{c.lede}</span>
+  <span class="meta">{s.videos.years(firstYear, yearOf(latest.date))}</span>
+</a>
+
+<style>
+  .sc {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    color: inherit;
+    text-decoration: none;
+  }
+  .sc__cover {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--paper-3);
+    margin-block-end: var(--space-1);
+  }
+  /* An accent edge sets a series apart from a single video. */
+  .sc__cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-block-start: 4px solid var(--accent);
+    pointer-events: none;
+  }
+  .sc__cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .sc:hover .sc__cover img {
+    transform: scale(1.04);
+  }
+  .sc__count {
+    position: absolute;
+    inset-block-end: var(--space-2);
+    inset-inline-end: var(--space-2);
+    padding: 0.15em 0.6em;
+    border-radius: 999px;
+    background: rgb(20 19 15 / 0.82);
+    color: #f7f3ec;
+    font-size: 0.75rem;
+  }
+  .sc__title {
+    font-size: var(--step-1);
+    line-height: 1.4;
+    text-align: start;
+  }
+  .sc:hover .sc__title {
+    color: var(--accent);
+  }
+  .sc__lede {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.7;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .sc .meta {
+    font-size: 0.8125rem;
+  }
+  @media (max-width: 34rem) {
+    .sc__lede {
+      display: none;
+    }
+    .sc__title {
+      font-size: var(--step-0);
+    }
+  }
+</style>

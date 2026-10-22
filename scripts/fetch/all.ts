@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { buildPersianTranslation } from '../quran/from-telegram';
 import { ROOT } from './lib/store';
 import * as instagram from './instagram';
+import * as playlists from './playlists';
 import * as quran from './quran';
 import * as telegram from './telegram';
 import * as tiktok from './tiktok';
@@ -16,7 +17,7 @@ import * as youtube from './youtube';
 
 const full = process.argv.includes('--full');
 // transcripts after youtube: it reads the videos youtube just stored.
-const jobs = { telegram, youtube, transcripts, tiktok, instagram } as const;
+const jobs = { telegram, youtube, transcripts, tiktok, instagram, playlists } as const;
 const failures: string[] = [];
 
 for (const [name, mod] of Object.entries(jobs)) {

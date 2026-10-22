@@ -98,7 +98,7 @@ const sections = [
   { key: 'articles', title: s.sections.articles.title, count: blogArticles.length, detail: 'kalaam.ir' },
   { key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` },
   { key: 'notes', title: s.sections.notes.title, count: notes.length, detail: 'Telegram' },
-  { key: 'videos', title: s.sections.videos.title, count: youtube.items.length, detail: s.episode(n(localeEps[0]?.n ?? 0)) },
+  { key: 'videos', title: s.sections.series.title, count: youtube.items.length, detail: s.episode(n(localeEps[0]?.n ?? 0)) },
   { key: 'tiktok', title: s.sections.tiktok.title, count: tiktok.items.length, detail: 'TikTok' },
   { key: 'instagram', title: s.sections.instagram.title, count: instagram.items.length || undefined, detail: 'Instagram' },
 ];
@@ -147,7 +147,7 @@ const jsonLd = [
           // Readers in the other languages mostly come to learn about Islam:
           // the video series and a place to ask come first.
           <p class="hero__actions">
-            <a class="btn btn--primary" href={href(locale, 'videos')}>
+            <a class="btn btn--primary" href={href(locale, 'series/islam-why-how')}>
               <Icon name="play" />
               {s.qa.watch}
             </a>
@@ -372,7 +372,7 @@ const jsonLd = [
       <p class="tl-more__end" hidden={!!next}>
         {u.timelineEnd}{' '}
         <a href={href(locale, 'notes')}>{s.sections.notes.title}</a> ·{' '}
-        <a href={href(locale, 'videos')}>{s.sections.videos.title}</a>
+        <a href={href(locale, 'videos')}>{s.sections.series.title}</a>
       </p>
     </div>
   </section>

@@ -1,0 +1,118 @@
+---
+// One series: its opening, every episode, then other series of its kind.
+// "Islam: why and how?" has a page in each language it is published in; the
+// Imam Ali Foundation's series are Persian only.
+import CollectionHead from '../../../../components/CollectionHead.astro';
+import EpisodeGrid from '../../../../components/EpisodeGrid.astro';
+import SeriesCard from '../../../../components/SeriesCard.astro';
+import type { Locale } from '../../../../i18n/locales';
+import { t } from '../../../../i18n/strings';
+import Base from '../../../../layouts/Base.astro';
+import { allSeries, collectionsFor, seriesLocales, type Collection } from '../../../../lib/collections';
+import { href } from '../../../../lib/paths';
+import { personRef } from '../../../../lib/schema';
+
+export function getStaticPaths() {
+  return allSeries().map(({ locale, c }) => ({ params: { lang: locale, key: c.key }, props: { c } }));
+}
+
+const locale = Astro.params.lang as Locale;
+const { c } = Astro.props as { c: Collection };
+const s = t(locale);
+const featured = c.group === 'featured';
+// Beside the featured series, the study series; beside any other, its own kind.
+const shelf = featured ? 'study' : c.group;
+const others = collectionsFor(locale).filter((o) => o.key !== c.key && o.group === shelf);
+const groupName = { featured: s.videos.seriesHeading, study: s.videos.studyGroup, occasion: s.videos.occasionGroup }[c.group];
+const pageUrl = new URL(href(locale, c.path), Astro.site).toString();
+---
+
+<Base
+  locale={locale}
+  path={c.path}
+  title={c.title}
+  description={c.lede}
+  image={`https://i.ytimg.com/vi/${c.episodes[0].id}/hqdefault.jpg`}
+  imageAlt={c.title}
+  locales={featured ? seriesLocales(c.key) : ['fa']}
+  alternates={featured}
+  switchPath={featured ? undefined : 'videos'}
+  crumbs={[
+    { name: s.sections.series.title, path: 'videos' },
+    { name: c.title, path: c.path },
+  ]}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWorkSeries',
+    '@id': `${pageUrl}#series`,
+    name: c.title,
+    description: c.lede,
+    inLanguage: featured ? c.langs : 'fa',
+    url: pageUrl,
+    author: personRef(Astro.site),
+    hasPart: c.episodes.slice(0, 40).map((ep) => ({
+      '@type': 'VideoObject',
+      name: ep.title,
+      uploadDate: ep.date,
+      thumbnailUrl: `https://i.ytimg.com/vi/${ep.id}/hqdefault.jpg`,
+      url: new URL(href(locale, ep.path), Astro.site).toString(),
+    })),
+  }}
+>
+  <div class="wrap">
+    <p class="crumb meta">
+      <a href={href(locale, 'videos')}>{s.sections.series.title}</a>
+      <span>{groupName}</span>
+    </p>
+
+    <section class="col" aria-labelledby={`${c.key}-title`}>
+      <CollectionHead locale={locale} c={c} level={1} />
+      <EpisodeGrid locale={locale} c={c} level={2} />
+    </section>
+
+    {
+      others.length > 0 && (
+        <section class="more" aria-labelledby="more-h">
+          <div class="section-title">
+            <h2 id="more-h">{s.videos.moreSeries}</h2>
+            <a class="link-arrow" href={href(locale, `videos#${shelf}`)}>
+              {s.viewAll}
+            </a>
+          </div>
+          <ul class="shelf">
+            {others.slice(0, 4).map((o) => (
+              <li>
+                <SeriesCard locale={locale} c={o} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .crumb {
+    margin-block: var(--space-2) var(--space-6);
+  }
+  .crumb a {
+    color: var(--accent);
+  }
+  .more {
+    margin-block-start: var(--space-8);
+  }
+  .shelf {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+  @media (max-width: 34rem) {
+    .shelf {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-5) var(--space-3);
+    }
+  }
+</style>

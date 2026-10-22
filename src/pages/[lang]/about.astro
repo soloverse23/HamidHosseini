@@ -1,60 +1,67 @@
 ---
-import Chapter from '../../components/Chapter.astro';
+import BookCover from '../../components/BookCover.astro';
 import Icon from '../../components/Icon.astro';
 import { type Locale } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
 import Base from '../../layouts/Base.astro';
-import { CHANNEL_URLS, instagram, notes, telegram, tiktok, youtube } from '../../lib/data';
-import { compact, date, num } from '../../lib/format';
+import { CHANNEL_URLS, instagram, telegram, tiktok } from '../../lib/data';
+import { compact } from '../../lib/format';
 import { href, localePaths } from '../../lib/paths';
 import { CHANNELS } from '../../lib/social';
 import about from '../../data/content/about.json';
-import { PROJECTS } from '../../data/projects';
+import { ABOUT, WHATSAPP } from '../../data/profile';
+import { editionFor, shelfFor } from '../../lib/books';
 import { excerpt } from '../../lib/text';
 import { foundationNode, personId, personNode } from '../../lib/schema';
 
 export const getStaticPaths = localePaths;
 const locale = Astro.params.lang as Locale;
 const s = t(locale);
-const n = (x: number) => num(locale, x);
+const a = ABOUT[locale];
 const c = (x?: number) => (x ? compact(locale, x) : '');
 const pick = (l: Partial<Record<Locale, string>>) => l[locale] ?? l.en ?? l.fa ?? '';
 const bio = pick(about.bio);
 
+// A path on this site, or a link out.
+const out = (link: string) => link.startsWith('http');
+const to = (link: string) => (out(link) ? link : href(locale, link));
+
+const shelf = shelfFor(locale).slice(0, 6);
+
 const channels = [
-  { icon: 'telegram', name: telegram.profiles.main?.name ?? 'کلام', handle: '@hamidhossaini', url: CHANNEL_URLS.telegram, lang: 'fa', followers: telegram.profiles.main?.followers, items: notes.length, since: notes.at(-1)?.date, page: 'notes' },
-  ...CHANNELS.filter((ch) => ch.platform === 'youtube').map((ch) => ({ icon: 'youtube' as const, name: ch.name, handle: ch.handle, url: ch.url, lang: ch.lang, followers: ch.followers, items: ch.count, since: youtube.items.filter((i) => i.channel === ch.lang).at(-1)?.date, page: 'videos' })),
-  { icon: 'tiktok', name: tiktok.profiles.main?.name ?? '', handle: '@islam.de.ce.si.cum', url: CHANNEL_URLS.tiktok, lang: 'ro', followers: CHANNELS.find((ch) => ch.id === 'tiktok')?.followers, items: tiktok.items.length, since: tiktok.items.at(-1)?.date, page: 'tiktok' },
-  { icon: 'instagram', name: instagram.profiles.main?.name ?? '', handle: '@kalam_hamidhosseini', url: CHANNEL_URLS.instagram, lang: 'fa', followers: instagram.profiles.main?.followers, items: instagram.items.length, since: instagram.items.at(-1)?.date, page: 'instagram' },
+  { icon: 'telegram', name: telegram.profiles.main?.name ?? 'کلام', url: CHANNEL_URLS.telegram, lang: 'fa', followers: telegram.profiles.main?.followers },
+  ...CHANNELS.filter((ch) => ch.platform === 'youtube').map((ch) => ({ icon: 'youtube' as const, name: ch.name, url: ch.url, lang: ch.lang, followers: ch.followers })),
+  { icon: 'tiktok', name: tiktok.profiles.main?.name ?? '', url: CHANNEL_URLS.tiktok, lang: 'ro', followers: CHANNELS.find((ch) => ch.id === 'tiktok')?.followers },
+  { icon: 'instagram', name: instagram.profiles.main?.name ?? '', url: CHANNEL_URLS.instagram, lang: 'fa', followers: instagram.profiles.main?.followers },
 ] as const;
 
 const sources: Record<Locale, string[]> = {
   en: [
-    'Telegram posts are read from the channel’s public web page every 30 minutes and kept here in full, including posts deleted from the preview later.',
+    'Telegram posts are read from the channel’s public web page every 6 hours and kept here in full, including posts deleted from the preview later.',
     'YouTube videos come from the public feeds of all five channels (Persian, Romanian, Arabic, Urdu and English); episodes with the same number are paired across languages.',
     'TikTok and Instagram are read from the public profiles on the same schedule. Images are stored on this site, so they keep working when the platforms’ links expire.',
     'The Quran translation and its notes are read from the reasoned translation’s own database, and each verse links to the Telegram post where it was first proposed.',
   ],
   ro: [
-    'Postările de pe Telegram sunt citite de pe pagina publică a canalului la fiecare 30 de minute și păstrate aici integral.',
+    'Postările de pe Telegram sunt citite de pe pagina publică a canalului la fiecare 6 ore și păstrate aici integral.',
     'Videoclipurile YouTube provin din fluxurile publice ale celor cinci canale (persană, română, arabă, urdu și engleză); episoadele cu același număr sunt asociate între limbi.',
     'TikTok și Instagram sunt citite din profilurile publice după același program. Imaginile sunt păstrate pe acest site, astfel încât să funcționeze și după ce linkurile platformelor expiră.',
     'Traducerea Coranului și notele ei sunt preluate din baza de date a „traducerii argumentate”, iar fiecare verset trimite la postarea de pe Telegram unde a fost propus.',
   ],
   ar: [
-    'تُقرأ منشورات تيليغرام من الصفحة العامة للقناة كل 30 دقيقة وتُحفظ هنا كاملة.',
+    'تُقرأ منشورات تيليغرام من الصفحة العامة للقناة كل 6 ساعات وتُحفظ هنا كاملة.',
     'تأتي مقاطع يوتيوب من الخلاصات العامة للقنوات الخمس (الفارسية والرومانية والعربية والأردية والإنجليزية)، وتُقرن الحلقات ذات الرقم نفسه بين اللغات.',
     'يُقرأ تيك توك وإنستغرام من الملفات العامة بالجدول نفسه، وتُحفظ الصور في هذا الموقع كي تبقى صالحة بعد انتهاء روابط المنصات.',
     'تُقرأ ترجمة القرآن وتوضيحاتها من قاعدة بيانات «الترجمة المستدلّة» نفسها، وترتبط كل آية بمنشور تيليغرام الذي اقتُرحت فيه أول مرة.',
   ],
   fa: [
-    'پست‌های تلگرام هر ۳۰ دقیقه از صفحهٔ عمومی کانال خوانده و به‌طور کامل در اینجا نگهداری می‌شوند.',
+    'پست‌های تلگرام هر ۶ ساعت از صفحهٔ عمومی کانال خوانده و به‌طور کامل در اینجا نگهداری می‌شوند.',
     'ویدئوهای یوتیوب از خوراک عمومی هر پنج کانال (فارسی، رومانیایی، عربی، اردو و انگلیسی) دریافت می‌شوند و قسمت‌های هم‌شماره در زبان‌های مختلف کنار هم قرار می‌گیرند.',
     'تیک‌تاک و اینستاگرام با همین برنامه از صفحه‌های عمومی خوانده می‌شوند. تصاویر روی همین سایت ذخیره می‌شوند تا پس از منقضی شدن پیوندهای پلتفرم‌ها هم در دسترس بمانند.',
     'ترجمهٔ قرآن و توضیحات آن از پایگاه دادهٔ «ترجمه مستدل قرآن» خوانده می‌شود و هر آیه به پست تلگرامی که نخستین بار در آن پیشنهاد شده پیوند دارد.',
   ],
   ur: [
-    'ٹیلی گرام کی پوسٹس ہر 30 منٹ بعد چینل کے عوامی صفحے سے پڑھی جاتی ہیں اور یہاں مکمل محفوظ رہتی ہیں۔',
+    'ٹیلی گرام کی پوسٹس ہر 6 گھنٹے بعد چینل کے عوامی صفحے سے پڑھی جاتی ہیں اور یہاں مکمل محفوظ رہتی ہیں۔',
     'یوٹیوب ویڈیوز پانچوں چینلز (فارسی، رومانیائی، عربی، اردو اور انگریزی) کی عوامی فیڈز سے آتی ہیں؛ ایک ہی نمبر کی اقساط مختلف زبانوں میں ایک ساتھ رکھی جاتی ہیں۔',
     'ٹک ٹاک اور انسٹاگرام اسی شیڈول پر عوامی پروفائلز سے پڑھے جاتے ہیں۔ تصاویر اسی سائٹ پر محفوظ کی جاتی ہیں تاکہ پلیٹ فارمز کے روابط ختم ہونے کے بعد بھی کام کرتی رہیں۔',
     'قرآن کا ترجمہ اور اس کی وضاحتیں “مدلل ترجمہ” کے اپنے ڈیٹا بیس سے لی جاتی ہیں، اور ہر آیت اس ٹیلی گرام پوسٹ سے جڑی ہے جس میں وہ پہلی بار تجویز کی گئی۔',
@@ -75,185 +82,729 @@ const sources: Record<Locale, string[]> = {
   ]}
 >
   <div class="wrap about">
-    <Chapter locale={locale} title={s.name} />
-
-    <div class="about__grid">
-      <div class="stack about__text">
-        {bio.split('\n\n').map((para, i) => <p class:list={{ lede: i === 0 }}>{para}</p>)}
-        <p><a href={href('fa', 'articles/2141524168')}>{s.articles.bio} →</a></p>
-        <h2>{s.about.tv}</h2>
-        <p>{s.about.tvText} <a href={href(locale, 'writings#ethics-of-servitude')}>{s.nav.writings} →</a></p>
+    <header class="hero">
+      <div class="hero__main">
+        <p class="kicker">{s.sections.about.title}</p>
+        <h1>{s.name}</h1>
+        <p class="hero__role">{a.role}</p>
+        <p class="lede hero__bio">{bio}</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href={CHANNEL_URLS.telegramPersonal} rel="noopener" target="_blank">
+            <Icon name="telegram" /> {s.about.contactTelegram}
+          </a>
+          <a class="btn" href={WHATSAPP.url} rel="noopener" target="_blank">
+            <Icon name="whatsapp" /> {s.about.contactWhatsapp} · <span dir="ltr">{WHATSAPP.number}</span>
+          </a>
+        </div>
       </div>
 
-      <aside class="contact">
-        <h2>{s.about.contact}</h2>
-        <a class="btn" href={CHANNEL_URLS.telegramPersonal} rel="noopener" target="_blank">
-          <Icon name="telegram" /> {s.about.contactTelegram} · @hamidhosseiniii
-        </a>
+      <aside class="glance" aria-labelledby="glance">
+        <h2 id="glance" class="kicker">{s.about.glance}</h2>
+        <dl>
+          {
+            a.facts.map((f) => (
+              <div>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
       </aside>
-    </div>
+    </header>
 
-    <section class="block" id="projects" aria-labelledby="projects-title">
-      <div class="section-title"><h2 id="projects-title">{s.about.projects}</h2></div>
-      <ul class="projects">
+    <section class="block story" id="biography" aria-labelledby="bio-title">
+      <div class="section-title"><h2 id="bio-title">{a.h.bio}</h2></div>
+      <div class="story__grid">
+        <div class="story__text stack">
+          {a.bio.map((p) => <p>{p}</p>)}
+          <p class="meta"><a href={href('fa', 'articles/2141524168')}>{s.articles.bio} →</a></p>
+        </div>
+        <aside class="approach" aria-labelledby="approach-title">
+          <h3 id="approach-title" class="kicker">{a.h.approach}</h3>
+          {a.approach.map((p, i) => <p class:list={{ approach__lead: i === 0 }}>{p}</p>)}
+        </aside>
+      </div>
+    </section>
+
+    <section class="block" id="projects" aria-labelledby="current-title">
+      <div class="section-title"><h2 id="current-title">{a.h.current}</h2></div>
+      <ul class="cards">
         {
-          PROJECTS.map((p) => (
-            <li class="project">
-              <h3><a href={p.url} rel="noopener" target="_blank">{pick(p.name)}</a></h3>
-              <p>{pick(p.description)}</p>
-              <p class="meta">
-                <a href={p.url} rel="noopener" target="_blank" dir="ltr">{new URL(p.url).host}</a>
-                {p.appUrl && <a href={p.appUrl} rel="noopener" target="_blank">{s.about.openApp}</a>}
-              </p>
+          a.current.map((x) => (
+            <li>
+              <a class="card" href={x.link ? to(x.link) : undefined} {...(x.link && out(x.link) ? { rel: 'noopener', target: '_blank' } : {})}>
+                <h3>
+                  {x.title}
+                  {x.link && out(x.link) && <Icon name="external" />}
+                </h3>
+                <p>{x.text}</p>
+              </a>
             </li>
           ))
         }
       </ul>
     </section>
 
-    <section class="block" aria-labelledby="channels">
-      <div class="section-title"><h2 id="channels">{s.about.channels}</h2></div>
-      <ul class="rows channels">
+    <section class="block pioneer" id="virtual-faculty" aria-labelledby="pioneer-title">
+      <span class="pioneer__year num" aria-hidden="true">{a.pioneer.year}</span>
+      <div class="pioneer__story">
+        <h2 id="pioneer-title">{s.about.pioneer}</h2>
+        <p>{a.pioneer.text}</p>
+      </div>
+    </section>
+
+    <section class="block" id="positions" aria-labelledby="positions-title">
+      <div class="section-title"><h2 id="positions-title">{a.h.positions}</h2></div>
+      <div class="positions">
+        {
+          a.positions.map((g) => (
+            <section class="positions__group">
+              <h3>
+                {g.title} <span class="num">{g.years}</span>
+              </h3>
+              <ol>
+                {g.items.map((p) => (
+                  <li class:list={{ 'positions--key': p.key }}>
+                    <span class="positions__years num">{p.years}</span>
+                    <span class="positions__role">{p.role}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="block teaching" id="teaching" aria-labelledby="teaching-title">
+      <div class="section-title"><h2 id="teaching-title">{a.h.teaching}</h2></div>
+      <p class="teaching__text">{a.teaching}</p>
+      <ul class="courses">
+        {a.courses.map((x) => <li>{x}</li>)}
+      </ul>
+    </section>
+
+    <section class="block talks" id="talks" aria-labelledby="talks-title">
+      <div class="section-title"><h2 id="talks-title">{a.h.talks}</h2></div>
+      <a class="series" href={to(a.series.link!)}>
+        <span class="series__icon"><Icon name="play" /></span>
+        <span class="series__text">
+          <span class="series__title">{a.series.title}</span>
+          <span>{a.series.text}</span>
+        </span>
+      </a>
+      <div class="talks__grid">
+        <div>
+          <h3 class="kicker">{a.h.longTalks}</h3>
+          <ul class="plain">
+            {a.longTalks.map((x) => <li>{x}</li>)}
+          </ul>
+        </div>
+        <div>
+          <h3 class="kicker">{a.h.bucharest}</h3>
+          <dl class="items">
+            {
+              a.bucharest.map((x) => (
+                <div>
+                  <dt>{x.title}</dt>
+                  <dd>{x.text}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+        <div>
+          <h3 class="kicker">{a.h.lectures}</h3>
+          <dl class="items">
+            {
+              a.lectures.map((x) => (
+                <div>
+                  <dt>{x.link ? <a href={to(x.link)}>{x.title}</a> : x.title}</dt>
+                  {x.text && <dd>{x.text}</dd>}
+                </div>
+              ))
+            }
+          </dl>
+          <h3 class="kicker">{a.h.educational}</h3>
+          <dl class="items">
+            {
+              a.educational.map((x) => (
+                <div>
+                  <dt>{x.title}</dt>
+                  <dd>{x.text}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="books" aria-labelledby="books-title">
+      <div class="section-title">
+        <h2 id="books-title">{a.h.books}</h2>
+        <a href={href(locale, 'books')}>{s.about.allBooks} →</a>
+      </div>
+      <ul class="shelf">
+        {
+          shelf.map((b) => {
+            const { edition } = editionFor(b, locale);
+            return (
+              <li>
+                <a href={href(locale, `books/${b.id}`)}>
+                  <span class="shelf__cover">
+                    <BookCover edition={edition} />
+                  </span>
+                  <span class="shelf__title" lang={edition.lang} dir="auto">
+                    {edition.title}
+                  </span>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+      <h3 class="kicker earlier__title">{a.h.earlier}</h3>
+      <ul class="earlier">
+        {
+          a.earlier.map((x) => (
+            <li>
+              <span class="earlier__year num">{x.year}</span>
+              <span>
+                {x.title} <span class="meta">{x.publisher}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="block" id="writings" aria-labelledby="writings-title">
+      <div class="section-title">
+        <h2 id="writings-title">{a.h.writings}</h2>
+        <a href={href(locale, 'writings')}>{s.nav.writings} →</a>
+      </div>
+      <div class="writings__grid">
+        <div>
+          <h3 class="kicker">{a.h.papers}</h3>
+          <ul class="plain">
+            {a.papers.map((x) => <li>{x}</li>)}
+          </ul>
+        </div>
+        <div>
+          <h3 class="kicker">{a.h.interviews}</h3>
+          <ul class="plain">
+            {a.interviews.map((x) => <li>{x}</li>)}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="block coda">
+      <h2 class="kicker" id="channels">{s.about.channels}</h2>
+      <ul class="chips">
         {
           channels.map((ch) => (
             <li>
-              <span class="ch__icon"><Icon name={ch.icon} /></span>
-              <span class="ch__name">
-                <a href={ch.url} rel="me noopener" target="_blank" lang={ch.lang} dir="auto">
-                  {ch.name}
-                </a>
-                <span class="meta">{ch.handle}</span>
-              </span>
-              <span class="ch__num num">{c(ch.followers)}</span>
-              <span class="ch__num num">
-                <a href={href(locale, ch.page)}>{ch.items ? n(ch.items) : ''}</a>
-              </span>
-              <span class="ch__since meta">{ch.since ? date(locale, ch.since, 'month') : ''}</span>
+              <a href={ch.url} rel="me noopener" target="_blank">
+                <Icon name={ch.icon} />
+                <span lang={ch.lang} dir="auto">{ch.name}</span>
+                {ch.followers ? <span class="num chips__n">{c(ch.followers)}</span> : null}
+              </a>
             </li>
           ))
         }
       </ul>
-    </section>
-
-    <section class="block measure" id="sources" aria-labelledby="sources-title">
-      <div class="section-title"><h2 id="sources-title">{s.footer.source}</h2></div>
-      <ul class="sources stack">
-        {sources[locale].map((x) => <li>{x}</li>)}
-      </ul>
-      <p class="meta">{s.quran.arabicSource}</p>
-    </section>
+      <details class="sources" id="sources">
+        <summary>{s.footer.source}</summary>
+        <ul>
+          {sources[locale].map((x) => <li>{x}</li>)}
+        </ul>
+        <p>{s.quran.arabicSource}</p>
+      </details>
+    </footer>
   </div>
 </Base>
 
+<script is:inline>
+  // The footer links to #sources: open it when that is where the reader lands.
+  if (location.hash === '#sources') document.getElementById('sources')?.setAttribute('open', '');
+</script>
+
 <style>
-  .projects {
-    list-style: none;
-    padding: 0;
-    display: grid;
-    gap: var(--space-5);
-  }
-  @media (min-width: 48rem) {
-    .projects {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-  .project {
-    display: grid;
-    gap: var(--space-2);
-    align-content: start;
-    padding-block-start: var(--space-3);
-    border-block-start: 1px solid var(--rule);
-  }
-  .project h3 {
-    font-size: var(--step-1);
-  }
-  .project h3 a {
-    color: inherit;
-    text-decoration: none;
-  }
-  .project h3 a:hover {
+  .kicker {
+    font-size: var(--step--1);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--accent);
   }
-  .project .meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-  }
-  .project .meta a {
-    color: var(--accent);
-  }
-  .about__grid {
-    display: grid;
-    gap: var(--space-7);
-  }
-  @media (min-width: 56rem) {
-    .about__grid {
-      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-    }
-  }
-  .about__text {
-    max-width: var(--measure);
-  }
-  .about__text h2,
-  .contact h2 {
-    font-size: var(--step-1);
-    margin-block-start: var(--space-6);
-  }
-  .about__text a {
-    color: var(--accent);
-  }
-  .contact {
-    display: grid;
-    gap: var(--space-3);
-    align-content: start;
-    justify-items: start;
-  }
-  .contact h2 {
-    margin-block-start: 0;
+  :root[dir='rtl'] .kicker {
+    letter-spacing: 0;
   }
   .block {
     margin-block-start: var(--space-8);
   }
-  .channels li {
+  .note {
+    margin-block-start: var(--space-4);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .plain {
+    list-style: none;
+    padding: 0;
+  }
+  .plain li {
+    padding-block: var(--space-2);
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
     display: grid;
-    grid-template-columns: 1.5rem minmax(0, 1fr) 5rem 5rem 8rem;
+    gap: var(--space-7);
+    padding-block: var(--space-6) var(--space-7);
+  }
+  @media (min-width: 56rem) {
+    .hero {
+      grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+  .hero h1 {
+    font-family: var(--font-serif);
+    font-size: var(--step-4);
+    line-height: 1.1;
+    margin-block: var(--space-2) var(--space-3);
+  }
+  .hero__role {
+    font-size: var(--step-1);
+    color: var(--ink-2);
+    max-width: 38rem;
+    padding-block-end: var(--space-5);
+    margin-block-end: var(--space-5);
+    border-block-end: 1px solid var(--rule);
+  }
+  .hero__bio {
+    max-width: var(--measure);
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-block-start: var(--space-5);
+  }
+  /* The Telegram mark cuts its plane out in the button's own colour. */
+  .hero__actions .btn--primary {
+    --icon-cut: var(--ink);
+  }
+  .hero__actions .btn--primary:hover {
+    --icon-cut: var(--accent-ink);
+  }
+  .glance {
+    background: var(--paper-2);
+    border-block-start: 3px solid var(--accent);
+    padding: var(--space-5);
+  }
+  .glance h2 {
+    color: var(--ink-3);
+    margin-block-end: var(--space-3);
+  }
+  .glance dl > div {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--step--1);
+  }
+  .glance dt {
+    color: var(--ink-3);
+  }
+  .glance dd {
+    margin: 0;
+  }
+
+  /* ---------- Biography and approach ---------- */
+  .story__grid {
+    display: grid;
+    gap: var(--space-7);
+  }
+  @media (min-width: 60rem) {
+    .story__grid {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+  .story__text {
+    max-width: var(--measure);
+  }
+  .story__text a {
+    color: var(--accent);
+  }
+  .approach {
+    display: grid;
     gap: var(--space-4);
-    align-items: center;
-    padding-block: var(--space-3);
+    padding-inline-start: var(--space-5);
+    border-inline-start: 3px solid var(--accent);
+    color: var(--ink-2);
+    font-size: var(--step--1);
   }
-  .ch__icon :global(svg) {
-    width: 1.15rem;
-    height: 1.15rem;
-    color: var(--accent);
+  @media (min-width: 60rem) {
+    .approach {
+      position: sticky;
+      inset-block-start: var(--space-6);
+    }
   }
-  .ch__name {
+  .approach__lead {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  /* ---------- Current work ---------- */
+  .cards {
+    list-style: none;
+    padding: 0;
     display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   }
-  .ch__name a {
-    font-weight: 500;
+  .card {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    block-size: 100%;
+    padding: var(--space-4);
+    background: var(--paper-2);
+    border-block-start: 2px solid var(--accent);
+    color: inherit;
     text-decoration: none;
+    transition: background 0.15s;
   }
-  .ch__num {
-    text-align: end;
+  a.card[href]:hover {
+    background: var(--paper-3);
   }
-  .ch__num a {
-    text-decoration: none;
+  .card h3 {
+    font-size: var(--step-0);
+    font-weight: 600;
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .card h3 :global(svg) {
+    inline-size: 0.85em;
+    block-size: 0.85em;
+    flex: none;
+    color: var(--ink-3);
+  }
+  .card p {
+    font-size: var(--step--1);
+    color: var(--ink-2);
+  }
+
+  /* ---------- The Virtual Faculty ---------- */
+  .pioneer {
+    display: grid;
+    gap: var(--space-6);
+    background: var(--accent-wash);
+    padding: var(--space-6) var(--gutter);
+    margin-inline: calc(var(--gutter) * -1);
+  }
+  @media (min-width: 56rem) {
+    .pioneer {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: var(--space-7);
+      padding-block: var(--space-7);
+    }
+  }
+  .pioneer__story {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+  .pioneer__year {
+    font-family: var(--font-serif);
+    font-size: clamp(3.5rem, 2.5rem + 6vw, 7.5rem);
+    line-height: 0.9;
     color: var(--accent);
   }
-  .ch__since {
-    text-align: end;
+  .pioneer h2 {
+    font-family: var(--font-serif);
+    font-size: var(--step-3);
+    line-height: 1.15;
   }
-  @media (max-width: 40rem) {
-    .channels li {
-      grid-template-columns: 1.5rem minmax(0, 1fr) auto auto;
+  .pioneer__story p {
+    font-size: var(--step-1);
+    line-height: 1.6;
+    max-width: 46rem;
+  }
+
+  /* ---------- Positions: one block per institution ---------- */
+  .positions {
+    display: grid;
+    gap: var(--space-6) var(--space-7);
+  }
+  @media (min-width: 56rem) {
+    .positions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .ch__since {
-      display: none;
+  }
+  .positions__group h3 {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: var(--step-0);
+    font-weight: 600;
+    padding-block-end: var(--space-2);
+    border-block-end: 2px solid var(--accent);
+  }
+  .positions__group h3 .num {
+    font-size: var(--step--1);
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .positions ol {
+    list-style: none;
+    padding: 0;
+  }
+  .positions li {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+    border-block-end: 1px solid var(--rule);
+    font-size: var(--step--1);
+  }
+  .positions__years {
+    color: var(--ink-3);
+  }
+  .positions--key .positions__years,
+  .positions--key .positions__role {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  @media (max-width: 30rem) {
+    .positions li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
     }
+  }
+
+  /* ---------- Teaching ---------- */
+  .teaching__text {
+    font-size: var(--step-1);
+    margin-block-end: var(--space-4);
+  }
+  .courses {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .courses li {
+    padding: 0.3em 0.85em;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    font-size: var(--step--1);
+  }
+
+  /* ---------- Talks ---------- */
+  .series {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    margin-block-end: var(--space-6);
+  }
+  .series:hover {
+    background: var(--accent-ink);
+  }
+  .series__icon {
+    display: grid;
+    place-items: center;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .series__icon :global(svg) {
+    inline-size: 1.2rem;
+    block-size: 1.2rem;
+  }
+  .series__text {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--step--1);
+    line-height: 1.7;
+    opacity: 0.92;
+  }
+  .series__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    line-height: 1.2;
+    opacity: 1;
+  }
+  .talks__grid,
+  .writings__grid {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 56rem) {
+    .talks__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .writings__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .talks__grid .kicker,
+  .writings__grid .kicker {
+    margin-block-end: var(--space-2);
+  }
+  .talks__grid dl + .kicker {
+    margin-block-start: var(--space-5);
+  }
+  .items > div {
+    padding-block: var(--space-2);
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--step--1);
+  }
+  .items dt {
+    font-weight: 600;
+  }
+  .items dt a {
+    color: var(--accent);
+  }
+  .items dd {
+    margin: 0;
+    color: var(--ink-2);
+  }
+
+  /* ---------- Books ---------- */
+  .shelf {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+  .shelf a {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+  }
+  .shelf__cover {
+    --cover-w: 8rem;
+    --cover-h: 11rem;
+    display: grid;
+    place-items: end center;
+    block-size: 11.5rem;
+  }
+  .shelf a:hover :global(.b3d) {
+    --ry: 0deg;
+    --lift: -4px;
+  }
+  .shelf__title {
+    font-size: var(--step--1);
+    line-height: 1.45;
+  }
+  .shelf a:hover .shelf__title {
+    color: var(--accent);
+  }
+  .earlier__title {
+    margin-block: var(--space-6) var(--space-2);
+  }
+  .earlier {
+    list-style: none;
+    padding: 0;
+    columns: 2 24rem;
+    column-gap: var(--space-7);
+  }
+  .earlier li {
+    break-inside: avoid;
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+    border-block-end: 1px solid var(--rule);
+    font-size: var(--step--1);
+  }
+  .earlier__year {
+    color: var(--ink-3);
+  }
+
+  /* ---------- Channels and sources: a quiet footer ---------- */
+  .coda {
+    padding-block-start: var(--space-5);
+    border-block-start: 1px solid var(--rule);
+    display: grid;
+    gap: var(--space-3);
+  }
+  .coda .kicker {
+    color: var(--ink-3);
+  }
+  .chips {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .chips a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.2em 0.65em;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    text-decoration: none;
+  }
+  .chips a:hover {
+    border-color: var(--ink-3);
+    color: var(--ink);
+  }
+  .chips :global(svg) {
+    inline-size: 0.95em;
+    block-size: 0.95em;
+    color: var(--accent);
+  }
+  .chips__n {
+    color: var(--ink-3);
   }
   .sources {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .sources summary {
+    cursor: pointer;
+    inline-size: fit-content;
+  }
+  .sources summary:hover {
+    color: var(--ink);
+  }
+  .sources ul {
     padding-inline-start: var(--space-5);
-    color: var(--ink-2);
-    margin-block-end: var(--space-4);
+    margin-block: var(--space-2);
+    display: grid;
+    gap: var(--space-1);
   }
 </style>

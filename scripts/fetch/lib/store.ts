@@ -44,7 +44,7 @@ export async function mergeFeed(
   let updated = 0;
 
   // View and like counts change on every run. Writing them each time would
-  // mean a commit and a redeploy every 30 minutes, so count-only changes are
+  // mean a commit and a redeploy on every sync, so count-only changes are
   // saved at most once a day (or together with a real change).
   const countsDue = Date.now() - Date.parse(feed.updatedAt) > 20 * 3600 * 1000;
   const withoutCounts = (i: FeedItem) => JSON.stringify({ ...i, views: undefined, likes: undefined });

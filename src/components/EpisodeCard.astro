@@ -1,0 +1,116 @@
+---
+// One episode in a grid: thumbnail with its number and length, the title,
+// and when it went up. Turns into a compact row on narrow screens.
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import type { CollectionEpisode } from '../lib/collections';
+import { date, duration, num } from '../lib/format';
+import { href } from '../lib/paths';
+
+interface Props {
+  locale: Locale;
+  ep: CollectionEpisode;
+  numbered?: boolean;
+  /** A line above the title, e.g. the series it comes from; defaults to the occasion */
+  eyebrow?: string;
+}
+const { locale, ep, numbered = true, eyebrow = ep.occasion } = Astro.props;
+const s = t(locale);
+const n = (x: number) => num(locale, x);
+---
+
+<a class="ep" href={href(locale, ep.path)}>
+  <span class="ep__thumb">
+    <img src={`https://i.ytimg.com/vi/${ep.id}/mqdefault.jpg`} width="320" height="180" alt="" loading="lazy" decoding="async" />
+    {numbered && <span class="ep__n num">{n(ep.n)}</span>}
+    {ep.duration && <span class="frame__badge">{duration(ep.duration)}</span>}
+  </span>
+  {eyebrow && <span class="ep__occasion" dir="auto">{eyebrow}</span>}
+  <span class="ep__title" lang={ep.lang} dir="auto" data-tr>{ep.title}</span>
+  <span class="meta">
+    {numbered && <span>{s.episode(n(ep.n))}</span>}
+    <time datetime={ep.date}>{date(locale, ep.date, 'month')}</time>
+  </span>
+</a>
+
+<style>
+  .ep {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    color: inherit;
+    text-decoration: none;
+  }
+  .ep__thumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--paper-3);
+  }
+  .ep__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .ep:hover .ep__thumb img {
+    transform: scale(1.04);
+  }
+  .ep__n {
+    position: absolute;
+    inset-block-start: var(--space-2);
+    inset-inline-start: var(--space-2);
+    min-width: 2rem;
+    padding: 0.1em 0.45em;
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--accent);
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .ep__occasion {
+    font-size: 0.8125rem;
+    color: var(--accent);
+    line-height: 1.5;
+    text-align: start;
+  }
+  .ep__title {
+    font-weight: 500;
+    line-height: 1.65;
+    text-align: start;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .ep:hover .ep__title {
+    color: var(--accent);
+  }
+  .ep .meta {
+    font-size: 0.8125rem;
+  }
+
+  @media (max-width: 34rem) {
+    .ep {
+      grid-template-columns: 9rem minmax(0, 1fr);
+      column-gap: var(--space-3);
+      row-gap: var(--space-1);
+    }
+    .ep__thumb {
+      grid-row: span 3;
+      align-self: start;
+    }
+    .ep__n {
+      font-size: 0.875rem;
+      min-width: 1.6rem;
+    }
+    .ep__title {
+      font-size: var(--step--1);
+      -webkit-line-clamp: 3;
+    }
+  }
+</style>

@@ -18,6 +18,7 @@ import { pathToFileURL } from 'node:url';
 import * as pagefind from 'pagefind';
 import { ARTICLES, BOOKS, LECTURES, type Localized } from '../../src/data/writings';
 import about from '../../src/data/content/about.json';
+import { ABOUT } from '../../src/data/profile';
 import { LOCALES } from '../../src/i18n/locales';
 import { t } from '../../src/i18n/strings';
 import {
@@ -39,6 +40,7 @@ import { firstLine } from '../../src/lib/text';
 import { topicsOf } from '../../src/lib/topics';
 import { CATEGORIES, SERIES, SERIES_KEYS } from '../../src/data/articles';
 import { articles } from '../../src/lib/articles';
+import { collectionsFor, seriesPages } from '../../src/lib/collections';
 
 type Meta = Record<string, string | number | undefined>;
 interface Rec {
@@ -169,6 +171,32 @@ for (const ep of episodes) for (const v of YT_LANGS.map((k) => ep[k])) if (v) vi
 for (const v of [...otherTalks, ...shorts]) video(v, 'youtube');
 for (const v of tiktok.items) video(v, 'tiktok');
 for (const v of instagram.items) video(v, 'instagram');
+// Persian series of the Imam Ali Foundation, each episode on its own page.
+for (const c of seriesPages()) {
+  for (const ep of c.episodes) {
+    const title = ep.occasion ? `${ep.occasion}: ${ep.title}` : ep.title;
+    records.push({
+      url: `/fa/${ep.path}/`,
+      type: 'videos',
+      lang: ['fa'],
+      title: `${title} ${c.title}`,
+      body: `${ep.text ?? ''} youtube`,
+      meta: {
+        kind: 'video',
+        platform: 'youtube',
+        path: ep.path,
+        title,
+        text: c.title,
+        date: ep.date,
+        image: `https://i.ytimg.com/vi/${ep.id}/hqdefault.jpg`,
+        duration: ep.duration,
+        episode: c.numbered ? ep.n : undefined,
+        lang: 'fa',
+      },
+      date: ep.date,
+    });
+  }
+}
 
 /* ---------- Writings ---------- */
 
@@ -270,8 +298,12 @@ const SECTIONS = ['writings', 'articles', 'quran', 'notes', 'videos', 'tiktok', 
 for (const key of SECTIONS) {
   const per = LOCALES.map((l) => {
     const s = t(l);
-    const sec = s.sections[key] as { title: string; lede?: string };
-    const extra = key === 'about' ? [about.bio[l] ?? '', s.about.tvText, s.name] : [s.nav[key]];
+    // The videos page is the hub of every series; its own name is under `series`.
+    const sec = (key === 'videos' ? s.sections.series : s.sections[key]) as { title: string; lede?: string };
+    const extra =
+      key === 'about'
+        ? [about.bio[l] ?? '', s.name, ABOUT[l].role, ...ABOUT[l].bio, ...ABOUT[l].approach, ...ABOUT[l].positions.flatMap((g) => g.items.map((p) => p.role)), ...ABOUT[l].courses]
+        : [s.nav[key]];
     return { l, title: sec.title, lede: sec.lede, extra };
   });
   records.push({
@@ -285,6 +317,24 @@ for (const key of SECTIONS) {
       path: key,
       ...Object.fromEntries(per.map((p) => [`t_${p.l}`, p.title])),
       ...Object.fromEntries(per.map((p) => [`d_${p.l}`, p.lede])),
+    },
+  });
+}
+
+// Each series page, under its name in every language that has it.
+for (const c of collectionsFor('fa')) {
+  const per = LOCALES.map((l) => collectionsFor(l).find((x) => x.key === c.key) ?? c);
+  records.push({
+    url: `/fa/${c.path}/`,
+    type: 'pages',
+    lang: c.group === 'featured' ? [...LOCALES] : ['fa'],
+    title: [...new Set(per.map((x) => x.title))].join(' '),
+    body: [...new Set(per.map((x) => x.lede))].join(' '),
+    meta: {
+      kind: 'page',
+      path: c.path,
+      ...Object.fromEntries(per.map((x, i) => [`t_${LOCALES[i]}`, x.title])),
+      ...Object.fromEntries(per.map((x, i) => [`d_${LOCALES[i]}`, x.lede])),
     },
   });
 }

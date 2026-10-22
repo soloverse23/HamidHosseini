@@ -1,0 +1,154 @@
+---
+// Every episode of a series, newest first or from the start. With `limit`,
+// only the first few show until the reader asks for the rest.
+import type { Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import type { Collection } from '../lib/collections';
+import { num } from '../lib/format';
+import EpisodeCard from './EpisodeCard.astro';
+
+interface Props {
+  locale: Locale;
+  c: Collection;
+  limit?: number;
+  level?: 2 | 3;
+}
+const { locale, c, limit, level = 3 } = Astro.props;
+const s = t(locale);
+const H = level === 2 ? 'h2' : 'h3';
+const folded = limit !== undefined && c.episodes.length > limit;
+---
+
+<div class="eps-wrap" data-eps-wrap data-limit={folded ? limit : undefined}>
+  <div class="eps-bar">
+    <H>{s.videos.episodes}</H>
+    {
+      c.numbered && (
+        <div class="seg" role="group" aria-label={s.videos.order}>
+          <button type="button" data-order="new" aria-pressed="true">{s.videos.newestFirst}</button>
+          <button type="button" data-order="old" aria-pressed="false">{s.videos.oldestFirst}</button>
+        </div>
+      )
+    }
+  </div>
+
+  <ol class="eps" data-eps>
+    {
+      c.episodes.map((ep, i) => (
+        <li id={`ep-${ep.n}`} hidden={folded && i >= limit!}>
+          <EpisodeCard locale={locale} ep={ep} numbered={c.numbered} />
+        </li>
+      ))
+    }
+  </ol>
+
+  {
+    folded && (
+      <p class="eps-more">
+        <button class="btn" type="button" data-unfold>
+          {s.videos.showAll(num(locale, c.episodes.length))}
+        </button>
+      </p>
+    )
+  }
+</div>
+
+<script>
+  // Newest first by default; a reader who switches to "from the start" keeps it.
+  const KEY = 'series-order';
+  const read = () => {
+    try {
+      return localStorage.getItem(KEY);
+    } catch {
+      return null;
+    }
+  };
+  document.querySelectorAll<HTMLElement>('[data-eps-wrap]').forEach((wrap) => {
+    const list = wrap.querySelector<HTMLOListElement>('[data-eps]');
+    const buttons = wrap.querySelectorAll<HTMLButtonElement>('[data-order]');
+    const unfold = wrap.querySelector<HTMLButtonElement>('[data-unfold]');
+    if (!list) return;
+    let limit = Number(wrap.dataset.limit) || Infinity;
+    let current = 'new';
+    const fold = () => [...list.children].forEach((li, i) => ((li as HTMLElement).hidden = i >= limit));
+    const apply = (order: string) => {
+      if (order !== current) list.append(...[...list.children].reverse());
+      current = order;
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.order === order)));
+      fold();
+    };
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        apply(b.dataset.order!);
+        try {
+          localStorage.setItem(KEY, current);
+        } catch {}
+      }),
+    );
+    unfold?.addEventListener('click', () => {
+      limit = Infinity;
+      fold();
+      unfold.parentElement?.remove();
+    });
+    if (buttons.length && read() === 'old') apply('old');
+  });
+</script>
+
+<style>
+  .eps-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-block: var(--space-7) var(--space-5);
+    padding-block-end: var(--space-3);
+    border-block-end: 1px solid var(--ink);
+  }
+  .eps-bar :is(h2, h3) {
+    font-size: var(--step-1);
+  }
+  .seg {
+    display: inline-flex;
+    padding: 2px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-2);
+  }
+  .seg button {
+    font: inherit;
+    font-size: var(--step--1);
+    padding: 0.25em 0.9em;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-3);
+    cursor: pointer;
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  }
+  .eps {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+  .eps li {
+    scroll-margin-block-start: var(--space-5);
+  }
+  .eps-more {
+    display: flex;
+    justify-content: center;
+    margin-block-start: var(--space-6);
+  }
+  @media (max-width: 34rem) {
+    .eps {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-4);
+    }
+  }
+</style>
