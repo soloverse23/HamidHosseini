@@ -1,0 +1,33 @@
+{
+  "id": "az-noghte-ye-sefr",
+  "year": 2016,
+  "lang": "fa",
+  "title": {
+    "fa": "از نقطهٔ صفر",
+    "ro": "De la punctul zero",
+    "ar": "من النقطة الصفر",
+    "ur": "نقطۂ صفر سے",
+    "en": "From Point Zero"
+  },
+  "venue": {
+    "fa": "دارالحدیث",
+    "en": "Dar al-Hadith",
+    "ro": "Dar al-Hadith",
+    "ar": "دار الحديث",
+    "ur": "دار الحدیث"
+  },
+  "summary": {
+    "fa": "گفتگوهایی در مقدمات باور به خدا",
+    "ro": "Conversații despre temeliile credinței în Dumnezeu",
+    "ar": "حوارات في مقدمات الإيمان بالله",
+    "ur": "خدا پر ایمان کے مقدمات پر گفتگوئیں",
+    "en": "Conversations on the groundwork of belief in God"
+  },
+  "cover": "/media/books/az-noghte-ye-sefr.webp",
+  "links": [
+    {
+      "kind": "pdf",
+      "url": "/files/az-noghte-ye-sefr.pdf"
+    }
+  ]
+}

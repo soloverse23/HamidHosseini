@@ -1,0 +1,33 @@
+{
+  "id": "amoozesh-e-pajoohesh",
+  "year": 2014,
+  "lang": "fa",
+  "title": {
+    "fa": "آموزش پژوهش",
+    "ro": "Învățarea cercetării",
+    "ar": "تعليم البحث",
+    "ur": "تحقیق کی تعلیم",
+    "en": "Learning Research"
+  },
+  "venue": {
+    "fa": "شمیم یاس ولایت",
+    "en": "Shamim-e Yas-e Velayat",
+    "ro": "Shamim-e Yas-e Velayat",
+    "ar": "شميم ياس ولايت",
+    "ur": "شمیم یاس ولایت"
+  },
+  "summary": {
+    "fa": "درسنامهٔ روش تحقیق با گرایش علوم نقلی",
+    "ro": "Manual de metodologia cercetării pentru științele transmise (bazate pe texte)",
+    "ar": "كتاب دراسي في منهج البحث في العلوم النقلية",
+    "ur": "نقلی علوم کے لیے روشِ تحقیق کی درسی کتاب",
+    "en": "A textbook of research methods for the transmitted (text-based) sciences"
+  },
+  "cover": "/media/books/amoozesh-e-pajoohesh.webp",
+  "links": [
+    {
+      "kind": "pdf",
+      "url": "/files/amoozesh-e-pajoohesh.pdf"
+    }
+  ]
+}
