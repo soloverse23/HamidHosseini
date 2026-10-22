@@ -139,6 +139,7 @@ collections:
     fields:
       - { label: Id, name: id, widget: string, pattern: ['^[a-z0-9-]+$', 'Lowercase Latin letters, digits and hyphens'], hint: 'Used in the link, e.g. keshti-nejat' }
       - { label: Year (Gregorian), name: year, widget: number, value_type: int }
+      - { label: Pages, name: pages, widget: number, value_type: int, required: false, hint: 'Page count of the PDF; the reader shows it before the book opens.' }
       - label: Original language
         name: lang
         widget: select

@@ -30,7 +30,7 @@ export function date(locale: Locale, iso: string, style: 'long' | 'short' | 'mon
 export function year(locale: Locale, y: number): string {
   // Persian readers expect the solar hijri year for recent dates.
   if (locale === 'fa') return date('fa', new Date(Date.UTC(y, 6, 1)).toISOString()).split(' ').pop()!;
-  return num(locale, y).replace(/[,.\s]/g, '');
+  return num(locale, y).replace(/[,.\s٬]/g, '');
 }
 
 /** 0.213 → "21.3%" in the reader's digits and sign. */

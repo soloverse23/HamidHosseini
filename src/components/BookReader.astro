@@ -1,0 +1,653 @@
+---
+// Full-screen reader for a book's PDF (see src/scripts/reader.ts). The desk
+// takes the book's direction, so turning, the arrows and the page slider all
+// run the way the book is bound; the toolbar keeps the site's direction.
+import { LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import type { Book } from '../lib/books';
+import { num } from '../lib/format';
+import Icon from './Icon.astro';
+
+interface Props {
+  book: Book;
+  locale: Locale;
+}
+const { book, locale } = Astro.props;
+const s = t(locale);
+const r = s.books.reader;
+const title = book.title[book.lang] ?? Object.values(book.title)[0];
+---
+
+<dialog
+  class="reader"
+  data-reader
+  data-id={book.id}
+  data-pdf={book.pdf}
+  data-dir={book.dir}
+  data-pages={book.pages}
+  data-intl={LOCALE_META[locale].intl}
+  aria-label={title}
+  style={`--tone: ${book.tone}`}
+>
+  <div class="reader__bar">
+    <button type="button" class="reader__icon" data-act="close" aria-label={r.close} title={r.close}>
+      <Icon name="close" />
+    </button>
+    <button type="button" class="reader__icon" data-act="toc" aria-label={r.toc} title={r.toc} aria-expanded="false" hidden>
+      <Icon name="menu" />
+    </button>
+    <p class="reader__title">
+      <span lang={book.lang} dir="auto">{title}</span>
+    </p>
+    <div class="reader__tools">
+      <button type="button" class="reader__icon" data-act="zoom-out" aria-label={r.zoomOut} title={r.zoomOut}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.4-4.4M8 11h6" /></svg>
+      </button>
+      <button type="button" class="reader__icon" data-act="zoom-in" aria-label={r.zoomIn} title={r.zoomIn}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.4-4.4M8 11h6M11 8v6" /></svg>
+      </button>
+      <span class="reader__sep" aria-hidden="true"></span>
+      <button type="button" class="reader__icon reader__wide-only" data-act="spread" aria-label={r.spread} title={r.spread} aria-pressed="false">
+        <Icon name="book" />
+      </button>
+      <button type="button" class="reader__icon" data-act="night" aria-label={r.night} title={r.night} aria-pressed="false">
+        <Icon name="moon" />
+      </button>
+      <button type="button" class="reader__icon" data-act="full" aria-label={r.full} title={r.full} aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
+      </button>
+      <a class="reader__icon" href={book.pdf} download aria-label={s.books.download} title={s.books.download}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" /></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="reader__body">
+    <nav class="reader__toc" data-toc aria-label={r.toc} hidden>
+      <p class="reader__toc-title">{r.toc}</p>
+    </nav>
+
+    <div class="reader__desk" data-desk dir={book.dir} tabindex="-1">
+      <div class="reader__spread" data-spread></div>
+      <button type="button" class="reader__turn reader__turn--prev" data-act="prev" aria-label={r.prev}>
+        <span><Icon name="chevron" /></span>
+      </button>
+      <button type="button" class="reader__turn reader__turn--next" data-act="next" aria-label={r.next}>
+        <span><Icon name="chevron" /></span>
+      </button>
+      <div class="reader__status" data-status role="status">
+        <div class="reader__loading">
+          <span class="reader__spinner" aria-hidden="true"></span>
+          <p>{r.loading}</p>
+          <span class="reader__loadbar"><span data-loadbar></span></span>
+        </div>
+        <div class="reader__error">
+          <p>{r.error}</p>
+          <a class="btn btn--primary" href={book.pdf} download><Icon name="file" />{s.books.download}</a>
+        </div>
+      </div>
+      <p class="reader__hint" data-hint dir="auto" hidden>{r.hint}</p>
+    </div>
+  </div>
+
+  <div class="reader__foot">
+    <span class="reader__where num" data-where aria-hidden="true">{num(locale, 1)}</span>
+    <input
+      class="reader__scrub"
+      type="range"
+      min="1"
+      max={book.pages ?? 1}
+      value="1"
+      dir={book.dir}
+      aria-label={r.page}
+      data-scrub
+    />
+    <label class="reader__goto">
+      <span class="visually-hidden">{r.page}</span>
+      <input type="number" min="1" max={book.pages} value="1" inputmode="numeric" data-goto />
+      <span aria-hidden="true">/</span>
+      <span class="num" data-total>{book.pages ? num(locale, book.pages) : ''}</span>
+    </label>
+  </div>
+</dialog>
+
+<script>
+  import '../scripts/reader';
+</script>
+
+<style>
+  .reader {
+    --desk: color-mix(in srgb, var(--tone) 28%, #121110);
+    --bar: rgb(18 17 15 / 0.82);
+    --fg: #ece6d9;
+    --fg-2: #a9a192;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: none;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
+    background: var(--desk);
+    color: var(--fg);
+    overflow: hidden;
+  }
+  .reader[open] {
+    display: grid;
+    animation: reader-in 0.35s cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+  .reader::backdrop {
+    background: rgb(0 0 0 / 0.6);
+  }
+  @keyframes reader-in {
+    from {
+      opacity: 0;
+      transform: scale(0.985);
+    }
+  }
+
+  /* ---------- Toolbar ---------- */
+  .reader__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bar);
+    border-block-end: 1px solid rgb(255 255 255 / 0.07);
+    backdrop-filter: blur(8px);
+    z-index: 3;
+  }
+  .reader__title {
+    flex: 1;
+    min-width: 0;
+    padding-inline: var(--space-2);
+    font-size: var(--step--1);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .reader__title span {
+    unicode-bidi: plaintext;
+  }
+  .reader__tools {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .reader__sep {
+    width: 1px;
+    height: 1.25rem;
+    margin-inline: var(--space-1);
+    background: rgb(255 255 255 / 0.14);
+  }
+  .reader__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--fg);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .reader__icon:hover {
+    background: rgb(255 255 255 / 0.1);
+    color: #fff;
+  }
+  .reader__icon[aria-pressed='true'],
+  .reader__icon[aria-expanded='true'] {
+    background: var(--fg);
+    color: #121110;
+  }
+  .reader__icon:disabled {
+    opacity: 0.35;
+    cursor: default;
+    background: none;
+  }
+  .reader__icon[hidden] {
+    display: none;
+  }
+  .reader__icon :global(svg),
+  .reader__icon svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  @media (max-width: 40rem) {
+    .reader__wide-only,
+    .reader__sep {
+      display: none;
+    }
+    .reader__icon {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+    .reader__bar {
+      padding-inline: var(--space-1);
+    }
+  }
+
+  /* ---------- The desk and its pages ---------- */
+  .reader__body {
+    position: relative;
+    display: flex;
+    min-height: 0;
+  }
+  .reader__desk {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    overflow: auto;
+    outline: none;
+    perspective: 1800px;
+    touch-action: pan-y pinch-zoom;
+    background:
+      radial-gradient(70% 60% at 50% 45%, rgb(255 255 255 / 0.06), transparent 70%),
+      var(--desk);
+  }
+  .reader[data-zoomed] .reader__desk {
+    touch-action: auto;
+  }
+  .reader__spread {
+    margin: auto;
+    display: flex;
+    padding: 40px;
+    transform-origin: center;
+  }
+  @media (max-width: 600px) {
+    .reader__spread {
+      padding: 12px;
+    }
+  }
+  .reader__spread :global(.reader__leaf) {
+    position: relative;
+    background: #fff;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.3),
+      0 20px 40px -12px rgb(0 0 0 / 0.55);
+  }
+  .reader__spread :global(.reader__page) {
+    display: block;
+    max-width: none;
+  }
+  /* The fold between facing pages. */
+  .reader__spread.is-spread :global(.reader__leaf[data-side='first'])::after,
+  .reader__spread.is-spread :global(.reader__leaf[data-side='second'])::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    width: 7%;
+    pointer-events: none;
+  }
+  .reader__spread.is-spread :global(.reader__leaf[data-side='first'])::after {
+    inset-inline-end: 0;
+    background: linear-gradient(to var(--fold-to, left), rgb(0 0 0 / 0.16), transparent);
+  }
+  .reader__spread.is-spread :global(.reader__leaf[data-side='second'])::after {
+    inset-inline-start: 0;
+    background: linear-gradient(to var(--fold-from, right), rgb(0 0 0 / 0.2), transparent);
+  }
+  [dir='rtl'] > .reader__spread {
+    --fold-to: right;
+    --fold-from: left;
+  }
+  .reader[data-night] {
+    --desk: #0b0b0a;
+  }
+  .reader[data-night] .reader__spread :global(.reader__page) {
+    filter: invert(0.9) hue-rotate(180deg) sepia(0.15);
+  }
+  .reader[data-night] .reader__spread :global(.reader__leaf) {
+    background: #1a1917;
+  }
+
+  /* Wide, quiet strips along both edges turn the page; the chevron shows on hover. */
+  .reader__turn {
+    position: absolute;
+    inset-block: 0;
+    width: clamp(3rem, 12%, 8rem);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-3);
+    border: 0;
+    background: none;
+    color: var(--fg);
+    cursor: pointer;
+    z-index: 2;
+  }
+  .reader__turn--prev {
+    inset-inline-start: 0;
+    justify-content: flex-start;
+  }
+  .reader__turn--next {
+    inset-inline-end: 0;
+    justify-content: flex-end;
+  }
+  .reader__turn span {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    background: rgb(18 17 15 / 0.55);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .reader__turn:hover span,
+  .reader__turn:focus-visible span {
+    opacity: 1;
+  }
+  .reader__turn--prev:hover span {
+    transform: translateX(-3px);
+  }
+  .reader__turn--next:hover span {
+    transform: translateX(3px);
+  }
+  [dir='rtl'] > .reader__turn--prev:hover span {
+    transform: translateX(3px);
+  }
+  [dir='rtl'] > .reader__turn--next:hover span {
+    transform: translateX(-3px);
+  }
+  .reader__turn :global(svg) {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+  /* The chevron points to where that page lies in this book. */
+  .reader__turn--prev :global(svg),
+  [dir='rtl'] > .reader__turn--next :global(svg) {
+    transform: scaleX(-1);
+  }
+  [dir='rtl'] > .reader__turn--prev :global(svg) {
+    transform: none;
+  }
+  .reader__turn:disabled {
+    cursor: default;
+  }
+  .reader__turn:disabled span {
+    opacity: 0 !important;
+  }
+  .reader[data-zoomed] .reader__turn {
+    width: 3.5rem;
+  }
+  .reader[data-zoomed] .reader__turn span,
+  .reader__desk:focus-visible .reader__turn span {
+    opacity: 0.85;
+  }
+  @media (hover: none) {
+    .reader__turn span {
+      opacity: 0.6;
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+    .reader__turn {
+      width: 2.75rem;
+      padding: 0 var(--space-1);
+    }
+  }
+  @media (max-width: 600px) {
+    .reader__turn {
+      position: fixed;
+      inset-block: auto 4.25rem;
+      height: 3rem;
+    }
+    .reader__turn--prev {
+      inset-inline-start: var(--space-2);
+    }
+    .reader__turn--next {
+      inset-inline-end: var(--space-2);
+    }
+  }
+
+  .reader__status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 2;
+    text-align: center;
+    padding: var(--space-5);
+  }
+  .reader__status[hidden] {
+    display: none;
+  }
+  .reader__loading,
+  .reader__error {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: center;
+    color: var(--fg-2);
+    font-size: var(--step--1);
+  }
+  .reader__error {
+    display: none;
+    color: var(--fg);
+    max-width: 24rem;
+  }
+  .reader__status[data-error] .reader__loading {
+    display: none;
+  }
+  .reader__status[data-error] .reader__error {
+    display: grid;
+  }
+  .reader__spinner {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    border: 2px solid rgb(255 255 255 / 0.15);
+    border-top-color: var(--fg);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .reader__loadbar {
+    width: 10rem;
+    height: 2px;
+    background: rgb(255 255 255 / 0.12);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .reader__loadbar span {
+    display: block;
+    height: 100%;
+    inline-size: 4%;
+    background: var(--fg);
+    transition: inline-size 0.2s;
+  }
+  .reader__hint {
+    position: absolute;
+    inset-inline: 0;
+    bottom: var(--space-5);
+    width: fit-content;
+    max-width: calc(100% - 2rem);
+    margin-inline: auto;
+    padding: var(--space-2) var(--space-4);
+    border-radius: 999px;
+    background: rgb(18 17 15 / 0.8);
+    color: var(--fg);
+    font-size: var(--step--1);
+    z-index: 3;
+    pointer-events: none;
+    animation: hint 3.5s ease both;
+  }
+  @keyframes hint {
+    0% {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    10%,
+    85% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* ---------- Contents ---------- */
+  .reader__toc {
+    width: min(22rem, 85vw);
+    flex: none;
+    overflow: auto;
+    padding: var(--space-4) var(--space-3);
+    background: rgb(18 17 15 / 0.92);
+    border-inline-end: 1px solid rgb(255 255 255 / 0.07);
+    z-index: 3;
+  }
+  .reader__toc[hidden] {
+    display: none;
+  }
+  @media (max-width: 900px) {
+    .reader__toc {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      box-shadow: 0 0 40px rgb(0 0 0 / 0.5);
+    }
+  }
+  .reader__toc-title {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    padding-inline: var(--space-2);
+    margin-block-end: var(--space-2);
+  }
+  .reader__toc :global(ol) {
+    list-style: none;
+    padding: 0;
+  }
+  .reader__toc :global(ol ol) {
+    padding-inline-start: var(--space-4);
+  }
+  .reader__toc :global(button) {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
+    padding: 0.45em var(--space-2);
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: var(--fg);
+    font-size: var(--step--1);
+    line-height: 1.5;
+    text-align: start;
+    cursor: pointer;
+  }
+  .reader__toc :global(button:hover) {
+    background: rgb(255 255 255 / 0.08);
+  }
+  .reader__toc :global(button .num) {
+    color: var(--fg-2);
+    flex: none;
+  }
+
+  /* ---------- Page slider ---------- */
+  .reader__foot {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-5);
+    background: var(--bar);
+    border-block-start: 1px solid rgb(255 255 255 / 0.07);
+    z-index: 3;
+  }
+  .reader__where {
+    min-width: 4.5rem;
+    font-size: var(--step--1);
+    color: var(--fg-2);
+  }
+  .reader__scrub {
+    --fill: 0%;
+    flex: 1;
+    min-width: 0;
+    height: 1.5rem;
+    background: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  .reader__scrub::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--fg) var(--fill), rgb(255 255 255 / 0.18) var(--fill));
+  }
+  .reader__scrub[dir='rtl']::-webkit-slider-runnable-track {
+    background: linear-gradient(to left, var(--fg) var(--fill), rgb(255 255 255 / 0.18) var(--fill));
+  }
+  .reader__scrub::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.18);
+  }
+  .reader__scrub::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--fg);
+  }
+  .reader__scrub::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgb(255 255 255 / 0.15);
+  }
+  .reader__scrub::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .reader__goto {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--step--1);
+    color: var(--fg-2);
+  }
+  .reader__goto input {
+    width: 3.75rem;
+    padding: 0.25em 0.4em;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    border-radius: 4px;
+    background: rgb(255 255 255 / 0.06);
+    color: var(--fg);
+    text-align: center;
+    font-size: var(--step--1);
+    -moz-appearance: textfield;
+  }
+  .reader__goto input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+  @media (max-width: 600px) {
+    .reader__where {
+      display: none;
+    }
+    .reader__foot {
+      padding-inline: var(--space-3);
+    }
+  }
+</style>

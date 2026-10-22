@@ -1,0 +1,622 @@
+---
+// The books on the Writings page: the newest one up front, then the whole
+// shelf, which a reader can search and reorder. Books already opened in the
+// reader show how far along the reader is, and come back in "Continue reading".
+import { books, type Book } from '../lib/books';
+import { LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/strings';
+import { num, year } from '../lib/format';
+import { href } from '../lib/paths';
+import { normalize } from '../lib/search/normalize';
+import BookCover from './BookCover.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const s = t(locale);
+
+const pick = (l?: Partial<Record<Locale, string>>) => (l ? (l[locale] ?? l.en ?? Object.values(l)[0]) : undefined);
+function titles(b: Book) {
+  const original = b.title[b.lang] ?? Object.values(b.title)[0]!;
+  const gloss = b.lang !== locale ? b.title[locale] : undefined;
+  return { original, gloss };
+}
+const page = (b: Book) => href(locale, `books/${b.id}`);
+const featured = books[0];
+const totalPages = books.reduce((n, b) => n + (b.pages ?? 0), 0);
+const sorts = [
+  ['newest', s.books.newest],
+  ['oldest', s.books.oldest],
+  ['longest', s.books.longest],
+  ['shortest', s.books.shortest],
+] as const;
+---
+
+{
+  featured && (
+    <section aria-labelledby="books" class="library">
+      <div class="section-title">
+        <h2 id="books">{s.books.books}</h2>
+        {totalPages > 0 && <p class="meta">{s.books.pages(num(locale, totalPages))}</p>}
+      </div>
+
+      {(() => {
+        const { original, gloss } = titles(featured);
+        return (
+          <article class="feature" style={`--tone: ${featured.tone}`}>
+            <a class="feature__cover" href={page(featured)} tabindex="-1" aria-hidden="true">
+              <BookCover book={featured} eager />
+            </a>
+            <div class="feature__body">
+              <p class="eyebrow feature__eyebrow">
+                {s.books.latest} · <span class="num">{year(locale, featured.year)}</span>
+              </p>
+              <h3 class="serif align-start" lang={featured.lang} dir="auto">
+                <a href={page(featured)}>{original}</a>
+              </h3>
+              {gloss && <p class="gloss">{gloss}</p>}
+              {pick(featured.summary) && <p class="feature__summary">{pick(featured.summary)}</p>}
+              <p class="meta">
+                {pick(featured.venue) && <span>{pick(featured.venue)}</span>}
+                {featured.pages && <span>{s.books.pages(num(locale, featured.pages))}</span>}
+              </p>
+              <p class="btn-row">
+                <a class="btn btn--light" href={`${page(featured)}#read`} data-resume={featured.id}>
+                  <Icon name="book" />
+                  <span>{s.books.start}</span>
+                </a>
+                {featured.pdf && (
+                  <a class="btn btn--ghost" href={featured.pdf} download>
+                    <Icon name="file" />
+                    {s.books.download}
+                  </a>
+                )}
+              </p>
+            </div>
+          </article>
+        );
+      })()}
+
+      <div class="resume" data-resume-row hidden>
+        <h3 class="resume__title">{s.books.reading}</h3>
+        <ul class="resume__list"></ul>
+      </div>
+
+      <div class="tools" role="search">
+        <label class="tools__find">
+          <Icon name="search" />
+          <span class="visually-hidden">{s.books.find}</span>
+          <input type="search" placeholder={s.books.find} autocomplete="off" data-find />
+        </label>
+        <div class="chips" role="group" aria-label={s.books.sortBy}>
+          {sorts.map(([key, label], i) => (
+            <button type="button" class="chip" data-sort={key} aria-pressed={i === 0 ? 'true' : 'false'}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <p class="meta tools__count" aria-live="polite" data-count data-template={s.books.shown('{a}', '{b}')}></p>
+      </div>
+
+      <ul class="shelf" data-shelf>
+        {books.map((b, i) => {
+          const { original, gloss } = titles(b);
+          const haystack = normalize(
+            [...Object.values(b.title), ...Object.values(b.summary ?? {}), ...Object.values(b.venue ?? {}), b.id].join(' '),
+          );
+          return (
+            <li class="shelf__item" id={b.id} data-q={haystack} data-year={b.year} data-pages={b.pages ?? 0} data-order={i}>
+              <a class="shelf__link" href={page(b)}>
+                <span class="shelf__stage">
+                  <BookCover book={b} eager={i < 4} />
+                </span>
+                <span class="shelf__progress" data-progress={b.id} hidden>
+                  <span></span>
+                </span>
+                <span class="shelf__text">
+                  <span class="shelf__title serif align-start" lang={b.lang} dir="auto">{original}</span>
+                  {gloss && <span class="gloss">{gloss}</span>}
+                  <span class="meta">
+                    <span class="num">{year(locale, b.year)}</span>
+                    {b.pages && <span>{s.books.pages(num(locale, b.pages))}</span>}
+                  </span>
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+      <p class="shelf__empty" data-empty hidden>{s.books.noMatch}</p>
+    </section>
+  )
+}
+
+<script
+  is:inline
+  type="application/json"
+  id="book-shelf-data"
+  set:html={JSON.stringify({
+    resume: s.books.resume('{n}'),
+    pct: s.books.readPct('{p}'),
+    intl: LOCALE_META[locale].intl,
+    books: Object.fromEntries(
+      books.map((b) => [b.id, { title: titles(b).original, lang: b.lang, cover: b.cover, href: page(b), pages: b.pages }]),
+    ),
+  }).replace(/</g, '\\u003c')}
+/>
+
+<script>
+  import { normalize } from '../lib/search/normalize';
+  import { readProgress } from '../scripts/book-progress';
+
+  const shelf = document.querySelector<HTMLElement>('[data-shelf]');
+  const raw = document.getElementById('book-shelf-data')?.textContent;
+  if (shelf && raw) {
+    const data = JSON.parse(raw) as {
+      resume: string;
+      pct: string;
+      intl: string;
+      books: Record<string, { title: string; lang: string; cover?: string; href: string; pages?: number }>;
+    };
+    const fmt = new Intl.NumberFormat(data.intl);
+    const n = (x: number) => fmt.format(x);
+    const items = [...shelf.querySelectorAll<HTMLElement>('.shelf__item')];
+    const find = document.querySelector<HTMLInputElement>('[data-find]')!;
+    const count = document.querySelector<HTMLElement>('[data-count]')!;
+    const empty = document.querySelector<HTMLElement>('[data-empty]')!;
+    let sort = 'newest';
+
+    const apply = () => {
+      const q = normalize(find.value.trim());
+      const terms = q.split(/\s+/).filter(Boolean);
+      let shown = 0;
+      for (const li of items) {
+        const hit = terms.every((w) => li.dataset.q!.includes(w));
+        li.hidden = !hit;
+        if (hit) shown++;
+      }
+      const key = (li: HTMLElement) =>
+        sort === 'newest'
+          ? Number(li.dataset.order)
+          : sort === 'oldest'
+            ? -Number(li.dataset.order)
+            : sort === 'longest'
+              ? -Number(li.dataset.pages)
+              : Number(li.dataset.pages);
+      const ordered = [...items].sort((a, b) => key(a) - key(b));
+      // Animate the reorder: remember where each card was, move it, then glide.
+      const before = new Map(ordered.map((li) => [li, li.getBoundingClientRect()]));
+      shelf.append(...ordered);
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
+        for (const li of ordered) {
+          const a = before.get(li)!;
+          const b = li.getBoundingClientRect();
+          if (li.hidden || (!a.width && !a.height)) continue;
+          const dx = a.left - b.left;
+          const dy = a.top - b.top;
+          if (dx || dy) li.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.75,.25,1)' });
+        }
+      count.textContent = count.dataset.template!.replace('{a}', n(shown)).replace('{b}', n(items.length));
+      empty.hidden = shown > 0;
+    };
+
+    find.addEventListener('input', apply);
+    for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-sort]'))
+      btn.addEventListener('click', () => {
+        sort = btn.dataset.sort!;
+        for (const b of document.querySelectorAll('[data-sort]')) b.setAttribute('aria-pressed', String(b === btn));
+        apply();
+      });
+    apply();
+
+    // Reading progress saved by the reader on this device.
+    const started: { id: string; page: number; pages: number; at: number }[] = [];
+    for (const id of Object.keys(data.books)) {
+      const p = readProgress(id);
+      if (!p) continue;
+      started.push({ id, ...p });
+      const bar = document.querySelector<HTMLElement>(`[data-progress="${id}"]`);
+      if (bar) {
+        const pct = Math.min(1, p.page / p.pages);
+        bar.hidden = false;
+        bar.firstElementChild!.setAttribute('style', `inline-size: ${Math.max(4, pct * 100)}%`);
+        bar.title = data.pct.replace('{p}', `${n(Math.round(pct * 100))}%`);
+      }
+      for (const cta of document.querySelectorAll<HTMLAnchorElement>(`[data-resume="${id}"]`)) {
+        cta.querySelector('span')!.textContent = data.resume.replace('{n}', n(p.page));
+      }
+    }
+    const row = document.querySelector<HTMLElement>('[data-resume-row]');
+    if (row && started.length) {
+      const list = row.querySelector('ul')!;
+      for (const p of started.sort((a, b) => b.at - a.at).slice(0, 4)) {
+        const b = data.books[p.id];
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `${b.href}#page=${p.page}`;
+        a.className = 'resume__item';
+        if (b.cover) {
+          const img = document.createElement('img');
+          img.src = b.cover;
+          img.alt = '';
+          a.append(img);
+        }
+        const text = document.createElement('span');
+        const title = document.createElement('span');
+        title.className = 'resume__name';
+        title.lang = b.lang;
+        title.dir = 'auto';
+        title.textContent = b.title;
+        const where = document.createElement('span');
+        where.className = 'meta';
+        where.textContent = data.resume.replace('{n}', n(p.page));
+        const bar = document.createElement('span');
+        bar.className = 'resume__bar';
+        bar.innerHTML = `<span style="inline-size:${Math.max(4, Math.min(100, (p.page / p.pages) * 100))}%"></span>`;
+        text.append(title, where, bar);
+        a.append(text);
+        li.append(a);
+        list.append(li);
+      }
+      row.hidden = false;
+    }
+  }
+</script>
+
+<style>
+  .library .section-title .meta {
+    margin: 0;
+  }
+
+  /* ---------- The newest book ---------- */
+  .feature {
+    --cover-h: 22rem;
+    --cover-w: 17rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-7) var(--space-6);
+    margin-block-end: var(--space-6);
+    border-radius: 6px;
+    overflow: hidden;
+    isolation: isolate;
+    color: #f4efe4;
+    background:
+      radial-gradient(120% 90% at 20% 0%, rgb(255 255 255 / 0.16), transparent 60%),
+      radial-gradient(80% 120% at 100% 100%, rgb(0 0 0 / 0.4), transparent 70%),
+      var(--tone);
+  }
+  :root[dir='rtl'] .feature {
+    background:
+      radial-gradient(120% 90% at 80% 0%, rgb(255 255 255 / 0.16), transparent 60%),
+      radial-gradient(80% 120% at 0% 100%, rgb(0 0 0 / 0.4), transparent 70%),
+      var(--tone);
+  }
+  /* Grain, so the colour reads as paper rather than a flat fill. */
+  .feature::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.18;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+  .feature__cover {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    min-height: calc(var(--cover-h) + var(--space-4));
+  }
+  .feature__body {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    max-width: 34rem;
+  }
+  .feature__eyebrow {
+    color: rgb(244 239 228 / 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+  }
+  :root[dir='rtl'] .feature__eyebrow {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: var(--step--1);
+  }
+  .feature h3 {
+    font-size: var(--step-4);
+    line-height: 1.25;
+    justify-self: stretch;
+  }
+  .feature h3 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .feature h3 a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+  }
+  .feature .gloss {
+    color: rgb(244 239 228 / 0.75);
+    font-size: var(--step-0);
+  }
+  .feature__summary {
+    font-size: var(--step-1);
+    line-height: 1.6;
+    color: rgb(244 239 228 / 0.92);
+  }
+  .feature .meta {
+    color: rgb(244 239 228 / 0.7);
+  }
+  .feature .meta > * + *::before {
+    color: rgb(244 239 228 / 0.45);
+  }
+  .feature .btn-row {
+    margin-block-start: var(--space-3);
+    gap: var(--space-3);
+  }
+  .btn--light {
+    background: #f4efe4;
+    border-color: #f4efe4;
+    color: #1d1a15;
+    padding: 0.7em 1.3em;
+    font-size: var(--step-0);
+  }
+  .btn--light:hover {
+    background: #fff;
+    border-color: #fff;
+    color: #1d1a15;
+  }
+  .btn--ghost {
+    color: #f4efe4;
+    border-color: rgb(244 239 228 / 0.45);
+    padding: 0.7em 1.3em;
+    font-size: var(--step-0);
+  }
+  .btn--ghost:hover {
+    color: #f4efe4;
+    border-color: #f4efe4;
+    background: rgb(255 255 255 / 0.08);
+  }
+  @media (max-width: 46rem) {
+    .feature {
+      --cover-h: 15rem;
+      --cover-w: 12rem;
+      grid-template-columns: 1fr;
+      padding: var(--space-6) var(--space-5);
+      text-align: start;
+    }
+    .feature h3 {
+      font-size: var(--step-3);
+    }
+    .feature__summary {
+      font-size: var(--step-0);
+    }
+  }
+
+  /* ---------- Continue reading ---------- */
+  .resume {
+    margin-block-end: var(--space-6);
+  }
+  .resume__title {
+    font-family: var(--font-sans);
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink-3);
+    margin-block-end: var(--space-3);
+  }
+  .resume__list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: var(--space-3);
+  }
+  .resume :global(.resume__item) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    text-decoration: none;
+    color: inherit;
+    background: var(--paper-2);
+    transition: border-color 0.15s, transform 0.2s;
+  }
+  .resume :global(.resume__item:hover) {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .resume :global(img) {
+    width: 2.75rem;
+    height: 3.5rem;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 4px 10px -4px rgb(0 0 0 / 0.4);
+  }
+  .resume :global(.resume__item > span) {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .resume :global(.resume__name) {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :root[dir='ltr'] .resume :global(.resume__name) {
+    text-align: left;
+  }
+  :root[dir='rtl'] .resume :global(.resume__name) {
+    text-align: right;
+  }
+  .resume :global(.resume__bar),
+  .shelf__progress {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+  .resume :global(.resume__bar > span),
+  .shelf__progress > span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    border-radius: inherit;
+  }
+
+  /* ---------- Search and order ---------- */
+  .tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    margin-block-end: var(--space-6);
+  }
+  .tools__find {
+    position: relative;
+    flex: 1 1 16rem;
+    max-width: 24rem;
+  }
+  .tools__find :global(svg) {
+    position: absolute;
+    inset-inline-start: 0.8rem;
+    top: 50%;
+    width: 1.05rem;
+    height: 1.05rem;
+    transform: translateY(-50%);
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .tools__find input {
+    width: 100%;
+    padding: 0.6em 0.9em;
+    padding-inline-start: 2.4rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    font-size: var(--step--1);
+  }
+  .tools__find input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+  }
+  .tools .chip {
+    background: none;
+    cursor: pointer;
+  }
+  .tools .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .tools__count {
+    margin-inline-start: auto;
+  }
+
+  /* ---------- The shelf ---------- */
+  .shelf {
+    --cover-h: 13rem;
+    --cover-w: 10.5rem;
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr));
+    gap: var(--space-7) var(--space-5);
+  }
+  .shelf__item[hidden] {
+    display: none;
+  }
+  .shelf__link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 4px;
+    outline-offset: 6px;
+  }
+  /* Every book stands on the same shelf line, whatever its shape. */
+  .shelf__stage {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: calc(var(--cover-h) + var(--space-5));
+    padding-block-end: 10px;
+  }
+  .shelf__stage::after {
+    content: '';
+    position: absolute;
+    inset-inline: -4px;
+    bottom: 0;
+    height: 10px;
+    border-radius: 1px;
+    background: linear-gradient(to bottom, var(--paper-3), var(--paper-2) 40%, var(--rule) 100%);
+    box-shadow:
+      0 1px 0 var(--rule-strong),
+      0 10px 14px -10px rgb(0 0 0 / 0.35);
+    z-index: -2;
+  }
+  .shelf__progress {
+    margin-inline: auto;
+    inline-size: 60%;
+  }
+  .shelf__text {
+    display: grid;
+    gap: 2px;
+  }
+  .shelf__title {
+    font-size: var(--step-1);
+    line-height: 1.45;
+    font-weight: 600;
+    transition: color 0.15s;
+  }
+  .shelf__link:hover .shelf__title {
+    color: var(--accent);
+  }
+  .shelf__text .meta {
+    font-size: 0.8125rem;
+  }
+  .shelf__empty {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--ink-3);
+    border: 1px dashed var(--rule);
+    border-radius: 4px;
+  }
+  @media (max-width: 34rem) {
+    .shelf {
+      --cover-h: 10rem;
+      --cover-w: 8rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-6) var(--space-4);
+    }
+    .shelf__title {
+      font-size: var(--step-0);
+    }
+    .tools__count {
+      margin-inline-start: 0;
+    }
+  }
+  .gloss {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+    font-style: italic;
+  }
+  :root[dir='rtl'] .gloss {
+    font-style: normal;
+  }
+</style>

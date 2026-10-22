@@ -18,6 +18,7 @@ export function GET({ site }: APIContext) {
     if (venue) out.push(`Published in: ${venue}`);
     const sum = pick(w.summary);
     if (sum) out.push(sum);
+    if (w.type === 'book') out.push(`Page: ${o}/en/books/${w.id}/`);
     for (const l of w.links) out.push(`- ${l.kind}: ${l.url}`);
     out.push('');
   }

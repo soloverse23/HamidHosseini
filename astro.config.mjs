@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import pdfjs from './scripts/pdfjs/integration.ts';
 import search from './scripts/search/integration.ts';
 import { readFileSync } from 'node:fs';
 import { PRODUCTION_URL } from './src/lib/site.ts';
@@ -46,6 +47,7 @@ export default defineConfig({
   },
   integrations: [
     search(),
+    pdfjs(),
     sitemap({
       // Telegram posts are Persian and mirrored in five UIs; keep the sitemap to
       // the Persian copy (posts, the list and its topics) and skip pagination.

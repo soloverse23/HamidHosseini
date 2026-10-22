@@ -1,0 +1,210 @@
+---
+// A book standing in space: the cover, the edge of its pages and its back,
+// as thick as the book is long. The binding follows the book's own language,
+// not the page's: a Persian book opens from the right on the English site too.
+import { thickness, type Book } from '../lib/books';
+import Icon from './Icon.astro';
+
+interface Props {
+  book: Book;
+  /** The first cover on the page: load it straight away */
+  eager?: boolean;
+  /** Turn towards the pointer */
+  tilt?: boolean;
+}
+const { book, eager = false, tilt = true } = Astro.props;
+const title = book.title[book.lang] ?? Object.values(book.title)[0];
+---
+
+<span
+  class="b3d"
+  data-bind={book.dir}
+  data-tilt={tilt ? '' : undefined}
+  style={`--tone: ${book.tone}; --depth: ${thickness(book.pages)}px`}
+>
+  <span class="b3d__body">
+    <span class="b3d__back"></span>
+    <span class="b3d__spine"></span>
+    <span class="b3d__pages"></span>
+    {
+      book.cover ? (
+        <img class="b3d__front" src={book.cover} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+      ) : (
+        <span class="b3d__front b3d__front--blank" lang={book.lang} dir={book.dir}>
+          <Icon name="book" />
+          {title}
+        </span>
+      )
+    }
+    <span class="b3d__hinge"></span>
+  </span>
+</span>
+
+<style>
+  .b3d {
+    --ry: calc(var(--side) * -10deg);
+    --rx: 0deg;
+    --lift: 0px;
+    --side: 1;
+    display: inline-block;
+    position: relative;
+    perspective: 1100px;
+  }
+  /* Bound on the right: everything mirrors, the pages show on the left. */
+  .b3d[data-bind='rtl'] {
+    --side: -1;
+  }
+  .b3d__body {
+    display: block;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: translateY(var(--lift)) rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform 0.55s cubic-bezier(0.2, 0.75, 0.25, 1);
+  }
+  .b3d[data-tracking] .b3d__body {
+    transition-duration: 0.12s;
+  }
+  .b3d__front {
+    display: block;
+    position: relative;
+    /* The page sets the box; the cover fits inside it at its own shape. */
+    max-width: var(--cover-w, 12rem);
+    max-height: var(--cover-h, 16rem);
+    width: auto;
+    height: auto;
+    border-radius: 1px 3px 3px 1px;
+    backface-visibility: hidden;
+  }
+  .b3d[data-bind='rtl'] .b3d__front {
+    border-radius: 3px 1px 1px 3px;
+  }
+  .b3d__front--blank {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-3);
+    aspect-ratio: 2 / 3;
+    width: min(var(--cover-w, 12rem), var(--cover-h, 16rem) * 2 / 3);
+    padding: var(--space-4);
+    background: var(--tone);
+    color: #f4efe4;
+    font-family: var(--font-naskh);
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
+  .b3d__front--blank :global(svg) {
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 0.7;
+  }
+  /* The crease where the cover folds into the spine. */
+  .b3d__hinge {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+      to right,
+      rgb(0 0 0 / 0.28),
+      rgb(255 255 255 / 0.22) 1.6%,
+      rgb(0 0 0 / 0.14) 3.4%,
+      rgb(255 255 255 / 0.06) 5.5%,
+      transparent 9%,
+      transparent 92%,
+      rgb(255 255 255 / 0.08)
+    );
+  }
+  .b3d[data-bind='rtl'] .b3d__hinge {
+    transform: scaleX(-1);
+  }
+  .b3d__back {
+    position: absolute;
+    inset: 0;
+    background: var(--tone);
+    border-radius: 3px;
+    transform: translateZ(calc(-1 * var(--depth)));
+    box-shadow: 0 18px 28px -14px rgb(0 0 0 / 0.55);
+  }
+  /* The block of pages along the fore-edge, folded back into depth. */
+  .b3d__pages {
+    position: absolute;
+    inset-block: 1.5%;
+    right: 2px;
+    width: var(--depth);
+    transform-origin: right center;
+    transform: rotateY(-90deg);
+    background:
+      linear-gradient(to right, rgb(0 0 0 / 0.18), transparent 30%, transparent 70%, rgb(0 0 0 / 0.12)),
+      repeating-linear-gradient(to right, #f6f1e6 0 1px, #ddd4c2 1px 2px);
+  }
+  .b3d[data-bind='rtl'] .b3d__pages {
+    right: auto;
+    left: 2px;
+    transform-origin: left center;
+    transform: rotateY(90deg);
+  }
+  .b3d__spine {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: var(--depth);
+    transform-origin: left center;
+    transform: rotateY(90deg);
+    background: linear-gradient(to right, rgb(0 0 0 / 0.35), rgb(255 255 255 / 0.12) 40%, rgb(0 0 0 / 0.3)), var(--tone);
+  }
+  .b3d[data-bind='rtl'] .b3d__spine {
+    left: auto;
+    right: 0;
+    transform-origin: right center;
+    transform: rotateY(-90deg);
+  }
+  /* Its shadow on the shelf. */
+  .b3d::after {
+    content: '';
+    position: absolute;
+    inset-inline: 8%;
+    bottom: -6px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(0 0 0 / 0.32), transparent);
+    filter: blur(2px);
+    transform: translateY(calc(var(--lift) * -0.4)) scaleX(calc(1 + var(--lift) / -60px));
+    transition: transform 0.55s cubic-bezier(0.2, 0.75, 0.25, 1);
+    z-index: -1;
+  }
+  :global(a:hover) .b3d,
+  :global(a:focus-visible) .b3d {
+    --ry: calc(var(--side) * -28deg);
+    --lift: -8px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .b3d {
+      --ry: calc(var(--side) * -10deg) !important;
+      --rx: 0deg !important;
+    }
+  }
+</style>
+
+<script>
+  // Lean the book towards the pointer while it is over the card.
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches || !matchMedia('(hover: hover)').matches;
+  if (!still) {
+    for (const book of document.querySelectorAll<HTMLElement>('.b3d[data-tilt]')) {
+      const card = book.closest<HTMLElement>('a, [data-tilt-area]') ?? book;
+      const side = book.dataset.bind === 'rtl' ? -1 : 1;
+      card.addEventListener('pointermove', (e) => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        book.dataset.tracking = '';
+        book.style.setProperty('--ry', `${side * -22 + x * 26}deg`);
+        book.style.setProperty('--rx', `${-y * 10}deg`);
+      });
+      card.addEventListener('pointerleave', () => {
+        delete book.dataset.tracking;
+        book.style.removeProperty('--ry');
+        book.style.removeProperty('--rx');
+      });
+    }
+  }
+</script>

@@ -24,6 +24,8 @@ export interface Work {
   id: string;
   type: 'book' | 'article' | 'interview' | 'dialogue';
   year: number;
+  /** Page count of the PDF (books) */
+  pages?: number;
   /** Language the work is written in */
   lang: Locale;
   title: Localized;

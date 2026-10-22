@@ -173,8 +173,10 @@ for (const v of instagram.items) video(v, 'instagram');
 /* ---------- Writings ---------- */
 
 for (const w of [...BOOKS, ...ARTICLES]) {
+  // Books have a page of their own, with the reader; articles are anchors on Writings.
+  const path = w.type === 'book' ? `books/${w.id}` : `writings#${w.id}`;
   records.push({
-    url: `/fa/writings/#${w.id}`,
+    url: w.type === 'book' ? `/fa/books/${w.id}/` : `/fa/writings/#${w.id}`,
     type: 'writings',
     lang: [w.lang],
     title: Object.values(w.title).join(' '),
@@ -182,7 +184,7 @@ for (const w of [...BOOKS, ...ARTICLES]) {
     meta: {
       kind: 'work',
       work: w.type,
-      path: `writings#${w.id}`,
+      path,
       orig: w.lang,
       year: w.year,
       ...localized('t', w.title),
