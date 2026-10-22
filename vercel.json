@@ -13,7 +13,7 @@
           "value": "hamid-hosseini.vercel.app"
         }
       ],
-      "destination": "https://www.hamidhosseini.site/:path*",
+      "destination": "https://hossaini.site/:path*",
       "permanent": true
     }
   ],

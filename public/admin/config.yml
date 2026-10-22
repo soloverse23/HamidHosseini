@@ -14,8 +14,8 @@ backend:
     uploadMedia: 'edit: upload “{{path}}”'
     deleteMedia: 'edit: delete “{{path}}”'
 
-site_url: https://www.hamidhosseini.site
-display_url: https://www.hamidhosseini.site
+site_url: https://hossaini.site
+display_url: https://hossaini.site
 media_folder: public/media/uploads
 public_folder: /media/uploads
 

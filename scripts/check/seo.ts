@@ -10,7 +10,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { LEGACY_HOST, PRODUCTION_URL } from '../../src/lib/site';
+import { LEGACY_HOSTS, PRODUCTION_URL } from '../../src/lib/site';
 
 const dist = resolve(process.argv[2] ?? 'dist');
 const origin = new URL(process.env.SITE_URL ?? PRODUCTION_URL).origin;
@@ -52,7 +52,8 @@ const pathOf = (url: string) => (url.startsWith(origin) ? decodeURIComponent(new
 // ---- 1. Stale domain anywhere in text output ----
 for (const f of files) {
   if (!/\.(html|xml|txt|json|js)$/.test(f)) continue;
-  if (readFileSync(f, 'utf8').includes(LEGACY_HOST)) error('legacy domain', relative(dist, f));
+  const text = readFileSync(f, 'utf8');
+  if (LEGACY_HOSTS.some((host) => text.includes(host))) error('legacy domain', relative(dist, f));
 }
 
 // ---- 2. Per page: canonical, hreflang, JSON-LD, links ----
