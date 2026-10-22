@@ -1,8 +1,10 @@
 ---
 // The books on the Writings page: the newest one up front, then the whole
-// shelf, which a reader can search and reorder. Books already opened in the
+// shelf, which a reader can search, filter and reorder. Each book shows the
+// edition in the reader's language when it has been translated, and the
+// original otherwise, marked with its language. Books already opened in the
 // reader show how far along the reader is, and come back in "Continue reading".
-import { books, type Book } from '../lib/books';
+import { books, editionFor, languageName, type Book } from '../lib/books';
 import { LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
 import { num, year } from '../lib/format';
@@ -18,14 +20,16 @@ const { locale } = Astro.props;
 const s = t(locale);
 
 const pick = (l?: Partial<Record<Locale, string>>) => (l ? (l[locale] ?? l.en ?? Object.values(l)[0]) : undefined);
-function titles(b: Book) {
-  const original = b.title[b.lang] ?? Object.values(b.title)[0]!;
-  const gloss = b.lang !== locale ? b.title[locale] : undefined;
-  return { original, gloss };
+/** What this reader sees of a book: its edition, and a gloss of the title when that edition is in another language. */
+function view(b: Book) {
+  const { edition, missing } = editionFor(b, locale);
+  const gloss = edition.lang !== locale ? b.title[locale] : undefined;
+  return { edition, missing, gloss };
 }
 const page = (b: Book) => href(locale, `books/${b.id}`);
 const featured = books[0];
-const totalPages = books.reduce((n, b) => n + (b.pages ?? 0), 0);
+const totalPages = books.reduce((n, b) => n + (view(b).edition.pages ?? 0), 0);
+const inMine = books.filter((b) => !view(b).missing).length;
 const sorts = [
   ['newest', s.books.newest],
   ['oldest', s.books.oldest],
@@ -43,32 +47,33 @@ const sorts = [
       </div>
 
       {(() => {
-        const { original, gloss } = titles(featured);
+        const { edition, missing, gloss } = view(featured);
         return (
-          <article class="feature" style={`--tone: ${featured.tone}`}>
+          <article class="feature" style={`--tone: ${edition.tone}`}>
             <a class="feature__cover" href={page(featured)} tabindex="-1" aria-hidden="true">
-              <BookCover book={featured} eager />
+              <BookCover edition={edition} eager />
             </a>
             <div class="feature__body">
               <p class="eyebrow feature__eyebrow">
-                {s.books.latest} · <span class="num">{year(locale, featured.year)}</span>
+                {s.books.latest} · <span class="num">{year(locale, edition.year)}</span>
+                {missing && <> · {languageName(edition.lang, locale)}</>}
               </p>
-              <h3 class="serif align-start" lang={featured.lang} dir="auto">
-                <a href={page(featured)}>{original}</a>
+              <h3 class="serif align-start" lang={edition.lang} dir="auto">
+                <a href={page(featured)}>{edition.title}</a>
               </h3>
               {gloss && <p class="gloss">{gloss}</p>}
               {pick(featured.summary) && <p class="feature__summary">{pick(featured.summary)}</p>}
               <p class="meta">
                 {pick(featured.venue) && <span>{pick(featured.venue)}</span>}
-                {featured.pages && <span>{s.books.pages(num(locale, featured.pages))}</span>}
+                {edition.pages && <span>{s.books.pages(num(locale, edition.pages))}</span>}
               </p>
               <p class="btn-row">
-                <a class="btn btn--light" href={`${page(featured)}#read`} data-resume={featured.id}>
+                <a class="btn btn--light" href={`${page(featured)}#read`} data-resume={edition.key}>
                   <Icon name="book" />
                   <span>{s.books.start}</span>
                 </a>
-                {featured.pdf && (
-                  <a class="btn btn--ghost" href={featured.pdf} download>
+                {edition.pdf && (
+                  <a class="btn btn--ghost" href={edition.pdf} download>
                     <Icon name="file" />
                     {s.books.download}
                   </a>
@@ -90,6 +95,20 @@ const sorts = [
           <span class="visually-hidden">{s.books.find}</span>
           <input type="search" placeholder={s.books.find} autocomplete="off" data-find />
         </label>
+        {
+          inMine > 0 && inMine < books.length && (
+            <div class="chips" role="group">
+              <button type="button" class="chip" data-only="" aria-pressed="true">
+                {s.books.all}
+                <span class="num">{num(locale, books.length)}</span>
+              </button>
+              <button type="button" class="chip" data-only="mine" aria-pressed="false">
+                {s.books.inMine}
+                <span class="num">{num(locale, inMine)}</span>
+              </button>
+            </div>
+          )
+        }
         <div class="chips" role="group" aria-label={s.books.sortBy}>
           {sorts.map(([key, label], i) => (
             <button type="button" class="chip" data-sort={key} aria-pressed={i === 0 ? 'true' : 'false'}>
@@ -102,26 +121,58 @@ const sorts = [
 
       <ul class="shelf" data-shelf>
         {books.map((b, i) => {
-          const { original, gloss } = titles(b);
+          const { edition, missing, gloss } = view(b);
           const haystack = normalize(
-            [...Object.values(b.title), ...Object.values(b.summary ?? {}), ...Object.values(b.venue ?? {}), b.id].join(' '),
+            [
+              ...Object.values(b.title),
+              ...b.editions.map((e) => e.title),
+              ...Object.values(b.summary ?? {}),
+              ...Object.values(b.venue ?? {}),
+              b.id,
+            ].join(' '),
           );
           return (
-            <li class="shelf__item" id={b.id} data-q={haystack} data-year={b.year} data-pages={b.pages ?? 0} data-order={i}>
+            <li
+              class="shelf__item"
+              id={b.id}
+              data-q={haystack}
+              data-year={b.year}
+              data-pages={edition.pages ?? 0}
+              data-order={i}
+              data-mine={missing ? undefined : ''}
+            >
               <a class="shelf__link" href={page(b)}>
                 <span class="shelf__stage">
-                  <BookCover book={b} eager={i < 4} />
+                  <BookCover edition={edition} eager={i < 4} />
+                  {missing && (
+                    <span class="shelf__tag" title={s.books.missing(languageName(edition.lang, locale))}>
+                      {languageName(edition.lang, locale)}
+                    </span>
+                  )}
                 </span>
-                <span class="shelf__progress" data-progress={b.id} hidden>
+                <span class="shelf__progress" data-progress={edition.key} hidden>
                   <span></span>
                 </span>
                 <span class="shelf__text">
-                  <span class="shelf__title serif align-start" lang={b.lang} dir="auto">{original}</span>
+                  <span class="shelf__title serif align-start" lang={edition.lang} dir="auto">{edition.title}</span>
                   {gloss && <span class="gloss">{gloss}</span>}
                   <span class="meta">
-                    <span class="num">{year(locale, b.year)}</span>
-                    {b.pages && <span>{s.books.pages(num(locale, b.pages))}</span>}
+                    <span class="num">{year(locale, edition.year)}</span>
+                    {edition.pages && <span>{s.books.pages(num(locale, edition.pages))}</span>}
                   </span>
+                  {b.editions.length > 1 && (
+                    <span class="shelf__langs">
+                      {b.editions.map((e) => (
+                        <abbr
+                          class:list={['shelf__lang', { 'is-here': e === edition }]}
+                          title={languageName(e.lang, locale)}
+                          lang={e.lang}
+                        >
+                          {LOCALE_META[e.lang].short}
+                        </abbr>
+                      ))}
+                    </span>
+                  )}
                 </span>
               </a>
             </li>
@@ -141,8 +192,15 @@ const sorts = [
     resume: s.books.resume('{n}'),
     pct: s.books.readPct('{p}'),
     intl: LOCALE_META[locale].intl,
+    // Every edition that can hold reading progress, by its progress key.
     books: Object.fromEntries(
-      books.map((b) => [b.id, { title: titles(b).original, lang: b.lang, cover: b.cover, href: page(b), pages: b.pages }]),
+      books.flatMap((b) => {
+        const shown = view(b).edition;
+        return b.editions.map((e) => [
+          e.key,
+          { title: e.title, lang: e.lang, cover: e.cover, href: page(b), hash: e === shown ? 'page' : `${e.lang}-page` },
+        ]);
+      }),
     ),
   }).replace(/</g, '\\u003c')}
 />
@@ -158,7 +216,7 @@ const sorts = [
       resume: string;
       pct: string;
       intl: string;
-      books: Record<string, { title: string; lang: string; cover?: string; href: string; pages?: number }>;
+      books: Record<string, { title: string; lang: string; cover?: string; href: string; hash: string }>;
     };
     const fmt = new Intl.NumberFormat(data.intl);
     const n = (x: number) => fmt.format(x);
@@ -167,13 +225,14 @@ const sorts = [
     const count = document.querySelector<HTMLElement>('[data-count]')!;
     const empty = document.querySelector<HTMLElement>('[data-empty]')!;
     let sort = 'newest';
+    let onlyMine = false;
 
     const apply = () => {
       const q = normalize(find.value.trim());
       const terms = q.split(/\s+/).filter(Boolean);
       let shown = 0;
       for (const li of items) {
-        const hit = terms.every((w) => li.dataset.q!.includes(w));
+        const hit = terms.every((w) => li.dataset.q!.includes(w)) && (!onlyMine || li.hasAttribute('data-mine'));
         li.hidden = !hit;
         if (hit) shown++;
       }
@@ -209,6 +268,12 @@ const sorts = [
         for (const b of document.querySelectorAll('[data-sort]')) b.setAttribute('aria-pressed', String(b === btn));
         apply();
       });
+    for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-only]'))
+      btn.addEventListener('click', () => {
+        onlyMine = btn.dataset.only === 'mine';
+        for (const b of document.querySelectorAll('[data-only]')) b.setAttribute('aria-pressed', String(b === btn));
+        apply();
+      });
     apply();
 
     // Reading progress saved by the reader on this device.
@@ -235,7 +300,7 @@ const sorts = [
         const b = data.books[p.id];
         const li = document.createElement('li');
         const a = document.createElement('a');
-        a.href = `${b.href}#page=${p.page}`;
+        a.href = `${b.href}#${b.hash}=${p.page}`;
         a.className = 'resume__item';
         if (b.cover) {
           const img = document.createElement('img');
@@ -618,5 +683,43 @@ const sorts = [
   }
   :root[dir='rtl'] .gloss {
     font-style: normal;
+  }
+  /* The original's language, on books not yet translated into the reader's. */
+  .shelf__tag {
+    position: absolute;
+    inset-block-start: var(--space-2);
+    inset-inline-end: 0;
+    padding: 0.1em 0.65em;
+    border-radius: 999px;
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    color: var(--ink-2);
+    font-size: 0.75rem;
+    font-weight: 500;
+    box-shadow: 0 4px 10px -6px rgb(0 0 0 / 0.4);
+    z-index: 1;
+  }
+  .shelf__langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-block-start: var(--space-1);
+  }
+  .shelf__lang {
+    min-width: 1.6rem;
+    padding: 0 0.35em;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    font-size: 0.6875rem;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    color: var(--ink-3);
+    font-family: var(--font-sans);
+  }
+  .shelf__lang.is-here {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-wash);
   }
 </style>

@@ -1,27 +1,32 @@
 ---
-// Full-screen reader for a book's PDF (see src/scripts/reader.ts). The desk
-// takes the book's direction, so turning, the arrows and the page slider all
-// run the way the book is bound; the toolbar keeps the site's direction.
+// Full-screen reader for one edition's PDF (see src/scripts/reader.ts). The
+// desk takes the edition's direction, so turning, the arrows and the page
+// slider all run the way that edition is bound; the toolbar keeps the site's
+// direction. A book page holds one reader per edition.
 import { LOCALE_META, type Locale } from '../i18n/locales';
 import { t } from '../i18n/strings';
-import type { Book } from '../lib/books';
+import type { Edition } from '../lib/books';
 import { num } from '../lib/format';
 import Icon from './Icon.astro';
 
 interface Props {
-  book: Book;
+  edition: Edition;
   locale: Locale;
+  /** The edition this page is about: it answers #read and #page=N */
+  main?: boolean;
 }
-const { book, locale } = Astro.props;
+const { edition: book, locale, main = false } = Astro.props;
 const s = t(locale);
 const r = s.books.reader;
-const title = book.title[book.lang] ?? Object.values(book.title)[0];
+const title = book.title;
 ---
 
 <dialog
   class="reader"
   data-reader
-  data-id={book.id}
+  data-id={book.key}
+  data-edition={book.lang}
+  data-main={main ? '' : undefined}
   data-pdf={book.pdf}
   data-dir={book.dir}
   data-pages={book.pages}

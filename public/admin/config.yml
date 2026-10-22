@@ -185,6 +185,77 @@ collections:
           - { label: URL, name: url, widget: string }
           - { label: Label, name: label, widget: string, required: false, hint: 'For “Buy”: the shop name' }
 
+      - label: Translations
+        name: translations
+        widget: object
+        required: false
+        hint: A published translation per language. The site shows it to readers of that language; without one they see the original and can ask for a translation.
+        fields:
+          - label: English
+            name: en
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Translator, name: translator, widget: string, required: false }
+              - { label: Year, name: year, widget: number, value_type: int, required: false }
+              - { label: Pages, name: pages, widget: number, value_type: int, required: false }
+              - { label: Cover, name: cover, widget: image, required: false }
+              - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
+              - { label: Library page, name: source, widget: string, required: false }
+          - label: Română
+            name: ro
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Translator, name: translator, widget: string, required: false }
+              - { label: Year, name: year, widget: number, value_type: int, required: false }
+              - { label: Pages, name: pages, widget: number, value_type: int, required: false }
+              - { label: Cover, name: cover, widget: image, required: false }
+              - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
+              - { label: Library page, name: source, widget: string, required: false }
+          - label: العربية
+            name: ar
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Translator, name: translator, widget: string, required: false }
+              - { label: Year, name: year, widget: number, value_type: int, required: false }
+              - { label: Pages, name: pages, widget: number, value_type: int, required: false }
+              - { label: Cover, name: cover, widget: image, required: false }
+              - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
+              - { label: Library page, name: source, widget: string, required: false }
+          - label: اردو
+            name: ur
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Translator, name: translator, widget: string, required: false }
+              - { label: Year, name: year, widget: number, value_type: int, required: false }
+              - { label: Pages, name: pages, widget: number, value_type: int, required: false }
+              - { label: Cover, name: cover, widget: image, required: false }
+              - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
+              - { label: Library page, name: source, widget: string, required: false }
+          - label: فارسی
+            name: fa
+            widget: object
+            required: false
+            collapsed: true
+            fields:
+              - { label: Title, name: title, widget: string, required: false }
+              - { label: Translator, name: translator, widget: string, required: false }
+              - { label: Year, name: year, widget: number, value_type: int, required: false }
+              - { label: Pages, name: pages, widget: number, value_type: int, required: false }
+              - { label: Cover, name: cover, widget: image, required: false }
+              - { label: PDF, name: pdf, widget: file, required: false, media_folder: /public/files, public_folder: /files }
+              - { label: Library page, name: source, widget: string, required: false }
   - name: qa
     label: Questions and answers
     label_singular: Question

@@ -27,5 +27,31 @@
       "kind": "pdf",
       "url": "/files/zendegi-name-imam-ali.pdf"
     }
-  ]
+  ],
+  "translations": {
+    "en": {
+      "title": "A Brief Biography of the Commander of the Faithful, Imam Ali (pbuh)",
+      "year": 2025,
+      "pages": 11,
+      "cover": "/media/books/zendegi-name-imam-ali.en.webp",
+      "pdf": "/files/zendegi-name-imam-ali.en.pdf",
+      "source": "https://biblioteca.imamali.ro/a-brief-biography-of-the-commander-of-the-faithful-imam-ali-pbuh/?lang=en"
+    },
+    "ro": {
+      "title": "Biografia succintă a Comandorului Credincioșilor, Imam Ali (pfal)",
+      "year": 2025,
+      "pages": 13,
+      "cover": "/media/books/zendegi-name-imam-ali.ro.webp",
+      "pdf": "/files/zendegi-name-imam-ali.ro.pdf",
+      "source": "https://biblioteca.imamali.ro/biografia-succinta-a-comandorului-credinciosilor-imam-ali-pfal/"
+    },
+    "ar": {
+      "title": "السيرة الموجزة لأمير المؤمنين الإمام علي (عليه السلام)",
+      "year": 2025,
+      "pages": 11,
+      "cover": "/media/books/zendegi-name-imam-ali.ar.webp",
+      "pdf": "/files/zendegi-name-imam-ali.ar.pdf",
+      "source": "https://biblioteca.imamali.ro/السيرة-الموجزة-لأمير-المؤمنين-الإمام/?lang=ar"
+    }
+  }
 }

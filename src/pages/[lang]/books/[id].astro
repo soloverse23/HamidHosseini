@@ -1,13 +1,16 @@
 ---
 // One page per book: the cover, what the book is, and the book itself, read
-// in place. The other books follow on a shelf to browse on to.
+// in place. Each language shows its own edition when the book has been
+// translated; otherwise the original, with a way to ask for a translation.
+// Every other edition can be opened here too. The other books follow on a
+// shelf to browse on to.
 import BookCover from '../../../components/BookCover.astro';
 import BookReader from '../../../components/BookReader.astro';
 import Icon from '../../../components/Icon.astro';
-import { LOCALES, LOCALE_META, type Locale } from '../../../i18n/locales';
+import { LOCALES, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
-import { books, type Book } from '../../../lib/books';
+import { books, editionFor, languageName, TRANSLATION_REQUESTS, type Book } from '../../../lib/books';
 import { num, year } from '../../../lib/format';
 import { href } from '../../../lib/paths';
 import { personRef } from '../../../lib/schema';
@@ -20,20 +23,28 @@ const locale = Astro.params.lang as Locale;
 const { book } = Astro.props as { book: Book };
 const s = t(locale);
 const pick = (l?: Partial<Record<Locale, string>>) => (l ? (l[locale] ?? l.en ?? Object.values(l)[0]) : undefined);
-const original = book.title[book.lang] ?? Object.values(book.title)[0]!;
-const gloss = book.lang !== locale ? book.title[locale] : undefined;
+const { edition, missing } = editionFor(book, locale);
+const original = book.editions[0];
+const lang = (l: Locale) => languageName(l, locale);
+// A reader's-language gloss of the title, when they are shown an edition in another language.
+const gloss = edition.lang !== locale ? book.title[locale] : undefined;
 const summary = pick(book.summary);
 const venue = pick(book.venue);
 const elsewhere = book.links.filter((l) => l.kind !== 'pdf' || !l.url.startsWith('/'));
+const otherEditions = book.editions.filter((e) => e !== edition && e.pdf);
 const others = books.filter((b) => b.id !== book.id);
 const site = Astro.site!;
 const path = `books/${book.id}`;
+const pageUrl = new URL(href(locale, path), site).toString();
+const whatsapp = `https://wa.me/${TRANSLATION_REQUESTS}?text=${encodeURIComponent(
+  s.books.waText(gloss ? `${original.title} (${gloss})` : original.title, pageUrl),
+)}`;
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Book',
-  '@id': new URL(href(locale, path), site).toString() + '#book',
-  name: original,
+  '@id': `${new URL(href('en', path), site)}#book`,
+  name: original.title,
   alternateName: Object.entries(book.title)
     .filter(([l]) => l !== book.lang)
     .map(([, v]) => v),
@@ -44,15 +55,28 @@ const jsonLd = {
   ...(venue && { publisher: { '@type': 'Organization', name: book.venue?.en ?? venue } }),
   ...(book.cover && { image: new URL(book.cover, site).toString() }),
   ...(book.summary && { description: book.summary[book.lang] ?? book.summary.en }),
-  url: new URL(href(locale, path), site).toString(),
-  ...(book.pdf && {
+  url: pageUrl,
+  ...(original.pdf && {
     workExample: {
       '@type': 'Book',
       bookFormat: 'https://schema.org/EBook',
       encodingFormat: 'application/pdf',
-      url: new URL(book.pdf, site).toString(),
+      url: new URL(original.pdf, site).toString(),
       inLanguage: book.lang,
     },
+  }),
+  ...(book.editions.length > 1 && {
+    workTranslation: book.editions.slice(1).map((e) => ({
+      '@type': 'Book',
+      name: e.title,
+      inLanguage: e.lang,
+      datePublished: String(e.year),
+      ...(e.pages && { numberOfPages: e.pages }),
+      ...(e.translator && { translator: { '@type': 'Person', name: e.translator } }),
+      ...(e.cover && { image: new URL(e.cover, site).toString() }),
+      bookFormat: 'https://schema.org/EBook',
+      url: new URL(e.pdf!, site).toString(),
+    })),
   }),
 };
 const linkLabel = (kind: string, label?: string) =>
@@ -64,34 +88,52 @@ const hostOf = (u: string) => {
     return '';
   }
 };
+const heading = gloss ? `${edition.title} (${gloss})` : edition.title;
 ---
 
 <Base
   locale={locale}
   path={path}
-  title={gloss ? `${original} (${gloss})` : original}
-  description={[gloss ? `${original} (${gloss})` : original, summary, venue, year(locale, book.year), book.pages && s.books.pages(num(locale, book.pages))].filter(Boolean).join(' · ')}
-  image={book.cover}
-  imageAlt={original}
+  title={heading}
+  description={[heading, summary, venue, year(locale, edition.year), edition.pages && s.books.pages(num(locale, edition.pages))].filter(Boolean).join(' · ')}
+  image={edition.cover}
+  imageAlt={edition.title}
   jsonLd={jsonLd}
   crumbs={[
     { name: s.sections.writings.title, path: 'writings' },
-    { name: original, path },
+    { name: edition.title, path },
   ]}
 >
-  <article class="book-page" style={`--tone: ${book.tone}`}>
+  <article class="book-page" style={`--tone: ${edition.tone}`}>
     <header class="hero">
       <div class="wrap hero__inner">
         <div class="hero__cover" data-tilt-area>
-          <BookCover book={book} eager />
+          <BookCover edition={edition} eager />
         </div>
         <div class="hero__body">
           <a class="hero__back" href={`${href(locale, 'writings')}#books`}>
             <Icon name="arrow" class="hero__back-arrow" />
             {s.books.books}
           </a>
-          <h1 class="serif align-start" lang={book.lang} dir="auto">{original}</h1>
+          {
+            (missing || !edition.original) && (
+              <p class="hero__edition">
+                <span class="hero__pill" lang={missing ? undefined : locale}>
+                  {missing ? `${s.books.original} · ${lang(edition.lang)}` : s.books.translatedFrom(lang(original.lang))}
+                </span>
+              </p>
+            )
+          }
+          <h1 class="serif align-start" lang={edition.lang} dir="auto">{edition.title}</h1>
           {gloss && <p class="hero__gloss">{gloss}</p>}
+          {
+            !edition.original && (
+              <p class="hero__orig">
+                <span>{s.books.originalTitle}:</span>{' '}
+                <span lang={original.lang} dir="auto">{original.title}</span>
+              </p>
+            )
+          }
           {summary && <p class="hero__summary">{summary}</p>}
 
           <dl class="facts">
@@ -101,33 +143,39 @@ const hostOf = (u: string) => {
                 <dd>{venue}</dd>
               </div>
             )}
+            {edition.translator && (
+              <div>
+                <dt>{s.books.translation}</dt>
+                <dd>{edition.translator}</dd>
+              </div>
+            )}
             <div>
               <dt>{s.books.year}</dt>
-              <dd class="num">{year(locale, book.year)}</dd>
+              <dd class="num">{year(locale, edition.year)}</dd>
             </div>
-            {book.pages && (
+            {edition.pages && (
               <div>
                 <dt>{s.books.pages('').trim() || s.books.reader.page}</dt>
-                <dd class="num">{num(locale, book.pages)}</dd>
+                <dd class="num">{num(locale, edition.pages)}</dd>
               </div>
             )}
             <div>
               <dt>{s.books.language}</dt>
-              <dd lang={book.lang}>{LOCALE_META[book.lang].label}</dd>
+              <dd>{lang(edition.lang)}</dd>
             </div>
           </dl>
 
           <p class="btn-row hero__actions">
-            {book.pdf ? (
+            {edition.pdf ? (
               <>
-                <a class="btn btn--read" href={`${book.pdf}`} data-open-reader>
+                <a class="btn btn--read" href={edition.pdf} data-open-reader={edition.lang}>
                   <Icon name="book" />
                   <span data-resume-label={s.books.resume('{n}')}>{s.books.start}</span>
                 </a>
-                <a class="btn btn--quiet" href="#read" data-open-reader data-page="1" data-restart hidden>
+                <a class="btn btn--quiet" href="#read" data-open-reader={edition.lang} data-page="1" data-restart={edition.lang} hidden>
                   {s.books.start}
                 </a>
-                <a class="btn btn--quiet" href={book.pdf} download>
+                <a class="btn btn--quiet" href={edition.pdf} download>
                   <Icon name="file" />
                   {s.books.download}
                 </a>
@@ -141,7 +189,28 @@ const hostOf = (u: string) => {
               )
             )}
           </p>
-          {book.pdf && elsewhere.length > 0 && (
+
+          {
+            missing && (
+              <aside class="ask">
+                <p class="ask__text">{s.books.missing(lang(edition.lang))}</p>
+                <p class="ask__row">
+                  <a class="ask__btn" href={whatsapp} rel="noopener" target="_blank">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2Zm0 17.7a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.3Z"
+                      />
+                    </svg>
+                    {s.books.request}
+                  </a>
+                  <span class="ask__note">{s.books.requestNote}</span>
+                </p>
+              </aside>
+            )
+          }
+
+          {elsewhere.length > 0 && edition.original && edition.pdf && (
             <p class="hero__elsewhere">
               <span>{s.books.elsewhere}:</span>
               {elsewhere.map((l) => (
@@ -156,7 +225,38 @@ const hostOf = (u: string) => {
       </div>
     </header>
 
-    {book.pdf && <BookReader book={book} locale={locale} />}
+    {
+      otherEditions.length > 0 && (
+        <section class="wrap editions" aria-labelledby="editions">
+          <h2 id="editions" class="editions__title">{s.books.editions}</h2>
+          <ul class="editions__list">
+            {otherEditions.map((e) => (
+              <li>
+                <a class="edition" href={e.pdf} data-open-reader={e.lang}>
+                  <span class="edition__cover" style={`--cover-h: 6.5rem; --cover-w: 5.5rem`}>
+                    <BookCover edition={e} tilt={false} />
+                  </span>
+                  <span class="edition__text">
+                    <span class="edition__lang">
+                      {lang(e.lang)}
+                      {e.original && <span class="edition__tag">{s.books.original}</span>}
+                    </span>
+                    <span class="edition__name" lang={e.lang} dir="auto">{e.title}</span>
+                    <span class="meta">
+                      {e.translator && <span>{s.books.translatedBy(e.translator)}</span>}
+                      {e.pages && <span>{s.books.pages(num(locale, e.pages))}</span>}
+                    </span>
+                  </span>
+                  <span class="edition__go" aria-hidden="true"><Icon name="book" /></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {book.editions.filter((e) => e.pdf).map((e) => <BookReader edition={e} locale={locale} main={e === edition} />)}
 
     {
       others.length > 0 && (
@@ -166,22 +266,25 @@ const hostOf = (u: string) => {
             <a href={`${href(locale, 'writings')}#books`}>{s.viewAll}</a>
           </div>
           <ul class="more__row">
-            {others.map((b) => (
-              <li>
-                <a href={href(locale, `books/${b.id}`)} class="more__item">
-                  <span class="more__stage">
-                    <BookCover book={b} />
-                  </span>
-                  <span class="more__title serif" lang={b.lang} dir="auto">
-                    {b.title[b.lang] ?? Object.values(b.title)[0]}
-                  </span>
-                  <span class="meta">
-                    <span class="num">{year(locale, b.year)}</span>
-                    {b.pages && <span>{s.books.pages(num(locale, b.pages))}</span>}
-                  </span>
-                </a>
-              </li>
-            ))}
+            {others.map((b) => {
+              const { edition: e, missing: m } = editionFor(b, locale);
+              return (
+                <li>
+                  <a href={href(locale, `books/${b.id}`)} class="more__item">
+                    <span class="more__stage">
+                      <BookCover edition={e} />
+                    </span>
+                    <span class="more__title serif" lang={e.lang} dir="auto">
+                      {e.title}
+                    </span>
+                    <span class="meta">
+                      <span class="num">{year(locale, e.year)}</span>
+                      {m ? <span>{lang(e.lang)}</span> : e.pages && <span>{s.books.pages(num(locale, e.pages))}</span>}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )
@@ -420,5 +523,182 @@ const hostOf = (u: string) => {
   }
   .more__item .meta {
     font-size: 0.8125rem;
+  }
+  /* ---------- Which edition this is ---------- */
+  .hero__edition {
+    margin-block-end: calc(-1 * var(--space-2));
+  }
+  .hero__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.2em 0.8em;
+    border-radius: 999px;
+    border: 1px solid rgb(244 239 228 / 0.35);
+    background: rgb(255 255 255 / 0.08);
+    font-size: var(--step--1);
+    color: rgb(244 239 228 / 0.9);
+  }
+  .hero__orig {
+    font-size: var(--step--1);
+    color: rgb(244 239 228 / 0.7);
+    margin-block-start: calc(-1 * var(--space-2));
+  }
+  .hero__orig [lang] {
+    color: #f4efe4;
+    font-size: var(--step-0);
+  }
+
+  /* ---------- Not translated yet: ask for it ---------- */
+  .ask {
+    justify-self: stretch;
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-radius: 6px;
+    background: rgb(0 0 0 / 0.22);
+    border: 1px solid rgb(244 239 228 / 0.16);
+    border-inline-start: 3px solid #f4efe4;
+  }
+  .ask__text {
+    font-size: var(--step--1);
+    line-height: 1.7;
+    color: rgb(244 239 228 / 0.92);
+  }
+  .ask__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+  }
+  .ask__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.55em 1.1em;
+    border-radius: 999px;
+    background: #25d366;
+    color: #06301a;
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.6);
+    transition: transform 0.15s, background 0.15s;
+  }
+  .ask__btn:hover {
+    background: #3ee07a;
+    color: #06301a;
+    transform: translateY(-1px);
+  }
+  .ask__btn svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+  .ask__note {
+    font-size: 0.8125rem;
+    color: rgb(244 239 228 / 0.65);
+  }
+
+  /* ---------- The same book in other languages ---------- */
+  .editions {
+    margin-block-start: var(--space-7);
+  }
+  .editions__title {
+    font-family: var(--font-sans);
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink-3);
+    margin-block-end: var(--space-3);
+  }
+  .editions__list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+    gap: var(--space-3);
+  }
+  .edition {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-4);
+    height: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--paper-2);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s, transform 0.2s;
+  }
+  .edition:hover {
+    border-color: var(--accent);
+    color: inherit;
+    transform: translateY(-2px);
+  }
+  .edition__cover {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 5.5rem;
+    height: 6.75rem;
+  }
+  .edition__text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .edition__lang {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .edition__tag {
+    padding: 0 0.5em;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  .edition__name {
+    font-weight: 600;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  :root[dir='ltr'] .edition__name {
+    text-align: left;
+  }
+  :root[dir='rtl'] .edition__name {
+    text-align: right;
+  }
+  .edition .meta {
+    font-size: 0.8125rem;
+  }
+  .edition__go {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    color: var(--ink-2);
+  }
+  .edition:hover .edition__go {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .edition__go :global(svg) {
+    width: 1.05rem;
+    height: 1.05rem;
   }
 </style>

@@ -1,17 +1,35 @@
 // What the shelf and the reader need to know about each book, beyond its JSON.
+//
+// A book can exist in several editions: the original and its translations.
+// Each language of the site shows the edition in its own language when there
+// is one, and the original otherwise (with a way to ask for a translation).
 
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { BOOKS, type Work } from '../data/writings';
-import { LOCALE_META } from '../i18n/locales';
+import { LOCALES, LOCALE_META, type Locale } from '../i18n/locales';
 
-export interface Book extends Work {
+export interface Edition {
+  lang: Locale;
+  /** Direction the edition is bound in: a Persian book opens from the right */
+  dir: 'ltr' | 'rtl';
+  title: string;
+  cover?: string;
   /** PDF served from this site, read in place */
   pdf?: string;
-  /** Direction the book is bound in: a Persian book opens from the right */
-  dir: 'ltr' | 'rtl';
+  pages?: number;
+  year: number;
+  translator?: string;
   /** Average colour of the cover, for the spine and the stage behind it */
   tone: string;
+  original: boolean;
+  /** Reading progress is kept per edition */
+  key: string;
+}
+
+export interface Book extends Work {
+  /** The original first, then translations in site order */
+  editions: Edition[];
 }
 
 /** Mean colour of the cover, darkened a little so light text reads on it. */
@@ -27,13 +45,58 @@ async function tone(cover?: string): Promise<string> {
 }
 
 export const books: Book[] = await Promise.all(
-  BOOKS.map(async (b) => ({
-    ...b,
-    pdf: b.links.find((l) => l.kind === 'pdf' && l.url.startsWith('/'))?.url,
-    dir: LOCALE_META[b.lang].dir,
-    tone: await tone(b.cover),
-  })),
+  BOOKS.map(async (b) => {
+    const original: Edition = {
+      lang: b.lang,
+      dir: LOCALE_META[b.lang].dir,
+      title: b.title[b.lang] ?? Object.values(b.title)[0]!,
+      cover: b.cover,
+      pdf: b.links.find((l) => l.kind === 'pdf' && l.url.startsWith('/'))?.url,
+      pages: b.pages,
+      year: b.year,
+      tone: await tone(b.cover),
+      original: true,
+      key: b.id,
+    };
+    const translations = await Promise.all(
+      LOCALES.filter((l) => l !== b.lang && b.translations?.[l]?.pdf).map(async (lang): Promise<Edition> => {
+        const t = b.translations![lang]!;
+        return {
+          lang,
+          dir: LOCALE_META[lang].dir,
+          title: t.title,
+          cover: t.cover ?? b.cover,
+          pdf: t.pdf,
+          pages: t.pages,
+          year: t.year ?? b.year,
+          translator: t.translator,
+          tone: await tone(t.cover ?? b.cover),
+          original: false,
+          key: `${b.id}.${lang}`,
+        };
+      }),
+    );
+    return { ...b, editions: [original, ...translations] };
+  }),
 );
+
+/** The edition a reader of `locale` sees, and whether it is a stand-in for a missing translation. */
+export function editionFor(book: Book, locale: Locale): { edition: Edition; missing: boolean } {
+  const own = book.editions.find((e) => e.lang === locale);
+  return { edition: own ?? book.editions[0], missing: !own };
+}
+
+/** "Persian", "persană", "الفارسية"… in the reader's language. */
+export function languageName(lang: Locale, locale: Locale): string {
+  try {
+    return new Intl.DisplayNames([LOCALE_META[locale].intl.split('-u-')[0]], { type: 'language' }).of(lang) ?? LOCALE_META[lang].label;
+  } catch {
+    return LOCALE_META[lang].label;
+  }
+}
 
 /** Spine thickness in px: thin pamphlets stay thin, the 500-page book looks it. */
 export const thickness = (pages?: number) => Math.round(Math.min(26, Math.max(5, 4 + (pages ?? 60) / 22)));
+
+/** WhatsApp number that takes requests for translations. */
+export const TRANSLATION_REQUESTS = '40734101111';

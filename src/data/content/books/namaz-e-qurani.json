@@ -27,5 +27,41 @@
       "kind": "pdf",
       "url": "/files/namaz-e-qurani.pdf"
     }
-  ]
+  ],
+  "translations": {
+    "en": {
+      "title": "Quranic Prayer",
+      "translator": "Aylin Setayesh",
+      "year": 2026,
+      "pages": 74,
+      "cover": "/media/books/namaz-e-qurani.en.webp",
+      "pdf": "/files/namaz-e-qurani.en.pdf",
+      "source": "https://biblioteca.imamali.ro/quranic-prayer/?lang=en"
+    },
+    "ro": {
+      "title": "Rugăciunea coranică",
+      "translator": "Rozhin Alsadat Mirmohammadi",
+      "year": 2026,
+      "pages": 74,
+      "cover": "/media/books/namaz-e-qurani.ro.webp",
+      "pdf": "/files/namaz-e-qurani.ro.pdf",
+      "source": "https://biblioteca.imamali.ro/rugaciunea-coranica/"
+    },
+    "ar": {
+      "title": "الصلاة القرآنية",
+      "year": 2026,
+      "pages": 60,
+      "cover": "/media/books/namaz-e-qurani.ar.webp",
+      "pdf": "/files/namaz-e-qurani.ar.pdf",
+      "source": "https://biblioteca.imamali.ro/الصلاة-القرآنية-2/?lang=ar"
+    },
+    "ur": {
+      "title": "قرآنی نماز",
+      "year": 2026,
+      "pages": 66,
+      "cover": "/media/books/namaz-e-qurani.ur.webp",
+      "pdf": "/files/namaz-e-qurani.ur.pdf",
+      "source": "https://biblioteca.imamali.ro/قرآنی-نماز/?lang=ur"
+    }
+  }
 }

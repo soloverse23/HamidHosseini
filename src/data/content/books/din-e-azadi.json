@@ -27,5 +27,33 @@
       "kind": "pdf",
       "url": "/files/din-e-azadi.pdf"
     }
-  ]
+  ],
+  "translations": {
+    "en": {
+      "title": "The Religion of Freedom and Freedom of Religion in the Quran",
+      "translator": "Ayleen Setayesh",
+      "year": 2024,
+      "pages": 35,
+      "cover": "/media/books/din-e-azadi.en.webp",
+      "pdf": "/files/din-e-azadi.en.pdf",
+      "source": "https://biblioteca.imamali.ro/the-religion-of-freedom-and-freedom-of-religion-in-quran/?lang=en"
+    },
+    "ro": {
+      "title": "Religia libertății și libertatea religioasă în Coran",
+      "translator": "Rozhin Alsadat Mirmohammadi",
+      "year": 2024,
+      "pages": 35,
+      "cover": "/media/books/din-e-azadi.ro.webp",
+      "pdf": "/files/din-e-azadi.ro.pdf",
+      "source": "https://biblioteca.imamali.ro/religia-libertatii-si-libertatea-religioasa-in-coran/"
+    },
+    "ar": {
+      "title": "دين الحرية والحرية الدينية في القرآن",
+      "year": 2024,
+      "pages": 20,
+      "cover": "/media/books/din-e-azadi.ar.webp",
+      "pdf": "/files/din-e-azadi.ar.pdf",
+      "source": "https://biblioteca.imamali.ro/دين-الحرية-والحرية-الدينیة-في-القرآن/?lang=ar"
+    }
+  }
 }

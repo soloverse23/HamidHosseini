@@ -179,7 +179,7 @@ for (const w of [...BOOKS, ...ARTICLES]) {
     url: w.type === 'book' ? `/fa/books/${w.id}/` : `/fa/writings/#${w.id}`,
     type: 'writings',
     lang: [w.lang],
-    title: Object.values(w.title).join(' '),
+    title: [...Object.values(w.title), ...Object.values(w.translations ?? {}).map((x) => x!.title)].join(' '),
     body: [...Object.values(w.venue ?? {}), ...Object.values(w.summary ?? {})].join(' '),
     meta: {
       kind: 'work',
@@ -187,7 +187,8 @@ for (const w of [...BOOKS, ...ARTICLES]) {
       path,
       orig: w.lang,
       year: w.year,
-      ...localized('t', w.title),
+      // A translated book is listed under its translated title in that language.
+      ...localized('t', { ...w.title, ...Object.fromEntries(Object.entries(w.translations ?? {}).map(([l, x]) => [l, x!.title])) }),
       ...localized('d', w.summary),
       ...localized('v', w.venue),
     },

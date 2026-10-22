@@ -20,6 +20,19 @@ export interface WorkLink {
   label?: string;
 }
 
+/** A published translation of a book, read on the site like the original. */
+export interface Translation {
+  title: string;
+  translator?: string;
+  /** Gregorian year of the translation */
+  year?: number;
+  pages?: number;
+  cover?: string;
+  pdf: string;
+  /** Its page on the publisher's library */
+  source?: string;
+}
+
 export interface Work {
   id: string;
   type: 'book' | 'article' | 'interview' | 'dialogue';
@@ -34,6 +47,8 @@ export interface Work {
   summary?: Localized;
   cover?: string;
   links: WorkLink[];
+  /** Books: translations by language, each with its own PDF */
+  translations?: Partial<Record<Locale, Translation>>;
 }
 
 export interface LectureSeries {

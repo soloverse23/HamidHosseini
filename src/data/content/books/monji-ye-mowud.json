@@ -27,5 +27,31 @@
       "kind": "pdf",
       "url": "/files/monji-ye-mowud.pdf"
     }
-  ]
+  ],
+  "translations": {
+    "en": {
+      "title": "The Promised Savior: Common Grounds and Challenges",
+      "year": 2025,
+      "pages": 19,
+      "cover": "/media/books/monji-ye-mowud.en.webp",
+      "pdf": "/files/monji-ye-mowud.en.pdf",
+      "source": "https://biblioteca.imamali.ro/the-promised-savior-common-grounds-and-challenges/?lang=en"
+    },
+    "ro": {
+      "title": "Mântuitorul promis: puncte comune și provocări",
+      "year": 2025,
+      "pages": 21,
+      "cover": "/media/books/monji-ye-mowud.ro.webp",
+      "pdf": "/files/monji-ye-mowud.ro.pdf",
+      "source": "https://biblioteca.imamali.ro/mantuitorul-promis-puncte-comune-si-provocari/"
+    },
+    "ar": {
+      "title": "المخلّص الموعود، نقاط الاتفاق والتحديات",
+      "year": 2025,
+      "pages": 15,
+      "cover": "/media/books/monji-ye-mowud.ar.webp",
+      "pdf": "/files/monji-ye-mowud.ar.pdf",
+      "source": "https://biblioteca.imamali.ro/المخلّص-الموعود،-نقاط-الاتفاق-والتحد/?lang=ar"
+    }
+  }
 }

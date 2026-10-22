@@ -27,5 +27,15 @@
       "kind": "pdf",
       "url": "/files/ghorbani-dar-eid-e-ghorban.pdf"
     }
-  ]
+  ],
+  "translations": {
+    "ro": {
+      "title": "Jertfa în Eid al-Adha",
+      "year": 2026,
+      "pages": 19,
+      "cover": "/media/books/ghorbani-dar-eid-e-ghorban.ro.webp",
+      "pdf": "/files/ghorbani-dar-eid-e-ghorban.ro.pdf",
+      "source": "https://biblioteca.imamali.ro/jertfa-in-eid-al-adha/"
+    }
+  }
 }

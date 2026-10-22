@@ -27,5 +27,31 @@
       "kind": "pdf",
       "url": "/files/payam-avar-e-mehrabani.pdf"
     }
-  ]
+  ],
+  "translations": {
+    "en": {
+      "title": "The Messenger of Kindness",
+      "year": 2025,
+      "pages": 9,
+      "cover": "/media/books/payam-avar-e-mehrabani.en.webp",
+      "pdf": "/files/payam-avar-e-mehrabani.en.pdf",
+      "source": "https://biblioteca.imamali.ro/the-messenger-of-kindness/?lang=en"
+    },
+    "ro": {
+      "title": "Mesagerul bunătății",
+      "year": 2025,
+      "pages": 9,
+      "cover": "/media/books/payam-avar-e-mehrabani.ro.webp",
+      "pdf": "/files/payam-avar-e-mehrabani.ro.pdf",
+      "source": "https://biblioteca.imamali.ro/mesagerul-bunatatii/"
+    },
+    "ar": {
+      "title": "رسول الرحمة",
+      "year": 2025,
+      "pages": 7,
+      "cover": "/media/books/payam-avar-e-mehrabani.ar.webp",
+      "pdf": "/files/payam-avar-e-mehrabani.ar.pdf",
+      "source": "https://biblioteca.imamali.ro/رسول-الرحمة/?lang=ar"
+    }
+  }
 }

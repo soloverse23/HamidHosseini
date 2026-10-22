@@ -1,38 +1,38 @@
 ---
 // A book standing in space: the cover, the edge of its pages and its back,
-// as thick as the book is long. The binding follows the book's own language,
-// not the page's: a Persian book opens from the right on the English site too.
-import { thickness, type Book } from '../lib/books';
+// as thick as the book is long. The binding follows the edition's own
+// language, not the page's: a Persian book opens from the right on the
+// English site too, and its English translation from the left.
+import { thickness, type Edition } from '../lib/books';
 import Icon from './Icon.astro';
 
 interface Props {
-  book: Book;
+  edition: Edition;
   /** The first cover on the page: load it straight away */
   eager?: boolean;
   /** Turn towards the pointer */
   tilt?: boolean;
 }
-const { book, eager = false, tilt = true } = Astro.props;
-const title = book.title[book.lang] ?? Object.values(book.title)[0];
+const { edition, eager = false, tilt = true } = Astro.props;
 ---
 
 <span
   class="b3d"
-  data-bind={book.dir}
+  data-bind={edition.dir}
   data-tilt={tilt ? '' : undefined}
-  style={`--tone: ${book.tone}; --depth: ${thickness(book.pages)}px`}
+  style={`--tone: ${edition.tone}; --depth: ${thickness(edition.pages)}px`}
 >
   <span class="b3d__body">
     <span class="b3d__back"></span>
     <span class="b3d__spine"></span>
     <span class="b3d__pages"></span>
     {
-      book.cover ? (
-        <img class="b3d__front" src={book.cover} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+      edition.cover ? (
+        <img class="b3d__front" src={edition.cover} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" />
       ) : (
-        <span class="b3d__front b3d__front--blank" lang={book.lang} dir={book.dir}>
+        <span class="b3d__front b3d__front--blank" lang={edition.lang} dir={edition.dir}>
           <Icon name="book" />
-          {title}
+          {edition.title}
         </span>
       )
     }

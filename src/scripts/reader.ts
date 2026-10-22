@@ -19,6 +19,8 @@ export function mountReader(dialog: HTMLDialogElement) {
   const id = dialog.dataset.id!;
   const url = dialog.dataset.pdf!;
   const rtl = dialog.dataset.dir === 'rtl';
+  // #page=12 for the page's own edition, #en-page=12 for another one.
+  const hashKey = dialog.hasAttribute('data-main') ? 'page' : `${dialog.dataset.edition}-page`;
   const intl = new Intl.NumberFormat(dialog.dataset.intl);
   const n = (x: number) => intl.format(x);
   const $ = <T extends HTMLElement>(sel: string) => dialog.querySelector<T>(sel)!;
@@ -225,7 +227,7 @@ export function mountReader(dialog: HTMLDialogElement) {
     ($('[data-act="prev"]') as HTMLButtonElement).disabled = page <= 1;
     ($('[data-act="next"]') as HTMLButtonElement).disabled = last >= total;
     saveProgress(id, page, total);
-    history.replaceState(null, '', `#page=${page}`);
+    history.replaceState(null, '', `#${hashKey}=${page}`);
 
     // Have the next and previous groups ready before they are asked for.
     const ahead = [...group(Math.min(total, last + 1)), ...group(Math.max(1, ps[0] - 1))];
@@ -398,29 +400,36 @@ export function mountReader(dialog: HTMLDialogElement) {
 
 /* ---------- Wiring on the book page ---------- */
 
-const dialog = document.querySelector<HTMLDialogElement>('dialog[data-reader]');
-if (dialog) {
-  const reader = mountReader(dialog);
-  const fromHash = () => {
-    const m = location.hash.match(/^#page=(\d+)$/);
-    if (m) return reader.open(Number(m[1]));
-    if (location.hash === '#read') return reader.open();
-  };
-  for (const a of document.querySelectorAll<HTMLAnchorElement>('[data-open-reader]'))
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      const at = Number(a.dataset.page) || undefined;
-      reader.open(at);
-    });
-  // Resume prompt on the start button.
+const readers = new Map<string, ReturnType<typeof mountReader>>();
+let main: string | undefined;
+for (const dialog of document.querySelectorAll<HTMLDialogElement>('dialog[data-reader]')) {
+  const lang = dialog.dataset.edition!;
+  readers.set(lang, mountReader(dialog));
+  if (dialog.hasAttribute('data-main')) main = lang;
+
+  // Resume prompts on the buttons that open this edition.
   const p = readProgress(dialog.dataset.id!);
   if (p) {
     const intl = new Intl.NumberFormat(dialog.dataset.intl);
-    for (const el of document.querySelectorAll<HTMLElement>('[data-resume-label]')) {
+    for (const el of document.querySelectorAll<HTMLElement>(`[data-open-reader="${lang}"] [data-resume-label]`))
       el.textContent = el.dataset.resumeLabel!.replace('{n}', intl.format(p.page));
-    }
-    for (const el of document.querySelectorAll<HTMLElement>('[data-restart]')) el.hidden = false;
+    for (const el of document.querySelectorAll<HTMLElement>(`[data-restart="${lang}"]`)) el.hidden = false;
   }
+}
+if (readers.size) {
+  for (const a of document.querySelectorAll<HTMLAnchorElement>('[data-open-reader]'))
+    a.addEventListener('click', (e) => {
+      const reader = readers.get(a.dataset.openReader!);
+      if (!reader) return;
+      e.preventDefault();
+      reader.open(Number(a.dataset.page) || undefined);
+    });
+  const fromHash = () => {
+    const m = location.hash.match(/^#(?:(\w\w)-)?page=(\d+)$/);
+    if (m) return readers.get(m[1] ?? main!)?.open(Number(m[2]));
+    const r = location.hash.match(/^#read(?:-(\w\w))?$/);
+    if (r) return readers.get(r[1] ?? main!)?.open();
+  };
   fromHash();
   addEventListener('hashchange', fromHash);
 }
