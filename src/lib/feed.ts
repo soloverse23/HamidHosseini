@@ -182,19 +182,23 @@ const isOwn = (n: FeedItem) =>
 
 /**
  * The newest Telegram post that is an actual written note (not a clip,
- * podcast or Quran translation). Posts are Persian, so only for Persian readers.
+ * podcast or Quran translation). Posts are Persian, so other languages get
+ * the newest long-form item in their own language (a video with its
+ * description), and the Persian note only when there is none.
  */
 export function featuredNote(locale: Locale): FeedItem | undefined {
-  if (locale !== 'fa') return undefined;
-  const pinned = notes.find((n) => n.pinned);
-  if (pinned) return pinned;
-  return notes.find(
-    (n) =>
-      n.text.length > 400 &&
-      isOwn(n) &&
-      n.series !== 'quran-translation' &&
-      !(n.tags ?? []).some((t) => t === '#پادکست' || t === '#کلیپ_آموزشی'),
-  );
+  const note =
+    notes.find((n) => n.pinned) ??
+    notes.find(
+      (n) =>
+        n.text.length > 400 &&
+        isOwn(n) &&
+        n.series !== 'quran-translation' &&
+        !(n.tags ?? []).some((t) => t === '#پادکست' || t === '#کلیپ_آموزشی'),
+    );
+  if (locale === 'fa') return note;
+  const pool = feedFor(locale).pool.filter((i) => !isShort(i) && i.text.trim());
+  return pool.find((i) => i.text.length > 400) ?? pool[0] ?? note;
 }
 
 /** Group Telegram posts by day for the Notes listing, same shape as the home feed. */

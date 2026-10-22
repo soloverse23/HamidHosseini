@@ -60,20 +60,25 @@ function sessionRows(l: LectureSeries, sessions: Session[]): { slot: number; ses
       <ul class="books">
             {BOOKS.map((b) => {
               const { original, gloss } = titles(b);
+              const first = sortLinks(b)[0];
+              const cover = b.cover ? <img src={b.cover} alt="" loading="lazy" /> : <Icon name="book" />;
               return (
                 <li class="book">
-                  <div class="book__cover frame">
-                    {b.cover ? <img src={b.cover} alt="" loading="lazy" /> : <Icon name="book" />}
-                  </div>
+                  {/* Covers come square or portrait; the stage shows each one whole. */}
+                  {first ? (
+                    <a class="book__cover" href={first.url} rel="noopener" target="_blank" tabindex="-1" aria-hidden="true">{cover}</a>
+                  ) : (
+                    <div class="book__cover">{cover}</div>
+                  )}
                   <div class="book__body">
                     <h3 class="serif align-start" lang={b.lang} dir="auto">{original}</h3>
                     {gloss && <p class="gloss">{gloss}</p>}
+                    {pick(b.summary) && <p class="summary">{pick(b.summary)}</p>}
                     <p class="meta">
                       {pick(b.venue) && <span>{pick(b.venue)}</span>}
                       <span>{year(locale, b.year)}</span>
                     </p>
-                    {pick(b.summary) && <p class="summary">{pick(b.summary)}</p>}
-                    <p class="btn-row">
+                    <p class="btn-row book__links">
                       {sortLinks(b).map((l, i) => (
                         <a class:list={['btn', { 'btn--primary': i === 0 }]} href={l.url} rel="noopener" target="_blank">
                           <Icon name={l.kind === 'telegram' ? 'telegram' : l.kind === 'buy' ? 'external' : 'file'} />
@@ -201,23 +206,80 @@ function sessionRows(l: LectureSeries, sessions: Session[]): { slot: number; ses
     list-style: none;
     padding: 0;
     display: grid;
-    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+    gap: var(--space-6) var(--space-5);
   }
   .book {
-    display: grid;
-    grid-template-columns: 8rem 1fr;
-    gap: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
   }
   .book__cover {
-    aspect-ratio: 2 / 3;
-    display: grid;
-    place-items: center;
+    aspect-ratio: 1;
+    /* Without these a portrait cover stretches its stage taller than its neighbours. */
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-5);
+    background: var(--paper-2);
+    border-radius: var(--radius);
     color: var(--ink-3);
   }
+  .book__cover img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 1px;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.12),
+      0 6px 16px -6px rgb(0 0 0 / 0.3);
+    transition: transform 0.2s;
+  }
+  a.book__cover:hover img {
+    transform: translateY(-3px);
+  }
+  .book__cover :global(svg) {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
   .book__body {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-2);
-    align-content: start;
+    flex: 1;
+  }
+  .book__body h3 {
+    font-size: var(--step-1);
+    line-height: 1.5;
+  }
+  .book__body .summary {
+    font-size: var(--step--1);
+  }
+  .book__body .meta {
+    font-size: var(--step--1);
+  }
+  .book__links {
+    margin-block-start: auto;
+    padding-block-start: var(--space-2);
+  }
+  .book__links .btn {
+    font-size: var(--step--1);
+  }
+  @media (max-width: 34rem) {
+    .books {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-5) var(--space-3);
+    }
+    .book__cover {
+      padding: var(--space-3);
+    }
+    .book__body h3 {
+      font-size: var(--step-0);
+    }
+    .book__links .btn {
+      padding: 0.4em 0.7em;
+    }
   }
 
   .work {

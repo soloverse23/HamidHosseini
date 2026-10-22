@@ -34,7 +34,7 @@ import { href, localePaths } from '../../lib/paths';
 import { PRODUCTION_URL } from '../../lib/site';
 import { verseHref } from '../../lib/quran-refs';
 import { foundationNode, personNode } from '../../lib/schema';
-import { PROJECTS } from '../../data/projects';
+import { FOUNDATION, PROJECTS } from '../../data/projects';
 import { pathsIn } from '../../lib/content';
 import { CHANNELS } from '../../lib/social';
 import { withoutEpisodeNo } from '../../lib/series';
@@ -47,15 +47,25 @@ const s = t(locale);
 const u = ui(locale);
 const n = (x: number) => num(locale, x);
 const pad = (i: number) => n(i).padStart(2, locale === 'fa' ? '۰' : locale === 'ar' ? '٠' : '0');
-const dirOf = (lang?: string) => (lang === 'fa' || lang === 'ar' ? 'rtl' : 'ltr');
+const dirOf = (lang?: string) => (lang === 'fa' || lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr');
 const strip = (x: string) => x.replace(/^[^\p{L}\p{N}«(]+/u, '').trim();
 
 /* Hero: the newest written note */
 const feat = featuredNote(locale);
 const paths = pathsIn(locale);
 const muin = PROJECTS.find((p) => p.id === 'muin')!;
+const featNote = feat?.source === 'telegram';
+const featHref = !feat
+  ? ''
+  : featNote
+    ? href('fa', `notes/${feat.id}`)
+    : feat.source === 'youtube' && feat.episode
+      ? href(locale, `videos/${feat.episode}`)
+      : feat.url;
+const featExternal = featHref.startsWith('http');
 const featTitle = feat ? itemTitle(feat, 140) : '';
-const featBody = feat ? excerpt(strip(feat.text.slice(feat.text.indexOf('\n') + 1)), 520) : '';
+/* A note's first line is its title; a video's description starts the body */
+const featBody = feat ? excerpt(strip(featNote ? feat.text.slice(feat.text.indexOf('\n') + 1) : feat.text), 520) : '';
 const featTopic = feat ? topicsOf(feat)[0] : undefined;
 
 /* Now: Quran */
@@ -163,14 +173,14 @@ const jsonLd = [
           <span class="feature__quote" aria-hidden="true">
             ❝
           </span>
-          <h2 class="feature__title x" lang={feat.lang} dir={dirOf(feat.lang)} data-tr>
-            <a href={href('fa', `notes/${feat.id}`)}>{featTitle}</a>
+          <h2 class="feature__title x" lang={contentLang(feat)} dir={dirOf(contentLang(feat))} data-tr>
+            <a href={featHref} rel={featExternal ? 'noopener' : undefined} target={featExternal ? '_blank' : undefined}>{featTitle}</a>
           </h2>
-          <p class="feature__body x clamp-4" lang={feat.lang} dir={dirOf(feat.lang)} data-tr>
+          <p class="feature__body x clamp-4" lang={contentLang(feat)} dir={dirOf(contentLang(feat))} data-tr>
             {featBody}
           </p>
           <p class="feature__foot">
-            <a class="feature__go" href={href('fa', `notes/${feat.id}`)}>
+            <a class="feature__go" href={featHref} rel={featExternal ? 'noopener' : undefined} target={featExternal ? '_blank' : undefined}>
               {s.readMore}
               <Icon name="arrow" class="flip" />
             </a>
@@ -207,24 +217,35 @@ const jsonLd = [
     )
   }
 
-  {
-    locale === 'ro' && (
-      <section class="wrap start" aria-labelledby="found-title">
-        <div class="block-head">
-          <h2 id="found-title">{s.about.projects}</h2>
-        </div>
-        <div class="start__grid">
-          {PROJECTS.map((p) => (
-            <article class="start__path">
-              <h3><a href={p.url} rel="noopener" target="_blank">{p.name.ro}</a></h3>
-              <p class="meta">{p.description.ro}</p>
-              {p.appUrl && <a class="link-arrow" href={p.appUrl} rel="noopener" target="_blank">{s.about.openApp}</a>}
-            </article>
-          ))}
-        </div>
-      </section>
-    )
-  }
+  <!-- ============ Foundation and projects ============ -->
+  <section class="wrap found" aria-labelledby="found-title">
+    <div class="block-head">
+      <h2 id="found-title">{s.about.projects}</h2>
+      <a class="more" href={href(locale, 'about#projects')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
+    </div>
+    <ul class="found__grid">
+      {PROJECTS.map((p) => (
+        <li class:list={['found__item', { 'found__item--lead': p === FOUNDATION }]}>
+          <h3 class="found__name">
+            <a href={p.url} rel="noopener" target="_blank">{p.name[locale] ?? p.name.en}</a>
+          </h3>
+          <p class="found__desc">{p.description[locale] ?? p.description.en}</p>
+          <p class="found__links">
+            <a class="link-arrow" href={p.url} rel="noopener" target="_blank" dir="ltr">
+              {new URL(p.url).host}
+              <Icon name="external" />
+            </a>
+            {p.appUrl && (
+              <a class="link-arrow" href={p.appUrl} rel="noopener" target="_blank">
+                {s.about.openApp}
+                <Icon name="arrow" class="flip" />
+              </a>
+            )}
+          </p>
+        </li>
+      ))}
+    </ul>
+  </section>
 
   <!-- ============ Now ============ -->
   <section class="wrap now" aria-labelledby="now-title">
@@ -930,6 +951,59 @@ const jsonLd = [
     display: grid;
     gap: var(--space-1);
     padding-inline-start: 1.2em;
+  }
+  .found {
+    margin-block: var(--space-7);
+  }
+  .found__grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5);
+  }
+  @media (min-width: 48rem) {
+    .found__grid {
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: var(--space-6);
+    }
+  }
+  .found__item {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--space-2);
+    padding-block-start: var(--space-4);
+    border-block-start: 1px solid var(--rule-strong);
+  }
+  /* The foundation leads: a lapis rule and a washed ground */
+  .found__item--lead {
+    padding: var(--space-4) var(--space-5) var(--space-5);
+    border-block-start: 3px solid var(--accent);
+    background: var(--accent-wash);
+  }
+  .found__name {
+    font-size: var(--step-1);
+    line-height: 1.35;
+  }
+  .found__item--lead .found__name {
+    font-size: var(--step-2);
+  }
+  .found__name a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .found__name a:hover {
+    color: var(--accent);
+  }
+  .found__desc {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    line-height: 1.75;
+  }
+  .found__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-block-start: var(--space-2);
   }
   .ep__langs {
     display: flex;
