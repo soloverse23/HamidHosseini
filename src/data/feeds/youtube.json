@@ -1,6 +1,6 @@
 {
  "source": "youtube",
- "updatedAt": "2026-10-24T10:49:57.972Z",
+ "updatedAt": "2026-10-25T11:15:40.787Z",
  "profiles": {
   "fa": {
    "name": "کلام - سید حمید حسینی",
@@ -12,7 +12,7 @@
    "name": "Islam, de ce și cum?",
    "handle": "@Islamdeceșicum",
    "url": "https://www.youtube.com/@Islamdece%C8%99icum",
-   "followers": 230
+   "followers": 231
   },
   "ar": {
    "name": "الإسلام، لماذا وكيف؟",
@@ -53,7 +53,7 @@
      "duration": 1213
     }
    ],
-   "views": 84
+   "views": 95
   },
   {
    "source": "youtube",
@@ -74,7 +74,7 @@
      "duration": 1438
     }
    ],
-   "views": 33
+   "views": 38
   },
   {
    "source": "youtube",
@@ -116,7 +116,7 @@
      "duration": 1495
     }
    ],
-   "views": 66
+   "views": 93
   },
   {
    "source": "youtube",
@@ -517,7 +517,7 @@
      "duration": 409
     }
    ],
-   "views": 614,
+   "views": 615,
    "series": "islam-why-how",
    "episode": 58
   },
@@ -1098,7 +1098,7 @@
      "duration": 407
     }
    ],
-   "views": 838,
+   "views": 841,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -1167,7 +1167,7 @@
      "duration": 275
     }
    ],
-   "views": 697,
+   "views": 700,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -1409,7 +1409,7 @@
      "duration": 419
     }
    ],
-   "views": 520,
+   "views": 521,
    "series": "islam-why-how",
    "episode": 51
   },
@@ -1455,7 +1455,7 @@
      "duration": 570
     }
    ],
-   "views": 565,
+   "views": 567,
    "series": "islam-why-how",
    "episode": 51
   },
@@ -2468,7 +2468,7 @@
      "duration": 472
     }
    ],
-   "views": 2800,
+   "views": 2900,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -4745,7 +4745,7 @@
      "duration": 586
     }
    ],
-   "views": 96,
+   "views": 97,
    "series": "islam-why-how",
    "episode": 42
   },
@@ -8106,7 +8106,7 @@
      "duration": 185
     }
    ],
-   "views": 396,
+   "views": 397,
    "series": "islam-why-how",
    "episode": 1
   }
