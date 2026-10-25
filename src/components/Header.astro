@@ -192,13 +192,26 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
   // (see the max-width: 62rem styles) and the page behind it stops scrolling.
   const menuBtn = document.querySelector<HTMLButtonElement>('.menu-toggle');
   const sheet = document.getElementById('site-menu');
-  if (menuBtn && sheet) {
+  const header = menuBtn?.closest<HTMLElement>('.site-header');
+  if (menuBtn && sheet && menuBtn.dataset.ready !== '1') {
+    menuBtn.dataset.ready = '1';
     const setOpen = (open: boolean) => {
+      if (open && header) {
+        document.documentElement.style.setProperty('--header-h', `${header.getBoundingClientRect().height}px`);
+      }
       menuBtn.setAttribute('aria-expanded', String(open));
       sheet.toggleAttribute('data-open', open);
       document.documentElement.toggleAttribute('data-menu-open', open);
+      if (open) menuBtn.dataset.openedAt = String(performance.now());
     };
-    menuBtn.addEventListener('click', () => setOpen(menuBtn.getAttribute('aria-expanded') !== 'true'));
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = menuBtn.getAttribute('aria-expanded') === 'true';
+      // Mobile browsers can deliver a second click for the same tap, which
+      // would close the sheet before it is ever seen.
+      if (open && performance.now() - Number(menuBtn.dataset.openedAt || 0) < 450) return;
+      setOpen(!open);
+    });
     sheet.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('a')) setOpen(false);
     });
@@ -480,10 +493,13 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* On wide screens the menu box is transparent: its nav is a grid item of
-     the bar, and the sheet-only parts are hidden. */
+  /* On wide screens the menu box is the nav cell. The sheet-only parts are hidden.
+     It is a real box (not display: contents) so the mobile sheet can show it. */
   .menu {
-    display: contents;
+    grid-area: nav;
+    display: flex;
+    justify-self: start;
+    min-width: 0;
   }
   .menu__foot,
   .primary :global(.primary__chev),
@@ -491,8 +507,6 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
     display: none;
   }
   .primary {
-    grid-area: nav;
-    justify-self: start;
     min-width: 0;
   }
   .primary ol {
@@ -544,6 +558,9 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
   }
   .menu-toggle {
     display: none;
+  }
+  .menu-toggle :global(svg) {
+    pointer-events: none;
   }
   .menu-toggle :global(.i-close) {
     display: none;
@@ -621,6 +638,11 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
      Every offset is logical (inline-start/end), so the bar and the sheet
      mirror themselves for Persian, Arabic and Urdu. */
   @media (max-width: 62rem) {
+    .site-header {
+      position: sticky;
+      z-index: 40;
+      inset-block-start: 0;
+    }
     .topbar {
       display: none;
     }
@@ -652,23 +674,32 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
 
     .menu {
       display: none;
-      position: absolute;
-      z-index: 40;
+      /* Fixed to the viewport. An absolute sheet under the bar is clipped on
+         mobile Safari when the page has overflow-x set, so the open menu
+         never appears. stretch overrides the desktop justify-self: start,
+         which would otherwise shrink the sheet to its content. */
+      position: fixed;
+      z-index: 30;
+      justify-self: stretch;
+      align-self: stretch;
+      width: auto;
+      max-width: none;
+      margin: 0;
       inset-inline: 0;
-      /* 100% is the header's padding edge: the sheet starts on the bar's
-         bottom border and redraws it, then runs to the bottom of the screen. */
-      inset-block-start: 100%;
-      height: calc(100dvh - 3.5rem);
+      inset-block-start: var(--header-h, 3.5rem);
+      inset-block-end: 0;
+      height: auto;
       border-block-start: 1px solid var(--rule);
       flex-direction: column;
       overflow-y: auto;
       overscroll-behavior: contain;
       padding: var(--space-2) var(--gutter) calc(var(--space-6) + env(safe-area-inset-bottom));
       background: var(--paper);
+      opacity: 1;
     }
     .menu[data-open] {
       display: flex;
-      animation: sheet-in 0.18s ease-out;
+      animation: sheet-in 0.18s ease-out forwards;
     }
     :global(html[data-menu-open]) {
       overflow: hidden;
@@ -789,8 +820,10 @@ const navHref = (path: string) => (path.startsWith('#') ? `${href(locale)}${path
   }
   @keyframes sheet-in {
     from {
-      opacity: 0;
       transform: translateY(-6px);
+    }
+    to {
+      transform: none;
     }
   }
 </style>
