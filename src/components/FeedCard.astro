@@ -11,7 +11,7 @@ import type { FeedEntry } from '../lib/feed';
 import { compact, duration, num } from '../lib/format';
 import { href } from '../lib/paths';
 import { withoutEpisodeNo } from '../lib/series';
-import { clipTitle, excerpt, itemTitle } from '../lib/text';
+import { cleanDisplay, clipTitle, excerpt, itemTitle } from '../lib/text';
 import { topicsOf } from '../lib/topics';
 import Icon from './Icon.astro';
 
@@ -49,6 +49,14 @@ const bodyOf = (i: FeedItem) => {
 const surahName = (n: number) => {
   const m = surahs[n - 1];
   return locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? m.ar : m.translit;
+};
+/** First substantial paragraph of a talk, without the date line, credits and timestamps. */
+const talkLede = (text: string) => {
+  const line = cleanDisplay(text)
+    .split('\n')
+    .map((l) => l.replace(/^[\s:：\-–—•]+/, '').trim())
+    .find((l) => l.length > 40 && !/سخنران|^\s*مکان|لایک کنید|Timestamps|هشتگ|^#|زمان‌بندی|سابسکرایب|^خطبه‌های نماز/.test(l));
+  return line ? excerpt(line, 220) : '';
 };
 const companionLabel = (c: FeedItem) =>
   (c.tags ?? []).includes('#پادکست') || c.kind === 'audio'
@@ -141,32 +149,49 @@ const companionLabel = (c: FeedItem) =>
     (() => {
       const [i, ...others] = forReader(entry.versions, locale);
       const m = i.media[0];
-      const internal = i.episode ? href(locale, `videos/${i.episode}`) : i.url;
+      const series = entry.series;
+      const internal = series ? href(locale, series.episodePath) : i.episode ? href(locale, `videos/${i.episode}`) : i.url;
       const lang = s.videos.langs[i.channel as YtLang];
       const title = withoutEpisodeNo(i.title);
+      const lede = series ? talkLede(i.text) : '';
       return (
-        <article class="card card--video" data-kind="video">
+        <article class:list={['card card--video', { 'card--series': !!series }]} data-kind="video">
           <div class="card__meta">
             <span class="src is-youtube" style={`--brand:${BRAND.youtube}`}>
               <Icon name="youtube" /> {LABEL.youtube}
             </span>
             {!bare && <time datetime={i.date}>{time(i.date)}</time>}
-            <span>{lang}</span>
+            {!series && <span>{lang}</span>}
+            {series && (
+              <a class="card__topic" href={href(locale, series.path)}>
+                {series.title}
+              </a>
+            )}
             {i.views ? <span>{s.views(compact(locale, i.views))}</span> : null}
           </div>
           <div class="card__main card__main--video">
             <a class="card__thumb card__thumb--wide frame" href={internal}>
               <img src={m?.src} alt="" width="480" height="360" loading="lazy" decoding="async" />
+              {series?.n && <span class="card__ep num">{num(locale, series.n)}</span>}
               <span class="card__play">
                 <Icon name="play" />
               </span>
               {m?.duration ? <span class="frame__badge">{duration(m.duration)}</span> : null}
             </a>
             <div class="card__text">
-              {i.episode && <p class="card__kicker">{s.sections.videos.title} · {s.episode(num(locale, i.episode))}</p>}
+              {series?.occasion ? (
+                <p class="card__kicker">{series.occasion}</p>
+              ) : (
+                !series && i.episode && <p class="card__kicker">{s.sections.videos.title} · {s.episode(num(locale, i.episode))}</p>
+              )}
               <h3 class="card__title x" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
                 <a href={internal}>{title}</a>
               </h3>
+              {lede && (
+                <p class="card__body x clamp-3" lang={i.lang} dir={dirOf(i.lang)} {...tr(i)}>
+                  {lede}
+                </p>
+              )}
               {others.length > 0 && (
                 <p class="card__companions">
                   {others.map((o) => (
@@ -195,6 +220,11 @@ const companionLabel = (c: FeedItem) =>
               {s.videos.play}
               <Icon name="arrow" class="flip" />
             </a>
+            {series?.n && (
+              <a class="card__chip" href={href(locale, series.path)}>
+                {s.videos.allEpisodes}
+              </a>
+            )}
             <a href={i.url} rel="noopener" target="_blank" class="card__ext">
               YouTube <Icon name="external" />
             </a>
@@ -316,6 +346,25 @@ const companionLabel = (c: FeedItem) =>
     font-size: 0.8125rem;
     color: var(--accent);
     font-weight: 500;
+  }
+  .card__ep {
+    position: absolute;
+    z-index: 1;
+    inset-block-start: 0.4rem;
+    inset-inline-start: 0.4rem;
+    min-width: 1.65rem;
+    padding: 0.02em 0.4em;
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--accent);
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    line-height: 1.35;
+    text-align: center;
+  }
+  :root[dir='rtl'] .card__ep {
+    font-family: var(--font-persian);
+    font-weight: 700;
   }
   .card__title {
     font-family: var(--font-sans);

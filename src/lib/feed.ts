@@ -8,20 +8,37 @@
 //  - Consecutive short videos (TikTok, YouTube Shorts) on the same day
 //    become one strip.
 //  - Quran-translation posts carry the verse range they produced.
+//  - Persian readers also get the Imam Ali Foundation playlists (Friday
+//    sermons and the other series). Those talks are not on the language
+//    channels, so nothing else would surface them here.
 //
 // Each language version shows only what is in its own language, so an
 // English reader never lands on a Persian post or a Romanian caption. The
 // Persian archive (notes, articles) stays one link away.
 
 import type { Locale } from '../i18n/locales';
+import { seriesPages } from './collections';
 import { instagram, notes, quranByPost, tiktok, uploadKey, youtube } from './data';
 import type { FeedItem } from './feed-types';
 
 export type FeedKind = 'note' | 'video' | 'shorts' | 'photo';
 
+/** A foundation-series talk, shown on the Persian timeline beside the channels. */
+export interface SeriesMark {
+  key: string;
+  title: string;
+  /** Series index, without the locale prefix */
+  path: string;
+  /** This episode's page */
+  episodePath: string;
+  /** Set for a numbered series; absent for gathered single talks */
+  n?: number;
+  occasion?: string;
+}
+
 export type FeedEntry =
   | { kind: 'note'; item: FeedItem; verses?: { surah: number; from: number; to: number } }
-  | { kind: 'video'; item: FeedItem; versions: FeedItem[]; companions: FeedItem[] }
+  | { kind: 'video'; item: FeedItem; versions: FeedItem[]; companions: FeedItem[]; series?: SeriesMark }
   | { kind: 'shorts'; items: FeedItem[] }
   | { kind: 'photo'; item: FeedItem };
 
@@ -62,13 +79,58 @@ interface LocaleFeed {
   folded: Set<string>;
   /** The video of each episode that carries its companions: the newest one in this language */
   carrier: Map<number, string>;
+  /** Foundation talks in this pool, keyed by YouTube id */
+  seriesOf: Map<string, SeriesMark>;
 }
+
+/** Foundation talks, newest or not. A video that lives in two series is kept once. */
+const FOUNDATION: { item: FeedItem; mark: SeriesMark }[] = (() => {
+  const out: { item: FeedItem; mark: SeriesMark }[] = [];
+  const seen = new Set<string>();
+  for (const series of seriesPages()) {
+    for (const ep of series.episodes) {
+      if (seen.has(ep.id)) continue;
+      seen.add(ep.id);
+      out.push({
+        item: {
+          source: 'youtube',
+          id: ep.id,
+          url: ep.url,
+          date: ep.date,
+          kind: 'video',
+          lang: 'fa',
+          channel: 'fa',
+          title: ep.title,
+          text: ep.text ?? '',
+          media: [{ kind: 'video', src: `https://i.ytimg.com/vi/${ep.id}/hqdefault.jpg`, width: 480, height: 360, duration: ep.duration }],
+        },
+        mark: {
+          key: series.key,
+          title: series.title,
+          path: series.path,
+          episodePath: ep.path,
+          n: series.numbered ? ep.n : undefined,
+          occasion: ep.occasion,
+        },
+      });
+    }
+  }
+  return out;
+})();
 
 const FEEDS = new Map<Locale, LocaleFeed>();
 function feedFor(locale: Locale): LocaleFeed {
   const cached = FEEDS.get(locale);
   if (cached) return cached;
-  const pool = ALL.filter((i) => contentLang(i) === locale);
+  // The language channels already carry "Islam: why and how?". The foundation
+  // series are Persian talks on another channel, so only Persian readers see them,
+  // and a video already in the channel feed is not listed twice.
+  const own = new Set(ALL.filter((i) => contentLang(i) === locale).map((i) => i.id));
+  const extra = locale === 'fa' ? FOUNDATION.filter((row) => !own.has(row.item.id)) : [];
+  const seriesOf = new Map(extra.map((row) => [row.item.id, row.mark]));
+  const pool = [...ALL.filter((i) => contentLang(i) === locale), ...extra.map((row) => row.item)].sort((a, b) =>
+    b.date.localeCompare(a.date),
+  );
   const carrier = new Map<number, string>();
   for (const v of pool) if (v.source === 'youtube' && v.episode && !carrier.has(v.episode)) carrier.set(v.episode, v.id);
   const companions = new Map<number, FeedItem[]>();
@@ -79,13 +141,13 @@ function feedFor(locale: Locale): LocaleFeed {
       folded.add(n.id);
     }
   }
-  const feed = { pool, companions, folded, carrier };
+  const feed = { pool, companions, folded, carrier, seriesOf };
   FEEDS.set(locale, feed);
   return feed;
 }
 
 function buildDays(locale: Locale, pool: FeedItem[], limit = Infinity): FeedDay[] {
-  const { folded, companions: COMPANIONS, carrier } = feedFor(locale);
+  const { folded, companions: COMPANIONS, carrier, seriesOf } = feedFor(locale);
   const entries: { day: string; date: string; entry: FeedEntry }[] = [];
   let used = 0;
   for (const item of pool) {
@@ -110,7 +172,11 @@ function buildDays(locale: Locale, pool: FeedItem[], limit = Infinity): FeedDay[
         continue; // one card per upload
       }
       const companions = item.episode && carrier.get(item.episode) === item.id ? (COMPANIONS.get(item.episode) ?? []) : [];
-      entries.push({ day, date: item.date, entry: { kind: 'video', item, versions: [item], companions } });
+      entries.push({
+        day,
+        date: item.date,
+        entry: { kind: 'video', item, versions: [item], companions, series: seriesOf.get(item.id) },
+      });
     } else if (item.source === 'instagram') {
       entries.push({ day, date: item.date, entry: { kind: 'photo', item } });
     } else {
