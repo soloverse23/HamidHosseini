@@ -1,18 +1,20 @@
 /**
  * Series on the Imam Ali Foundation's YouTube channel → src/data/collections/fa.json
  *
- * The list of series lives in src/data/collections/sources.ts. yt-dlp lists
- * each whole playlist; where it is blocked (as it can be from CI), the
- * playlist's RSS feed still brings in its latest 15 videos. Videos not seen
- * before get their date, length and description from the public watch page.
- * A playlist that cannot be read keeps what was stored, so a blocked run
- * never empties a series.
+ * The list of series lives in src/data/collections/sources.ts. Each playlist is
+ * read from yt-dlp and, beside that, from the playlist page itself. The page
+ * is what still shows a video just added when yt-dlp is blocked or a step
+ * behind, and the RSS feed is only a last resort: YouTube often answers it
+ * with 404. A video is never dropped for lack of a publish date — the player
+ * API supplies the date when the watch page does not — and a playlist that
+ * cannot be read at all keeps what was stored.
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { XMLParser } from 'fast-xml-parser';
 import { PLAYLISTS } from '../../src/data/collections/sources';
 import { fetchText, ROOT, sleep } from './lib/store';
+import { pageVideos, unavailable, videoDetails, type ListedVideo } from './lib/youtube-web';
 import { ytdlpJson } from './lib/ytdlp';
 
 export interface SeriesVideo {
@@ -40,92 +42,168 @@ async function readStore(): Promise<SeriesFile> {
   }
 }
 
-/** Date, length and description of one video, from its watch page. */
-async function watchDetails(id: string) {
-  const html = await fetchText(`https://www.youtube.com/watch?v=${id}`, { headers: { cookie: 'SOCS=CAI' } });
-  const date = html.match(/"publishDate":"([^"]+)"/)?.[1] ?? html.match(/itemprop="datePublished" content="([^"]+)"/)?.[1];
-  const length = Number(html.match(/"lengthSeconds":"(\d+)"/)?.[1]) || undefined;
-  const title = html.match(/<meta name="title" content="([^"]*)"/)?.[1];
-  const raw = html.match(/"shortDescription":"((?:[^"\\]|\\.)*)"/)?.[1];
-  let text: string | undefined;
+/** Latest 15 videos of a playlist, from its public RSS feed. Often 404. */
+async function fromRss(playlist: string): Promise<ListedVideo[] | undefined> {
   try {
-    text = raw ? JSON.parse(`"${raw}"`).trim() : undefined;
+    const xml = await fetchText(`https://www.youtube.com/feeds/videos.xml?playlist_id=${playlist}`);
+    const feed = new XMLParser().parse(xml).feed;
+    const videos = [feed?.entry ?? []].flat().flatMap((e: any) => {
+      const id = String(e?.['yt:videoId'] ?? '');
+      return /^[A-Za-z0-9_-]{11}$/.test(id) && !unavailable(String(e?.title ?? '')) ? [{ id, title: String(e.title) }] : [];
+    });
+    return videos.length ? videos : undefined;
   } catch {
-    text = undefined;
+    return undefined;
   }
-  return { date: date ? new Date(date).toISOString() : undefined, duration: length, title, text: text || undefined };
 }
 
-/** Latest 15 videos of a playlist, from its public RSS feed. */
-async function fromRss(playlist: string): Promise<{ id: string; title: string }[]> {
-  const xml = await fetchText(`https://www.youtube.com/feeds/videos.xml?playlist_id=${playlist}`);
-  const feed = new XMLParser().parse(xml).feed;
-  return [feed?.entry ?? []].flat().map((e: any) => ({ id: String(e['yt:videoId']), title: String(e.title) }));
+function listedFromYtdlp(list: any): { items: ListedVideo[]; authoritative: boolean } | undefined {
+  const entries: any[] = list?.entries ?? [];
+  if (!entries.length) return undefined;
+  const items: ListedVideo[] = [];
+  for (const [pos, e] of entries.entries()) {
+    if (!e?.id || unavailable(e.title)) continue;
+    items.push({
+      id: String(e.id),
+      title: e.title || undefined,
+      duration: typeof e.duration === 'number' && e.duration > 0 ? e.duration : undefined,
+      pos,
+    });
+  }
+  if (!items.length) return undefined;
+  const declared = Number(list.playlist_count) || 0;
+  // playlist_count includes private rows. A shorter entries array is a partial
+  // page, which must not replace the videos we already stored.
+  return { items, authoritative: declared > 0 && entries.length >= declared };
 }
 
-const unavailable = (title?: string) => !title || /^\[(private|deleted) video\]$/i.test(title);
+/** First listing wins a field it actually has; later listings fill the gaps. */
+function absorb(into: ListedVideo[], seen: Map<string, number>, video: ListedVideo) {
+  const at = seen.get(video.id);
+  if (at === undefined) {
+    seen.set(video.id, into.length);
+    into.push({ ...video });
+    return;
+  }
+  const prev = into[at];
+  into[at] = { ...prev, title: prev.title || video.title, duration: prev.duration ?? video.duration };
+}
 
-async function complete(
-  id: string,
-  pos: number,
-  known: Map<string, SeriesVideo>,
-  given: { title?: string; duration?: number },
-): Promise<SeriesVideo | undefined> {
-  const prev = known.get(id);
-  if (prev) return { ...prev, title: given.title ?? prev.title, duration: given.duration ?? prev.duration, pos };
-  const d = await watchDetails(id).catch(() => undefined);
+/**
+ * yt-dlp's full list keeps playlist order, including the index of a private
+ * row. Anything the live page shows that yt-dlp missed is ordered with the
+ * page, and a partial list never discards videos already stored.
+ */
+function combine(full: { items: ListedVideo[]; authoritative: boolean } | undefined, recent: ListedVideo[], stored: SeriesVideo[]): ListedVideo[] {
+  if (full?.authoritative) {
+    const have = new Set(full.items.map((video) => video.id));
+    if (recent.every((video) => have.has(video.id))) return full.items;
+    const into: ListedVideo[] = [];
+    const seen = new Map<string, number>();
+    for (const video of recent) absorb(into, seen, video);
+    for (const video of full.items) absorb(into, seen, video);
+    return into.map((video, pos) => ({ ...video, pos }));
+  }
+
+  const into: ListedVideo[] = [];
+  const seen = new Map<string, number>();
+  for (const video of recent) absorb(into, seen, video);
+  for (const video of full?.items ?? []) absorb(into, seen, video);
+  for (const video of stored) absorb(into, seen, { id: video.id, title: video.title, duration: video.duration });
+  return into.map((video, pos) => ({ ...video, pos }));
+}
+
+/** `missing` is a public video we still cannot date. A private row is neither. */
+async function complete(video: ListedVideo, known: Map<string, SeriesVideo>): Promise<{ video?: SeriesVideo; missing?: boolean }> {
+  const prev = known.get(video.id);
+  const pos = video.pos ?? prev?.pos ?? 0;
+  if (prev) return { video: { ...prev, title: video.title ?? prev.title, duration: video.duration ?? prev.duration, pos } };
+  const details = await videoDetails(video.id);
   await sleep(300);
-  if (!d?.date) return undefined;
-  return { id, title: given.title ?? d.title ?? '', date: d.date, duration: given.duration ?? d.duration, text: d.text, pos };
+  if (details.unavailable || unavailable(details.title)) return {};
+  if (!details.date) return { missing: true };
+  return {
+    video: {
+      id: video.id,
+      title: video.title ?? details.title ?? '',
+      date: details.date,
+      duration: video.duration ?? details.duration,
+      text: details.text,
+      pos,
+    },
+  };
 }
 
 export async function run() {
   const store = await readStore();
   const next: Record<string, SeriesVideo[]> = {};
-  let failed = 0;
+  const problems: string[] = [];
+  let unread = 0;
 
   for (const src of PLAYLISTS) {
     const stored = store.series[src.key] ?? [];
-    const known = new Map(stored.map((v) => [v.id, v]));
-    const videos: SeriesVideo[] = [];
+    const known = new Map(stored.map((video) => [video.id, video]));
 
-    if (src.playlist) {
-      const list = await ytdlpJson(`https://www.youtube.com/playlist?list=${src.playlist}`, ['--flat-playlist']);
-      if (list?.entries?.length) {
-        for (const [pos, e] of (list.entries as any[]).entries()) {
-          if (unavailable(e.title)) continue;
-          const v = await complete(e.id, pos, known, { title: e.title, duration: e.duration ?? undefined });
-          if (v) videos.push(v);
-        }
-      } else {
-        // Without the full list, keep every stored video and add what the feed has that is new.
-        const recent = await fromRss(src.playlist).catch(() => undefined);
-        if (!recent) {
-          failed++;
-          next[src.key] = stored;
-          continue;
-        }
-        videos.push(...stored);
-        for (const e of recent.filter((e) => !known.has(e.id))) {
-          const v = await complete(e.id, stored.length + videos.length, known, { title: e.title });
-          if (v) videos.push(v);
-        }
-      }
-    } else {
+    if (!src.playlist) {
+      const videos: SeriesVideo[] = [];
+      const unresolved: string[] = [];
       for (const [pos, [id, title]] of (src.videos ?? []).entries()) {
-        const v = await complete(id, pos, known, { title });
-        if (v) videos.push(v);
+        const done = await complete({ id, title, pos }, known);
+        if (done.video) videos.push(done.video);
+        else if (done.missing) unresolved.push(id);
       }
+      next[src.key] = videos.length ? videos : stored;
+      if (unresolved.length) problems.push(`${src.key}: no date for ${unresolved.join(', ')}`);
+      console.log(`  ${src.key}: ${next[src.key].length} videos`);
+      continue;
+    }
+
+    const full = listedFromYtdlp(await ytdlpJson(`https://www.youtube.com/playlist?list=${src.playlist}`, ['--flat-playlist']));
+    // The page is the fresh head of the playlist. RSS only if the page is blocked.
+    const recent =
+      (await pageVideos(`https://www.youtube.com/playlist?list=${src.playlist}&hl=fa`, 'fa')) ??
+      (await fromRss(src.playlist)) ??
+      [];
+    const ordered = combine(full, recent, stored);
+    if (!ordered.length) {
+      unread++;
+      next[src.key] = stored;
+      console.log(`  ${src.key}: kept ${stored.length} stored videos`);
+      continue;
+    }
+
+    const videos: SeriesVideo[] = [];
+    const unresolved: string[] = [];
+    const onPage = new Set(recent.map((video) => video.id));
+    let hidden = 0;
+    for (const video of ordered) {
+      // yt-dlp keeps private rows that the public page does not. They have no
+      // title. A public upload still has its title on the page.
+      if (!video.title && !onPage.has(video.id) && !known.has(video.id)) {
+        hidden++;
+        continue;
+      }
+      const done = await complete(video, known);
+      if (done.video) videos.push(done.video);
+      else if (done.missing) unresolved.push(video.id);
     }
     next[src.key] = videos.length ? videos : stored;
-    console.log(`  ${src.key}: ${next[src.key].length} videos`);
+    const added = videos.filter((video) => !known.has(video.id)).map((video) => video.id);
+    if (unresolved.length) problems.push(`${src.key}: no date for ${unresolved.join(', ')}`);
+    const via = full?.authoritative ? 'yt-dlp' : full ? 'partial list' : 'page';
+    console.log(
+      `  ${src.key}: ${next[src.key].length} videos via ${via}${added.length ? ` +${added.join(',')}` : ''}${hidden ? ` (${hidden} private)` : ''}${unresolved.length ? ` (${unresolved.length} without a date)` : ''}`,
+    );
   }
 
   const changed = JSON.stringify(next) !== JSON.stringify(store.series);
   if (changed) await writeFile(FILE, `${JSON.stringify({ updatedAt: new Date().toISOString(), series: next }, null, 2)}\n`);
-  const total = Object.values(next).reduce((n, l) => n + l.length, 0);
+  const total = Object.values(next).reduce((n, list) => n + list.length, 0);
   console.log(`playlists: ${total} videos in ${PLAYLISTS.length} series${changed ? '' : ' (unchanged)'}`);
-  if (failed === PLAYLISTS.filter((p) => p.playlist).length) throw new Error('no playlist could be read');
+  const playlistCount = PLAYLISTS.filter((src) => src.playlist).length;
+  if (unread === playlistCount) problems.push('no playlist could be read');
+  else if (unread) console.warn(`playlists: ${unread} playlist(s) could not be read; stored videos were kept`);
+  if (problems.length) throw new Error(problems.join('; '));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

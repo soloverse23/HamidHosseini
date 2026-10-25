@@ -1,17 +1,21 @@
 /**
  * YouTube channel → src/data/feeds/youtube.json
  *
- * 1. The public RSS feed (latest 15, never blocked) is read on every run.
- * 2. yt-dlp lists the whole channel (videos + shorts) so older uploads are
- *    included too. It may be blocked from CI IPs; RSS alone keeps the feed
- *    current in that case.
- * 3. Items not seen before get their date and description from the watch page.
+ * 1. The public RSS feed (latest 15) is read on every run. YouTube often
+ *    answers it with 404; that no longer skips the rest of the channel.
+ * 2. yt-dlp lists the whole channel (videos + shorts). It may be blocked
+ *    from CI IPs.
+ * 3. When either of those fails, the channel's videos and shorts pages
+ *    still supply the recent uploads.
+ * 4. Items not seen before get their date and description from the watch
+ *    page, or from the player API when that page withholds them.
  */
 import { XMLParser } from 'fast-xml-parser';
 import type { FeedItem, SourceProfile } from '../../src/lib/feed-types';
 import { episodeFromTitle } from '../../src/lib/series';
-import { ytdlpJson } from './lib/ytdlp';
 import { fetchText, mergeFeed, readFeed, sleep } from './lib/store';
+import { pageVideos, unavailable, videoDetails } from './lib/youtube-web';
+import { ytdlpJson } from './lib/ytdlp';
 
 /** Every channel publishes the same numbered series, each in its own language. */
 export const CHANNELS = [
@@ -86,7 +90,7 @@ function makeItem(channel: Channel, p: {
 async function fromRss(channel: Channel): Promise<FeedItem[]> {
   const xml = await fetchText(`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`);
   const feed = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '' }).parse(xml).feed;
-  const entries = [feed.entry ?? []].flat();
+  const entries = [feed?.entry ?? []].flat().filter(Boolean);
   return entries.map((e: any) =>
     makeItem(channel, {
       id: e['yt:videoId'],
@@ -99,54 +103,84 @@ async function fromRss(channel: Channel): Promise<FeedItem[]> {
   );
 }
 
-/** Date + description for a single video, from its public watch page. */
-async function watchDetails(id: string) {
-  const html = await fetchText(`https://www.youtube.com/watch?v=${id}`, { headers: { cookie: 'SOCS=CAI' } });
-  const date = html.match(/"publishDate":"([^"]+)"/)?.[1] ?? html.match(/itemprop="datePublished" content="([^"]+)"/)?.[1];
-  const rawDesc = html.match(/"shortDescription":"((?:[^"\\]|\\.)*)"/)?.[1];
-  let description: string | undefined;
-  try {
-    description = rawDesc ? JSON.parse(`"${rawDesc}"`) : undefined;
-  } catch {
-    description = undefined;
+async function addNew(
+  channel: Channel,
+  items: Map<string, FeedItem>,
+  known: Map<string, FeedItem>,
+  video: { id?: string; title?: string; duration?: number; views?: number },
+  short: boolean,
+  undated: string[],
+) {
+  if (!video.id || unavailable(video.title)) return;
+  const prev = items.get(video.id) ?? known.get(video.id);
+  if (prev) {
+    const media = video.duration ? [{ ...prev.media[0], duration: video.duration }] : prev.media;
+    items.set(video.id, { ...prev, views: video.views ?? prev.views, media });
+    return;
   }
-  return { date: date ? new Date(date).toISOString() : undefined, description };
+  const details = await videoDetails(video.id);
+  if (details.unavailable || unavailable(details.title)) return;
+  if (!details.date) {
+    undated.push(video.id);
+    return;
+  }
+  items.set(
+    video.id,
+    makeItem(channel, {
+      id: video.id,
+      title: video.title || details.title || '',
+      date: details.date,
+      short,
+      description: details.text,
+      views: video.views,
+      duration: video.duration ?? details.duration,
+    }),
+  );
+  await sleep(300);
 }
 
 async function syncChannel(channel: Channel, known: Map<string, FeedItem>) {
   const items = new Map<string, FeedItem>();
-  for (const item of await fromRss(channel)) items.set(item.id, item);
+  const undated: string[] = [];
+  let rss = false;
+  try {
+    for (const item of await fromRss(channel)) items.set(item.id, item);
+    rss = true;
+  } catch (err) {
+    console.warn(`  youtube ${channel.key} rss: ${(err as Error).message.split('\n')[0]}`);
+  }
 
   let followers: number | undefined;
+  const listed = new Set<string>();
   for (const tab of ['videos', 'shorts'] as const) {
     const list = await ytdlpJson(`https://www.youtube.com/channel/${channel.id}/${tab}`, ['--flat-playlist']);
     if (!list) continue;
+    listed.add(tab);
     followers ??= list.channel_follower_count ?? undefined;
     for (const e of list.entries ?? []) {
-      const prev = items.get(e.id) ?? known.get(e.id);
-      if (prev) {
-        // Refresh counts only; keep the richer RSS/watch-page fields.
-        const media = e.duration ? [{ ...prev.media[0], duration: e.duration }] : prev.media;
-        items.set(e.id, { ...prev, views: e.view_count ?? prev.views, media });
-        continue;
-      }
-      const details = await watchDetails(e.id).catch(() => ({ date: undefined, description: undefined }));
-      if (!details.date) continue;
-      items.set(
-        e.id,
-        makeItem(channel, {
-          id: e.id,
-          title: e.title ?? '',
-          date: details.date,
-          short: tab === 'shorts',
-          description: details.description,
-          views: e.view_count ?? undefined,
-          duration: e.duration ?? undefined,
-        }),
+      await addNew(
+        channel,
+        items,
+        known,
+        { id: e?.id, title: e?.title, duration: e?.duration ?? undefined, views: e?.view_count ?? undefined },
+        tab === 'shorts',
+        undated,
       );
-      await sleep(300);
     }
   }
+
+  // RSS is down often, and yt-dlp is blocked from some runners. The channel
+  // page still has the recent uploads those two missed.
+  for (const tab of ['videos', 'shorts'] as const) {
+    if (rss && listed.has(tab)) continue;
+    const page = await pageVideos(`https://www.youtube.com/channel/${channel.id}/${tab}?hl=${channel.key}`, channel.key);
+    if (!page) continue;
+    listed.add(tab);
+    for (const video of page) await addNew(channel, items, known, video, tab === 'shorts', undated);
+  }
+
+  if (!rss && !listed.size) throw new Error(`no listing for ${channel.key}`);
+  if (undated.length) console.warn(`  youtube ${channel.key}: no date for ${undated.join(', ')}`);
 
   // Durations come only from yt-dlp; keep what we had.
   for (const [id, item] of items) {
