@@ -5,6 +5,8 @@ import search from './scripts/search/integration.ts';
 import { readFileSync } from 'node:fs';
 import { PRODUCTION_URL } from './src/lib/site.ts';
 import { isThin } from './src/lib/text.ts';
+import { duplicateOf } from './src/lib/duplicates.ts';
+import { articles } from './src/lib/articles.ts';
 
 const telegramItems = JSON.parse(readFileSync(new URL('./src/data/feeds/telegram.json', import.meta.url), 'utf8')).items;
 const postDates = new Map(telegramItems.map((i) => [i.id, i.date]));
@@ -33,6 +35,14 @@ const articleDates = new Map(
   ]),
 );
 
+// Copies of a text published elsewhere on the site point their canonical there.
+// An article with no text (a picture only) is noindex.
+const emptyArticles = new Set(articles.filter((a) => !a.text.trim()).map((a) => `articles/${a.id}`));
+const notCanonical = (page) => {
+  const path = page.match(/\/fa\/((?:notes|articles)\/\d+)\/$/)?.[1];
+  return !!path && (duplicateOf.has(path) || emptyArticles.has(path));
+};
+
 const SITE = process.env.SITE_URL ?? PRODUCTION_URL;
 
 export default defineConfig({
@@ -57,6 +67,7 @@ export default defineConfig({
         !/\/(en|ro|ar|ur)\/notes\//.test(page) &&
         // The Quran is indexed only in Persian; the other locales' copies are noindex.
         !/\/(en|ro|ar|ur)\/quran\//.test(page) &&
+        !notCanonical(page) &&
         !thinPosts.has(page.match(/\/fa\/notes\/(\d+)\/$/)?.[1]) &&
         !/\/notes\/(.+\/)?page\//.test(page) &&
         !/\/search\/$/.test(page) &&

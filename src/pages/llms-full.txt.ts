@@ -3,6 +3,7 @@ import { ARTICLES, BOOKS, LECTURES, type Localized } from '../data/writings';
 import { CATEGORIES } from '../data/articles';
 import { articles } from '../lib/articles';
 import { episodes, notes, YT_LANGS } from '../lib/data';
+import { duplicateOf } from '../lib/duplicates';
 
 const pick = (l?: Localized) => (l ? (l.en ?? l.fa ?? Object.values(l)[0]) : undefined);
 
@@ -53,8 +54,13 @@ export function GET({ site }: APIContext) {
   out.push('');
 
   out.push('## Latest Telegram notes (Persian)', '');
+  // A repost is listed once, under the address of the copy that is canonical.
+  const listed = new Set<string>();
   for (const n of notes.slice(0, 100)) {
-    out.push(`### ${o}/fa/notes/${n.id}/ | ${n.date.slice(0, 10)}`, n.text.trim(), '');
+    const path = duplicateOf.get(`notes/${n.id}`) ?? `notes/${n.id}`;
+    if (listed.has(path)) continue;
+    listed.add(path);
+    out.push(`### ${o}/fa/${path}/ | ${n.date.slice(0, 10)}`, n.text.trim(), '');
   }
   return new Response(out.join('\n'), { headers: { 'content-type': 'text/plain; charset=utf-8' } });
 }

@@ -1534,6 +1534,16 @@ bdi,
 .tr-pop[open] {
   animation: tr-pop-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.05);
 }
+/* The first ask: a card in the launcher's corner, over a usable page. */
+.tr-pop--card {
+  z-index: 60;
+  inset: auto;
+  inset-block-end: var(--space-4);
+  inset-inline-end: var(--space-4);
+  margin: 0;
+  width: min(100% - 2 * var(--space-4), 24rem);
+  max-height: calc(100% - 2 * var(--space-4));
+}
 .tr-pop::backdrop {
   background: rgb(20 19 15 / 0.4);
   backdrop-filter: blur(3px);
@@ -1710,6 +1720,36 @@ bdi,
   .tr-pop__fine {
     padding-inline: var(--space-4);
   }
+}
+/* The card keeps to a small corner of the screen, phones included. */
+.tr-pop--card .tr-pop__icon {
+  display: none;
+}
+.tr-pop--card .tr-pop__body {
+  justify-items: start;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  text-align: start;
+}
+.tr-pop--card .tr-pop__title {
+  padding-inline-end: 2.25rem;
+  font-size: var(--step-0);
+  line-height: 1.5;
+}
+.tr-pop--card .tr-pop__ask {
+  font-size: 0.9rem;
+}
+.tr-pop--card .tr-pop__actions {
+  grid-template-columns: 1fr 1fr;
+  margin-block-start: var(--space-1);
+}
+.tr-pop--card .tr-pop__actions .btn {
+  min-height: 2.6rem;
+}
+.tr-pop--card .tr-pop__fine {
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  font-size: 0.72rem;
+  line-height: 1.5;
 }
 
 /* Blocks being translated pulse gently; translated posts carry a quiet mark. */

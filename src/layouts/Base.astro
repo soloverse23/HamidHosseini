@@ -35,6 +35,8 @@ interface Props {
   crumbs?: { name: string; path: string }[];
   /** Point canonical at another locale's copy (content that exists once, e.g. Persian posts). */
   canonicalLocale?: Locale;
+  /** Point canonical at another page that carries the same text (see lib/duplicates). */
+  canonicalPath?: string;
   /** Emit hreflang alternates. Turn off for content that is only indexed in one locale. */
   alternates?: boolean;
   /** Locales that have their own version of this page (default: all) */
@@ -47,7 +49,7 @@ interface Props {
 
 const {
   locale, title, description, path, image, jsonLd, noindex, switchPath,
-  ogType = 'website', published, modified, imageAlt, crumbs, canonicalLocale, alternates = true, locales = LOCALES,
+  ogType = 'website', published, modified, imageAlt, crumbs, canonicalLocale, canonicalPath, alternates = true, locales = LOCALES,
 } = Astro.props;
 // x-default must be a real indexable page (never "/"), so crawlers are not
 // sent into the geo IP redirect. Prefer English when this page has it.
@@ -58,7 +60,7 @@ const { dir } = LOCALE_META[locale];
 const fullTitle = title ? `${title} | ${s.name}` : `${s.name} | ${s.tagline}`;
 const desc = description ?? s.tagline;
 const site = Astro.site ?? new URL(PRODUCTION_URL);
-const canonical = new URL(href(canonicalLocale ?? locale, path), site).toString();
+const canonical = new URL(href(canonicalLocale ?? locale, canonicalPath ?? path), site).toString();
 const abs = (p: string) => new URL(p, site).toString();
 const nodes = [
   ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : []),
@@ -91,7 +93,10 @@ const ogImage = new URL(image ?? '/og.png', site).toString();
     <link rel="alternate" type="application/rss+xml" title={s.name} href="/rss.xml" />
     <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt" />
     <meta name="author" content={s.name} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#14130f" media="(prefers-color-scheme: dark)" />
     <meta property="og:type" content={ogType} />

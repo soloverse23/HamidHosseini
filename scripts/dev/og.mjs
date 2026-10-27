@@ -21,7 +21,7 @@ await page.evaluate(async () => {
   document.documentElement.dataset.theme = 'light';
   document.body.innerHTML = `
   <div style="width:1200px;height:630px;box-sizing:border-box;padding:72px 80px;background:#f7f3ec;color:#1d1a15;display:flex;flex-direction:column;justify-content:space-between;border-bottom:10px solid #1d4f91">
-    <svg width="56" height="56" viewBox="0 0 32 32" fill="none"><g stroke="#1d4f91" stroke-width="1.4" stroke-linejoin="round"><rect x="7" y="7" width="18" height="18"/><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"/><circle cx="16" cy="16" r="3.2"/></g></svg>
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path stroke="#1d4f91" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="m19.648 5.437l-.659-1.043c-.364-.577-.546-.866-.785-.892c-.238-.027-.505.247-1.038.795c-1.722 1.77-3.444 1.508-5.166 4.691c-1.722-3.183-3.444-2.921-5.166-4.691c-.533-.548-.8-.822-1.038-.795c-.239.026-.421.315-.785.892l-.658 1.043c-.255.402-.382.604-.347.816c.034.212.217.357.584.647l6.182 4.898c.591.468.887.702 1.228.702s.637-.234 1.228-.702L19.41 6.9c.367-.29.55-.435.584-.647c.035-.212-.092-.414-.346-.816M22 8.5l-16 12v-4.696M2 8.5l16 12v-4.696"/></svg>
     <div>
       <div style="font-family:'Noto Naskh Arabic Variable';font-size:64px;font-weight:600;direction:rtl;text-align:left;line-height:1.3">سید حمید حسینی</div>
       <div style="font-family:'Vazirmatn Variable';font-size:30px;color:#4b463d;direction:rtl;text-align:left;line-height:1.6">آثار، فعالیت‌ها و گفتگوها</div>
@@ -36,6 +36,8 @@ await page.evaluate(async () => {
   );
 });
 await page.waitForTimeout(400);
+// The translate offer opens a moment after load; drop it if it has.
+await page.evaluate(() => document.querySelectorAll('dialog').forEach((d) => d.remove()));
 await page.screenshot({ path: 'public/og.png' });
 await browser.close();
 console.log('public/og.png');

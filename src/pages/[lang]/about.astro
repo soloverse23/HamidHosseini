@@ -244,7 +244,7 @@ const sources: Record<Locale, string[]> = {
     <section class="block" id="books" aria-labelledby="books-title">
       <div class="section-title">
         <h2 id="books-title">{a.h.books}</h2>
-        <a href={href(locale, 'books')}>{s.about.allBooks} →</a>
+        <a href={`${href(locale, 'writings')}#books`}>{s.about.allBooks} →</a>
       </div>
       <ul class="shelf">
         {

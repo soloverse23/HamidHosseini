@@ -12,6 +12,7 @@ import { LOCALES, type Locale } from '../../../i18n/locales';
 import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { notes, noteTitleCount, quranFa, telegram } from '../../../lib/data';
+import { duplicateOf } from '../../../lib/duplicates';
 import { personRef } from '../../../lib/schema';
 import type { FeedItem } from '../../../lib/feed-types';
 import { compact, date, num, plain } from '../../../lib/format';
@@ -186,6 +187,7 @@ const pageTitle = repeated ? `${postTitle}، ${date(locale, props.item.date)}` :
       ogType="article"
       published={props.item.date}
       canonicalLocale="fa"
+      canonicalPath={duplicateOf.get(`notes/${props.item.id}`)}
       crumbs={[
         { name: s.sections.notes.title, path: 'notes' },
         { name: postTitle || `#${props.item.id}`, path: `notes/${slug}` },

@@ -356,9 +356,13 @@ function choose(choice: Choice) {
   closeDialog();
 }
 
-function openDialog() {
+// The first, unprompted ask is a card in the corner: no backdrop, no focus
+// grab, the page stays usable. A full-screen modal on arrival is what search
+// engines count as an intrusive interstitial. Opened from the button, it is
+// a modal again.
+function openDialog(modal = true) {
   if (!dialog) {
-    dialog = h('dialog', { class: 'tr-pop', 'aria-labelledby': 'tr-title', ...common }) as HTMLDialogElement;
+    dialog = h('dialog', { class: 'tr-pop', 'aria-labelledby': 'tr-title', 'data-nosnippet': '', ...common }) as HTMLDialogElement;
     // Esc or a click on the backdrop means "not now" the first time, "no change" later.
     dialog.addEventListener('cancel', (e) => {
       e.preventDefault();
@@ -367,6 +371,12 @@ function openDialog() {
     });
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) dialog!.dispatchEvent(new Event('cancel', { cancelable: true }));
+    });
+    // A non-modal dialog gets no cancel event from Esc.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dialog!.open && !dialog!.matches(':modal')) {
+        dialog!.dispatchEvent(new Event('cancel', { cancelable: true }));
+      }
     });
     document.body.append(dialog);
   }
@@ -399,8 +409,18 @@ function openDialog() {
     h('p', { class: 'tr-pop__fine' }, info, h('span', {}, S.privacy)),
   );
   if (launcher) launcher.hidden = true;
-  dialog.showModal();
-  (actions[0] as HTMLElement).focus();
+  if (dialog.open) dialog.close();
+  dialog.classList.toggle('tr-pop--card', !modal);
+  if (modal) {
+    dialog.showModal();
+    (actions[0] as HTMLElement).focus();
+  } else {
+    // show() moves focus into the dialog; an unprompted card should not.
+    const was = document.activeElement as HTMLElement | null;
+    dialog.show();
+    if (was && was !== document.body) was.focus({ preventScroll: true });
+    else (document.activeElement as HTMLElement | null)?.blur();
+  }
 }
 
 // The popup shrinks into the corner button so the reader sees where it went.
@@ -438,7 +458,7 @@ function renderLauncher() {
   if (!units.size) return;
   if (!launcher) {
     launcher = h('button', { type: 'button', class: 'tr-launch', 'aria-haspopup': 'dialog', ...common }) as HTMLButtonElement;
-    launcher.addEventListener('click', openDialog);
+    launcher.addEventListener('click', () => openDialog());
     launcher.hidden = dialog?.open ?? savedChoice() === null;
     document.body.append(launcher);
   }
@@ -463,7 +483,10 @@ function renderLauncher() {
 }
 
 // ---------- Boot ----------
-let asked = false;
+// Crawlers and headless renderers (Googlebot renders pages, with empty
+// storage every time) are never asked: the page they index is the original.
+const BOT = /bot|crawl|spider|slurp|headless|lighthouse|inspectiontool|preview/i.test(navigator.userAgent);
+let asked = BOT;
 function boot(scope?: ParentNode) {
   const added = collect(scope);
   if (!added.length) return;
@@ -479,7 +502,7 @@ function boot(scope?: ParentNode) {
     asked = true;
     // Let the page settle before asking, and never over another open dialog
     // (e.g. the search dialog opened with ⌘K right after load).
-    const ask = () => (document.querySelector('dialog[open]') ? setTimeout(ask, 1000) : openDialog());
+    const ask = () => (document.querySelector('dialog[open]') ? setTimeout(ask, 1000) : openDialog(false));
     setTimeout(ask, 700);
   }
 }

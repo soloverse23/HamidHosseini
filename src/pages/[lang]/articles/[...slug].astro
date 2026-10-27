@@ -23,6 +23,7 @@ import {
 import { date, num } from '../../../lib/format';
 import { href } from '../../../lib/paths';
 import { PRODUCTION_URL } from '../../../lib/site';
+import { duplicateOf } from '../../../lib/duplicates';
 import { personRef } from '../../../lib/schema';
 
 type Props =
@@ -95,7 +96,8 @@ const series = item?.series ? { key: item.series.key, ...SERIES[item.series.key]
 const near = item ? neighbours(item) : undefined;
 const more = item ? related(item) : [];
 const showToc = !!item && item.headings.length >= 3 && item.headings.length <= 24;
-const description = item ? item.excerpt.slice(0, 200) : listLede;
+// A post that is only a picture has no excerpt; fall back to its title and date.
+const description = item ? item.excerpt.slice(0, 200) || `${item.title}، ${date('fa', item.date)}` : listLede;
 const jsonLd = item
   ? {
       '@context': 'https://schema.org',
@@ -306,6 +308,8 @@ const crumbs =
       switchPath="articles"
       alternates={false}
       canonicalLocale="fa"
+      canonicalPath={duplicateOf.get(`articles/${props.item.id}`)}
+      noindex={!props.item.text.trim()}
       image={props.item.image?.src}
       imageAlt={props.item.title}
       ogType="article"
