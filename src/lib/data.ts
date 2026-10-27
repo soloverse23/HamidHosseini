@@ -170,6 +170,7 @@ export const quranFa = faTranslation as unknown as {
 export const translatedCount = (n: number) => Object.keys(quranFa.surahs[n] ?? {}).length;
 export const totalTranslated = surahs.reduce((sum, s) => sum + translatedCount(s.n), 0);
 export const surahsStarted = surahs.filter((s) => translatedCount(s.n) > 0).length;
+export const surahsDone = surahs.filter((s) => translatedCount(s.n) >= s.ayahs).length;
 
 /** The surah and highest verse from the most recent translation post. */
 export const quranNow = (() => {

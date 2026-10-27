@@ -9,7 +9,7 @@ const pick = (l?: Localized) => (l ? (l.en ?? l.fa ?? Object.values(l)[0]) : und
 // Plain-text corpus for AI agents: works, lectures, episodes and the newest notes.
 export function GET({ site }: APIContext) {
   const o = site!.origin;
-  const out: string[] = ['# Seyed Hamid Hosseini: full text index', '', `Source: ${o}/llms.txt`, ''];
+  const out: string[] = ['# Seyyed Hamid Hosseini: full text index', '', `Source: ${o}/llms.txt`, ''];
 
   out.push('## Writings', '');
   for (const w of [...BOOKS, ...ARTICLES]) {

@@ -6,7 +6,7 @@ import { excerpt, itemTitle } from '../lib/text';
 export function GET(context: APIContext) {
   const items = latest(60);
   return rss({
-    title: 'سید حمید حسینی · Seyed Hamid Hosseini',
+    title: 'سید حمید حسینی · Seyyed Hamid Hosseini',
     description: 'Notes, Quran translation and talks from Telegram, YouTube and more.',
     site: context.site!,
     items: items.map((i) => ({

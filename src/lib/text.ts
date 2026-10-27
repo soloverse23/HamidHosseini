@@ -39,9 +39,17 @@ export function firstLine(text: string, max = 120): string {
 export const DECOR =
   /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u{1F170}-\u{1F251}\uFE0E\uFE0F\u20E3\u200D✳❇✴⭕◾◽▪▫►◄●○■□➡⬅⬆⬇]/gu;
 
+/**
+ * The Latin spellings the channels use for his name ("Seyed", "Sayyid"…),
+ * written the one way the site uses. Hashtags (#SeyedHamidHosseini) have no
+ * spaces and are left as they are.
+ */
+const NAME_VARIANT = /\b(?:Seyed|Seyyid|Sayyid|Sayyed|Sayed|Seied)(?= Hamid Hosseini\b)/g;
+
 /** Text without decorative emoji, keeping line breaks. */
 export function cleanDisplay(text: string): string {
   return text
+    .replace(NAME_VARIANT, 'Seyyed')
     .replace(DECOR, ' ')
     .replace(/[ \t]+/g, ' ')
     .replace(/ *\n */g, '\n')
@@ -53,7 +61,7 @@ export function cleanDisplay(text: string): string {
 export function cleanDisplayHtml(html: string): string {
   return html
     .split(/(<[^>]+>)/)
-    .map((part) => (part.startsWith('<') ? part : part.replace(DECOR, ' ').replace(/[ \t]{2,}/g, ' ')))
+    .map((part) => (part.startsWith('<') ? part : part.replace(NAME_VARIANT, 'Seyyed').replace(DECOR, ' ').replace(/[ \t]{2,}/g, ' ')))
     .join('')
     .replace(/(^|<br \/>)\s+/g, '$1')
     .replace(/\s+(<br \/>|$)/g, '$1');

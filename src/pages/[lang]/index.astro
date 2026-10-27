@@ -1,6 +1,7 @@
 ---
 import '@fontsource/amiri-quran/400.css';
 import Icon from '../../components/Icon.astro';
+import Mark from '../../components/Mark.astro';
 import QuranMap from '../../components/QuranMap.astro';
 import SearchField from '../../components/SearchField.astro';
 import Timeline from '../../components/Timeline.astro';
@@ -21,7 +22,7 @@ import {
   quranNow,
   shorts,
   surahs,
-  surahsStarted,
+  surahsDone,
   tiktok,
   totalTranslated,
   type YtLang,
@@ -93,14 +94,24 @@ const next = timeline(locale)[1];
 
 /* Index of sections */
 const sessionsTotal = LECTURES.reduce((a, l) => a + (lectureSessions[l.id]?.length ?? 0), 0);
-const sections = [
+const sections: { key: string; title: string; count?: number; unit?: (n: string) => string; detail: string }[] = [
   { key: 'writings', title: s.sections.writings.title, count: BOOKS.length + ARTICLES.length + LECTURES.length, detail: s.books.sessions(n(sessionsTotal)) },
   { key: 'articles', title: s.sections.articles.title, count: blogArticles.length, detail: 'kalaam.ir' },
-  { key: 'quran', title: s.sections.quran.title, count: totalTranslated, detail: `${n(surahsStarted)} ${s.quran.surahs}` },
+  { key: 'quran', title: s.sections.quran.title, count: totalTranslated, unit: s.quran.verses, detail: s.quran.surahsDone(n(surahsDone)) },
   { key: 'notes', title: s.sections.notes.title, count: notes.length, detail: 'Telegram' },
-  { key: 'videos', title: s.sections.series.title, count: youtube.items.length, detail: s.episode(n(localeEps[0]?.n ?? 0)) },
+  { key: 'videos', title: s.sections.series.title, count: youtube.items.length, unit: s.videosCount, detail: s.episode(n(localeEps[0]?.n ?? 0)) },
   { key: 'tiktok', title: s.sections.tiktok.title, count: tiktok.items.length, detail: 'TikTok' },
   { key: 'instagram', title: s.sections.instagram.title, count: instagram.items.length || undefined, detail: 'Instagram' },
+];
+
+/* Phones: the main sections as tiles under the hero (the index below is for wider screens) */
+const quick: { key: string; icon: 'book' | 'quote' | 'telegram' | 'youtube' | 'play' | 'file'; title: string; count?: string }[] = [
+  { key: 'quran', icon: 'book', title: s.sections.quran.title, count: s.quran.verses(n(totalTranslated)) },
+  { key: 'notes', icon: 'telegram', title: s.sections.notes.title, count: s.posts(n(notes.length)) },
+  { key: 'videos', icon: 'youtube', title: s.sections.series.title, count: s.videosCount(n(youtube.items.length)) },
+  { key: 'shorts', icon: 'play', title: s.nav.shorts, count: s.videosCount(n(tiktok.items.length + instagram.items.length + shorts.length)) },
+  { key: 'writings', icon: 'file', title: s.sections.writings.title, count: u.countBooks(n(BOOKS.length)) },
+  { key: 'articles', icon: 'quote', title: s.sections.articles.title, count: s.articles.count(n(blogArticles.length)) },
 ];
 
 const origin = (Astro.site ?? new URL(PRODUCTION_URL)).origin;
@@ -129,6 +140,7 @@ const jsonLd = [
   <!-- ============ Hero ============ -->
   <section class="wrap hero">
     <div class="hero__intro">
+      <Mark size={220} class="hero__mark" />
       <h1 class="hero__name">{s.name}</h1>
       <p class="hero__tag">{s.tagline}</p>
       {
@@ -161,11 +173,25 @@ const jsonLd = [
       <SearchField locale={locale} class="hero__search" />
     </div>
 
+    <nav class="quick" aria-label={u.sections}>
+      <ul>
+        {quick.map((q) => (
+          <li>
+            <a href={href(locale, q.key)}>
+              <span class="quick__icon"><Icon name={q.icon} /></span>
+              <span class="quick__title">{q.title}</span>
+              {q.count && <span class="quick__count">{q.count}</span>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
     {
       feat && (
         <article class="feature">
           <p class="feature__label">
-            <span>{feat.pinned ? u.pinned : u.featured}</span>
+            <span>{feat.pinned ? u.pinned : feat.source === 'youtube' ? u.featuredVideo : u.featured}</span>
             <time datetime={feat.date} data-rel>
               {date(locale, feat.date, 'short')}
             </time>
@@ -301,7 +327,7 @@ const jsonLd = [
       <article class="panel panel--shorts">
         <header class="panel__head">
           <h3>{u.shortsTitle}</h3>
-          <a class="more" href={href(locale, 'tiktok')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
+          <a class="more" href={href(locale, 'shorts')}>{s.viewAll}<Icon name="chevron" class="flip" /></a>
         </header>
         <ul class="shorts4">
           {
@@ -437,7 +463,7 @@ const jsonLd = [
               <span class="idx__no">{pad(i + 1)}</span>
               <span class="idx__title">{sec.title}</span>
               <span class="idx__meta">
-                {sec.count !== undefined && <span class="num">{n(sec.count)}</span>}
+                {sec.count !== undefined && <span class="num">{sec.unit ? sec.unit(n(sec.count)) : n(sec.count)}</span>}
                 <span>{sec.detail}</span>
               </span>
               <Icon name="arrow" class="idx__arrow flip" />
@@ -1340,5 +1366,256 @@ const jsonLd = [
   }
   :root[dir='rtl'] .idx a:hover :global(.idx__arrow) {
     transform: scaleX(-1) translateX(3px);
+  }
+
+  /* ---------- Phones ---------- */
+  /* On a narrow screen the page reads as a stack of cards: a lapis cover,
+     section tiles, and rows that scroll sideways instead of growing long. */
+  :global(.hero__mark),
+  .quick {
+    display: none;
+  }
+  @media (max-width: 47.99rem) {
+    .hero,
+    .found {
+      --chip: #fff;
+    }
+    :root[data-theme='dark'] .hero,
+    :root[data-theme='dark'] .found {
+      --chip: var(--paper-3);
+    }
+  }
+  @media (max-width: 47.99rem) and (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .hero,
+    :root:not([data-theme='light']) .found {
+      --chip: var(--paper-3);
+    }
+  }
+  @media (max-width: 47.99rem) {
+    .hero {
+      gap: var(--space-5);
+      margin-block-start: calc(-1 * var(--space-5));
+      padding-block: 0 var(--space-5);
+    }
+
+    /* Cover: deep lapis in both themes, the khatam faint behind the name */
+    .hero__intro {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      padding: var(--space-5);
+      border-radius: 18px;
+      color: #fff;
+      background:
+        radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.14), transparent 55%),
+        linear-gradient(160deg, #1d4f91, #12305a);
+      box-shadow: 0 18px 36px -24px rgb(18 48 90 / 0.8);
+    }
+    :global(.hero__mark) {
+      display: block;
+      position: absolute;
+      z-index: -1;
+      inset-block-start: -2.5rem;
+      inset-inline-end: -3.5rem;
+      color: rgb(255 255 255 / 0.13);
+    }
+    /* The header already shows the name and tagline */
+    .hero__name {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .hero__tag {
+      display: none;
+    }
+    .hero__actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      margin: 0;
+    }
+    .hero__actions .btn {
+      justify-content: center;
+      padding-inline: 0.6em;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      border-radius: 10px;
+      border-color: rgb(255 255 255 / 0.35);
+      background: rgb(255 255 255 / 0.08);
+      color: #fff;
+    }
+    .hero__actions .btn--primary {
+      border-color: #fff;
+      background: #fff;
+      color: #12305a;
+    }
+    :global(.hero__search) {
+      width: 100%;
+      margin-block-start: var(--space-3);
+    }
+
+    /* Section tiles */
+    .quick {
+      display: block;
+    }
+    .quick ul {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-2);
+    }
+    .quick a {
+      display: grid;
+      justify-items: start;
+      gap: 0.2rem;
+      height: 100%;
+      padding: var(--space-3);
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      background: var(--paper-2);
+      color: var(--ink);
+      text-decoration: none;
+      transition:
+        border-color 0.15s,
+        transform 0.15s;
+    }
+    .quick a:active {
+      transform: scale(0.97);
+    }
+    .quick__icon {
+      display: grid;
+      place-items: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      margin-block-end: var(--space-1);
+      border-radius: 10px;
+      background: var(--chip);
+      color: var(--accent);
+      --icon-cut: var(--chip);
+    }
+    .quick__icon :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+    .quick__title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      line-height: 1.35;
+    }
+    .quick__count {
+      font-size: 0.6875rem;
+      color: var(--ink-3);
+    }
+
+    /* Latest note: a card with a lapis strip across the top */
+    .feature,
+    :root[dir='rtl'] .feature {
+      padding: var(--space-5);
+      border: 1px solid var(--rule);
+      border-block-start: 4px solid var(--accent);
+      border-radius: 14px;
+    }
+    .feature__label span {
+      padding: 0.1rem 0.6rem;
+      border-radius: 999px;
+      background: var(--chip);
+    }
+    .feature__title {
+      font-size: 1.3rem;
+    }
+
+    /* Section heads: a small lapis diamond, as in the mark */
+    .block-head {
+      margin-block-end: var(--space-4);
+    }
+    .block-head h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 1.35rem;
+    }
+    .block-head h2::before {
+      content: '';
+      width: 0.45rem;
+      height: 0.45rem;
+      background: var(--accent);
+      transform: rotate(45deg);
+    }
+
+    /* Rows that scroll sideways, edge to edge, one card at a time */
+    .found__grid,
+    .shorts4 {
+      display: flex;
+      gap: var(--space-3);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      margin-inline: calc(-1 * var(--gutter));
+      padding-inline: var(--gutter);
+      padding-block-end: var(--space-2);
+      scrollbar-width: none;
+    }
+    .found__grid::-webkit-scrollbar,
+    .shorts4::-webkit-scrollbar {
+      display: none;
+    }
+    .found__grid > li,
+    .shorts4 > li {
+      flex: none;
+      scroll-snap-align: start;
+    }
+
+    .found {
+      margin-block: var(--space-5) var(--space-6);
+    }
+    .found__item,
+    .found__item--lead {
+      width: 82%;
+      padding: var(--space-5);
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      background: var(--paper-2);
+    }
+    .found__item--lead {
+      border-block-start: 4px solid var(--accent);
+      background: var(--chip);
+    }
+
+    .now,
+    .timeline {
+      margin-block-end: var(--space-7);
+    }
+    .now-grid {
+      gap: var(--space-6);
+    }
+    .panel--quran {
+      padding: var(--space-4);
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+    }
+    .q-verse {
+      border-radius: 10px;
+    }
+    .shorts4 > li {
+      width: 38%;
+    }
+    .shorts4 .frame,
+    .panel--episode :global(.frame) {
+      border-radius: 12px;
+    }
+
+    /* The tiles at the top lead to every section, and the footer lists
+       the channels, so neither is repeated here */
+    .channels,
+    .index {
+      display: none;
+    }
+    .timeline {
+      margin-block-end: 0;
+    }
   }
 </style>

@@ -1,7 +1,6 @@
 ---
 // Every short clip in one place (TikTok, Instagram, YouTube Shorts), newest
 // first, with the platform as a filter rather than a section of its own.
-import Chapter from '../../components/Chapter.astro';
 import Icon from '../../components/Icon.astro';
 import { type Locale, isRtl } from '../../i18n/locales';
 import { t } from '../../i18n/strings';
@@ -23,9 +22,7 @@ const counts = { tiktok: tiktok.items.length, instagram: instagram.items.length,
 
 <Base locale={locale} path="shorts" crumbs={[{ name: s.nav.shorts, path: 'shorts' }]} title={s.nav.shorts} description={u.shortsLede}>
   <div class="wrap">
-    <Chapter locale={locale} title={s.nav.shorts} lede={u.shortsLede}>
-      <span class="meta">{s.videosCount(num(locale, items.length))}</span>
-    </Chapter>
+    <h1 class="visually-hidden">{s.nav.shorts}</h1>
 
     <p class="filters" role="group">
       <button type="button" aria-pressed="true" data-filter="all">{u.all}</button>

@@ -1,4 +1,4 @@
-# Seyed Hamid Hosseini: website
+# Seyyed Hamid Hosseini: website
 
 A static site (Astro) in English, Romanian, Arabic, Persian and Urdu. It collects his books and writings, his Quran translation, the Telegram channel, the five YouTube channels of “Islam, why and how?” (Persian, Romanian, Arabic, Urdu, English), TikTok and Instagram. A scheduled GitHub Action keeps it up to date.
 

@@ -1,8 +1,8 @@
 import type { Locale } from './locales';
 
 const en = {
-  name: 'Seyed Hamid Hosseini',
-  tagline: 'Collected works, activities and connections',
+  name: 'Seyyed Hamid Hosseini',
+  tagline: 'Works, Projects and Dialogues',
   skip: 'Skip to content',
   nav: {
     home: 'Home',
@@ -131,7 +131,7 @@ const en = {
     request: 'Request an English translation',
     requestNote: 'Send a message on WhatsApp. Requests help decide what is translated next.',
     waText: (t: string, u: string) =>
-      `Hello! I would like to read the book “${t}” by Seyed Hamid Hosseini in English. Could it be translated? ${u}`,
+      `Hello! I would like to read the book “${t}” by Seyyed Hamid Hosseini in English. Could it be translated? ${u}`,
     inMine: 'In English',
     all: 'All',
     details: 'About the book',
@@ -157,6 +157,7 @@ const en = {
   quran: {
     surah: 'Surah',
     surahs: 'Surahs',
+    surahsDone: (n: string) => `${n} surahs translated`,
     verses: (n: string) => `${n} verses`,
     translated: (a: string, b: string) => `${a} of ${b} verses translated`,
     progress: 'Progress',
@@ -290,7 +291,7 @@ const en = {
     clear: 'Clear',
     reset: 'Clear search',
     try: 'Try',
-    examples: ['صبر', 'الرحمن', 'Coran', '2:255'],
+    examples: ['صبر', 'الرحمن', 'Quran', '2:255'],
     goTo: 'Go to',
     didYouMean: 'Did you mean {q}?',
     seeAll: (n: string) => `See all ${n} results`,
@@ -321,7 +322,7 @@ const en = {
     reminders: 'Reminders',
   },
   footer: {
-    rights: 'All texts by Seyed Hamid Hosseini unless stated otherwise.',
+    rights: 'All texts by Seyyed Hamid Hosseini unless stated otherwise.',
     rss: 'RSS',
     source: 'Where everything comes from',
   },
@@ -332,8 +333,8 @@ export type Strings = typeof en;
 
 const ro: Strings = {
   ...en,
-  name: 'Seyed Hamid Hosseini',
-  tagline: 'Opere, activități și legături',
+  name: 'Seyyed Hamid Hosseini',
+  tagline: 'Lucrări, proiecte și dialoguri',
   skip: 'Sari la conținut',
   nav: {
     home: 'Acasă',
@@ -461,7 +462,7 @@ const ro: Strings = {
     missing: (l) => `Această carte nu a fost încă tradusă în română; este afișat originalul în ${l}.`,
     request: 'Cereți traducerea în română',
     requestNote: 'Trimiteți un mesaj pe WhatsApp. Cererile ajută la alegerea cărților care vor fi traduse.',
-    waText: (t, u) => `Bună ziua! Aș dori să citesc în română cartea „${t}” de Seyed Hamid Hosseini. Ar putea fi tradusă? ${u}`,
+    waText: (t, u) => `Bună ziua! Aș dori să citesc în română cartea „${t}” de Seyyed Hamid Hosseini. Ar putea fi tradusă? ${u}`,
     inMine: 'În română',
     all: 'Toate',
     details: 'Despre carte',
@@ -487,6 +488,7 @@ const ro: Strings = {
   quran: {
     surah: 'Sura',
     surahs: 'Sure',
+    surahsDone: (n) => `${n} sure traduse`,
     verses: (n) => `${n} versete`,
     translated: (a, b) => `${a} din ${b} versete traduse`,
     progress: 'Progres',
@@ -652,7 +654,7 @@ const ro: Strings = {
     reminders: 'Îndemnuri',
   },
   footer: {
-    rights: 'Toate textele aparțin lui Seyed Hamid Hosseini, dacă nu se precizează altfel.',
+    rights: 'Toate textele aparțin lui Seyyed Hamid Hosseini, dacă nu se precizează altfel.',
     rss: 'RSS',
     source: 'De unde provine conținutul',
   },
@@ -662,7 +664,7 @@ const ro: Strings = {
 const ar: Strings = {
   ...en,
   name: 'السيد حميد الحسيني',
-  tagline: 'مجموعة الأعمال والأنشطة والتواصل',
+  tagline: 'آثار ومشاريع وحوارات',
   skip: 'انتقل إلى المحتوى',
   nav: {
     home: 'الرئيسية',
@@ -816,6 +818,7 @@ const ar: Strings = {
   quran: {
     surah: 'سورة',
     surahs: 'السور',
+    surahsDone: (n) => `السور المترجمة: ${n}`,
     verses: (n) => `${n} آية`,
     translated: (a, b) => `تُرجمت ${a} من ${b} آية`,
     progress: 'التقدّم',
@@ -989,7 +992,7 @@ const ar: Strings = {
 const fa: Strings = {
   ...en,
   name: 'سید حمید حسینی',
-  tagline: 'مجموعه آثار، فعالیت‌ها و ارتباطات',
+  tagline: 'آثار، طرح‌ها و گفتگوها',
   skip: 'رفتن به محتوا',
   nav: {
     home: 'خانه',
@@ -1143,6 +1146,7 @@ const fa: Strings = {
   quran: {
     surah: 'سوره',
     surahs: 'سوره‌ها',
+    surahsDone: (n) => `${n} سورهٔ ترجمه‌شده`,
     verses: (n) => `${n} آیه`,
     translated: (a, b) => `${a} از ${b} آیه ترجمه شده`,
     progress: 'پیشرفت',
@@ -1317,7 +1321,7 @@ const fa: Strings = {
 const ur: Strings = {
   ...en,
   name: 'سید حمید حسینی',
-  tagline: 'مجموعۂ آثار، سرگرمیاں اور رابطے',
+  tagline: 'تصانیف، منصوبے اور مکالمے',
   skip: 'مواد پر جائیں',
   nav: {
     home: 'صفحۂ اول',
@@ -1471,6 +1475,7 @@ const ur: Strings = {
   quran: {
     surah: 'سورہ',
     surahs: 'سورتیں',
+    surahsDone: (n) => `${n} مترجم سورتیں`,
     verses: (n) => `${n} آیات`,
     translated: (a, b) => `${b} میں سے ${a} آیات کا ترجمہ ہو چکا`,
     progress: 'پیش رفت',

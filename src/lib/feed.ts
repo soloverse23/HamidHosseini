@@ -247,8 +247,8 @@ const isOwn = (n: FeedItem) =>
   /حمید حسینی|Hamid Hosseini/i.test(n.forwardedFrom.name);
 
 /**
- * The newest Telegram post that is an actual written note (not a clip,
- * podcast or Quran translation). Posts are Persian, so other languages get
+ * The newest Telegram post that is an actual written note, Quran
+ * translations included (not a clip or podcast). Posts are Persian, so other languages get
  * the newest long-form item in their own language (a video with its
  * description), and the Persian note only when there is none.
  */
@@ -259,7 +259,6 @@ export function featuredNote(locale: Locale): FeedItem | undefined {
       (n) =>
         n.text.length > 400 &&
         isOwn(n) &&
-        n.series !== 'quran-translation' &&
         !(n.tags ?? []).some((t) => t === '#پادکست' || t === '#کلیپ_آموزشی'),
     );
   if (locale === 'fa') return note;

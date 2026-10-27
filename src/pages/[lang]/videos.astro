@@ -1,5 +1,4 @@
 ---
-import Chapter from '../../components/Chapter.astro';
 import CollectionHead from '../../components/CollectionHead.astro';
 import EpisodeCard from '../../components/EpisodeCard.astro';
 import Icon from '../../components/Icon.astro';
@@ -62,7 +61,7 @@ const videoLd = {
 
 <Base locale={locale} path="videos" jsonLd={videoLd} crumbs={[{ name: s.sections.series.title, path: 'videos' }]} title={s.sections.series.title} description={s.sections.series.lede}>
   <div class="wrap">
-    <Chapter locale={locale} title={s.sections.series.title} lede={s.sections.series.lede} />
+    <h1 class="visually-hidden">{s.sections.series.title}</h1>
 
     {
       featured.map((c) => (

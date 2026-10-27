@@ -11,6 +11,7 @@ import Base from '../../../../layouts/Base.astro';
 import { allSeries, collectionsFor, seriesLocales, type Collection } from '../../../../lib/collections';
 import { href } from '../../../../lib/paths';
 import { personRef } from '../../../../lib/schema';
+import { excerpt } from '../../../../lib/text';
 
 export function getStaticPaths() {
   return allSeries().map(({ locale, c }) => ({ params: { lang: locale, key: c.key }, props: { c } }));
@@ -53,8 +54,11 @@ const pageUrl = new URL(href(locale, c.path), Astro.site).toString();
     hasPart: c.episodes.slice(0, 40).map((ep) => ({
       '@type': 'VideoObject',
       name: ep.title,
+      description: excerpt(ep.text || `${c.title}: ${ep.title}`, 300),
       uploadDate: ep.date,
+      inLanguage: ep.lang,
       thumbnailUrl: `https://i.ytimg.com/vi/${ep.id}/hqdefault.jpg`,
+      embedUrl: `https://www.youtube.com/embed/${ep.id}`,
       url: new URL(href(locale, ep.path), Astro.site).toString(),
     })),
   }}

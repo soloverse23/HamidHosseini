@@ -426,24 +426,53 @@ const many = slides.length > 1;
     .slider {
       min-height: 0;
     }
+    /* One centred column: cover, then the words under it. The slides share
+       the height of the tallest, so each sits in the middle of it. */
     .slide {
-      --cover-h: 12rem;
-      --cover-w: 10rem;
-      padding-block: var(--space-5) calc(var(--space-5) + 2rem);
-      align-items: start;
+      --cover-h: 11.5rem;
+      --cover-w: 9rem;
+      padding-block: var(--space-5) calc(var(--space-4) + 2rem);
+      align-items: center;
     }
     .slide::before {
       background: linear-gradient(to bottom, rgb(10 9 8 / 0.1), rgb(10 9 8 / 0.6) 45%, rgb(10 9 8 / 0.8));
     }
     .slide__inner {
       grid-template-columns: 1fr;
-      gap: var(--space-5);
+      gap: var(--space-4);
     }
-    .slide__title {
+    .slide__cover {
+      min-height: 0;
+    }
+    .slide__body {
+      gap: var(--space-3);
+      justify-items: center;
+      justify-self: center;
+      text-align: center;
+    }
+    .slide__eyebrow {
+      justify-content: center;
+    }
+    .slide__title,
+    :root .slide__title.align-start {
       font-size: var(--step-3);
+      justify-self: center;
+      text-align: center;
     }
     .slide__summary {
       font-size: var(--step-0);
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
+    }
+    .slide__actions {
+      justify-content: center;
+      gap: var(--space-3) var(--space-4);
+      margin-block-start: var(--space-1);
+    }
+    .slide__read {
+      padding: 0.7em 1.4em;
     }
     .slider__nav {
       justify-content: center;

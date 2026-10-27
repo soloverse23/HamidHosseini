@@ -12,7 +12,7 @@ export const personId = (site?: URL) => `${origin(site)}/#person`;
 export const foundationId = (site?: URL) => `${origin(site)}/#imam-ali-foundation`;
 
 /** Reference to the author, for `author`, `publisher`, `translator` … */
-export const personRef = (site?: URL) => ({ '@type': 'Person', '@id': personId(site), name: 'Seyed Hamid Hosseini' });
+export const personRef = (site?: URL) => ({ '@type': 'Person', '@id': personId(site), name: 'Seyyed Hamid Hosseini' });
 
 export function personNode(site?: URL) {
   const o = origin(site);
@@ -20,9 +20,9 @@ export function personNode(site?: URL) {
     '@context': 'https://schema.org',
     '@type': 'Person',
     '@id': personId(site),
-    name: 'Seyed Hamid Hosseini',
+    name: 'Seyyed Hamid Hosseini',
     alternateName: ['سید حمید حسینی', 'Hamid Hosseini', 'السيد حميد حسيني', 'Seyed Hamid Hosseini'],
-    honorificPrefix: 'Seyed',
+    honorificPrefix: 'Seyyed',
     url: `${o}/fa/about/`,
     image: `${o}/og.png`,
     jobTitle: 'Islamic scholar and writer',
