@@ -1,6 +1,7 @@
-// Builds the site search index. Run by the Astro integration in
-// scripts/search/integration.ts (after `astro build`, and on `astro dev`), or
-// by hand: `tsx scripts/search/build-index.ts [siteDir]` (default: dist).
+// Builds the site search index. Run by `npm run build` once `astro build` has
+// exited, by the Astro integration in scripts/search/integration.ts on
+// `astro dev`, or by hand: `tsx scripts/search/build-index.ts [siteDir]`
+// (default: dist).
 //
 // Instead of scraping the rendered pages (which Pagefind would split into one
 // index per page language, so an English reader could never find a Persian

@@ -1,5 +1,6 @@
 // Astro integration for site search.
-//  - `astro build`: writes the index into the output folder (dist/pagefind).
+//  - `npm run build`: build-index.ts runs after `astro build` and writes the
+//                   index into the output folder (dist/pagefind).
 //  - `astro dev`:   builds the index once into node_modules/.cache (outside
 //                   Vite's file watcher; it is ~10k files) and serves it at
 //                   /pagefind/, so search works while developing too.
@@ -33,9 +34,9 @@ export default function search(): AstroIntegration {
   return {
     name: 'site-search',
     hooks: {
-      'astro:build:done': async ({ dir, logger }) => {
-        logger.info(await writeIndex(fileURLToPath(dir).replace(/\/$/, '')));
-      },
+      // `npm run build` writes the index after `astro build` has exited (see
+      // package.json): run from this hook, it sat on top of Astro's memory
+      // and the two together ran the Vercel build out of RAM.
       'astro:server:setup': ({ server, logger }) => {
         const root = join(process.cwd(), 'node_modules/.cache/site-search');
         const ready = writeIndex(root)

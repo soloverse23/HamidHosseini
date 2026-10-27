@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && tsx scripts/search/build-index.ts dist",
     "preview": "astro preview",
     "fetch:telegram": "tsx scripts/fetch/telegram.ts",
     "fetch:youtube": "tsx scripts/fetch/youtube.ts",
