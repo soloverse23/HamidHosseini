@@ -24,7 +24,7 @@ await page.evaluate(async () => {
     <svg width="56" height="56" viewBox="0 0 32 32" fill="none"><g stroke="#1d4f91" stroke-width="1.4" stroke-linejoin="round"><rect x="7" y="7" width="18" height="18"/><rect x="7" y="7" width="18" height="18" transform="rotate(45 16 16)"/><circle cx="16" cy="16" r="3.2"/></g></svg>
     <div>
       <div style="font-family:'Noto Naskh Arabic Variable';font-size:64px;font-weight:600;direction:rtl;text-align:left;line-height:1.3">سید حمید حسینی</div>
-      <div style="font-family:'Vazirmatn Variable';font-size:30px;color:#4b463d;direction:rtl;text-align:left;line-height:1.6">آثار، طرح‌ها و گفتگوها</div>
+      <div style="font-family:'Vazirmatn Variable';font-size:30px;color:#4b463d;direction:rtl;text-align:left;line-height:1.6">آثار، فعالیت‌ها و گفتگوها</div>
       <div style="font-family:'Newsreader Variable';font-size:84px;letter-spacing:-0.02em;line-height:1.05;margin-top:24px">Seyyed Hamid Hosseini</div>
     </div>
     <div style="font-family:'IBM Plex Sans';font-size:26px;color:#4b463d">Works, Projects and Dialogues</div>

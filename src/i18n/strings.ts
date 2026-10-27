@@ -992,7 +992,7 @@ const ar: Strings = {
 const fa: Strings = {
   ...en,
   name: 'سید حمید حسینی',
-  tagline: 'آثار، طرح‌ها و گفتگوها',
+  tagline: 'آثار، فعالیت‌ها و گفتگوها',
   skip: 'رفتن به محتوا',
   nav: {
     home: 'خانه',
