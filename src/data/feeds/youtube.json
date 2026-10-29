@@ -1,12 +1,12 @@
 {
  "source": "youtube",
- "updatedAt": "2026-10-28T22:30:55.705Z",
+ "updatedAt": "2026-10-29T22:42:15.085Z",
  "profiles": {
   "fa": {
    "name": "کلام - سید حمید حسینی",
    "handle": "@kalam-hamidhossaini",
    "url": "https://www.youtube.com/@kalam-hamidhossaini",
-   "followers": 630
+   "followers": 632
   },
   "ro": {
    "name": "Islam, de ce și cum?",
@@ -53,7 +53,7 @@
      "duration": 393
     }
    ],
-   "views": 12,
+   "views": 15,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -76,7 +76,7 @@
      "duration": 312
     }
    ],
-   "views": 186,
+   "views": 376,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -99,7 +99,7 @@
      "duration": 365
     }
    ],
-   "views": 150,
+   "views": 248,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -122,7 +122,7 @@
      "duration": 388
     }
    ],
-   "views": 66,
+   "views": 106,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -145,7 +145,7 @@
      "duration": 1213
     }
    ],
-   "views": 104
+   "views": 107
   },
   {
    "source": "youtube",
@@ -208,7 +208,7 @@
      "duration": 1495
     }
    ],
-   "views": 98
+   "views": 99
   },
   {
    "source": "youtube",
@@ -229,7 +229,7 @@
      "duration": 416
     }
    ],
-   "views": 1400,
+   "views": 1500,
    "series": "islam-why-how",
    "episode": 62
   },
@@ -298,7 +298,7 @@
      "duration": 367
     }
    ],
-   "views": 828,
+   "views": 829,
    "series": "islam-why-how",
    "episode": 60
   },
@@ -430,7 +430,7 @@
      "duration": 448
     }
    ],
-   "views": 546,
+   "views": 547,
    "series": "islam-why-how",
    "episode": 59
   },
@@ -453,7 +453,7 @@
      "duration": 504
     }
    ],
-   "views": 118,
+   "views": 119,
    "series": "islam-why-how",
    "episode": 59
   },
@@ -540,7 +540,7 @@
      "duration": 601
     }
    ],
-   "views": 947,
+   "views": 948,
    "series": "islam-why-how",
    "episode": 58
   },
@@ -609,7 +609,7 @@
      "duration": 409
     }
    ],
-   "views": 616,
+   "views": 617,
    "series": "islam-why-how",
    "episode": 58
   },
@@ -739,7 +739,7 @@
      "duration": 367
     }
    ],
-   "views": 667,
+   "views": 668,
    "series": "islam-why-how",
    "episode": 57
   },
@@ -1190,7 +1190,7 @@
      "duration": 407
     }
    ],
-   "views": 861,
+   "views": 862,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -1259,7 +1259,7 @@
      "duration": 275
     }
    ],
-   "views": 727,
+   "views": 733,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -1501,7 +1501,7 @@
      "duration": 419
     }
    ],
-   "views": 521,
+   "views": 522,
    "series": "islam-why-how",
    "episode": 51
   },
@@ -1547,7 +1547,7 @@
      "duration": 570
     }
    ],
-   "views": 570,
+   "views": 573,
    "series": "islam-why-how",
    "episode": 51
   },
@@ -4118,7 +4118,7 @@
      "duration": 150
     }
    ],
-   "views": 76
+   "views": 80
   },
   {
    "source": "youtube",
@@ -4333,7 +4333,7 @@
      "height": 360
     }
    ],
-   "views": 919
+   "views": 920
   },
   {
    "source": "youtube",
@@ -4400,7 +4400,7 @@
      "duration": 231
     }
    ],
-   "views": 81,
+   "views": 82,
    "series": "islam-why-how",
    "episode": 28
   },
@@ -4837,7 +4837,7 @@
      "duration": 586
     }
    ],
-   "views": 97,
+   "views": 98,
    "series": "islam-why-how",
    "episode": 42
   },
@@ -6872,7 +6872,7 @@
      "duration": 234
     }
    ],
-   "views": 53,
+   "views": 54,
    "episode": 8,
    "series": "islam-why-how"
   },
@@ -7669,7 +7669,7 @@
      "duration": 186
     }
    ],
-   "views": 307,
+   "views": 308,
    "series": "islam-why-how",
    "episode": 1
   },
@@ -7692,7 +7692,7 @@
      "duration": 196
     }
    ],
-   "views": 682,
+   "views": 683,
    "series": "islam-why-how",
    "episode": 3
   },
@@ -8014,7 +8014,7 @@
      "duration": 276
     }
    ],
-   "views": 64,
+   "views": 65,
    "episode": 9,
    "series": "islam-why-how"
   },
@@ -8198,7 +8198,7 @@
      "duration": 185
     }
    ],
-   "views": 401,
+   "views": 400,
    "series": "islam-why-how",
    "episode": 1
   }
