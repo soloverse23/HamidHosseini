@@ -65,8 +65,9 @@ const featHref = !feat
       : feat.url;
 const featExternal = featHref.startsWith('http');
 const featTitle = feat ? itemTitle(feat, 140) : '';
-/* A note's first line is its title; a video's description starts the body */
-const featBody = feat ? excerpt(strip(featNote ? feat.text.slice(feat.text.indexOf('\n') + 1) : feat.text), 520) : '';
+/* A note's first line is its title; a video's description starts the body. A one-line caption is all title. */
+const featRest = !feat ? '' : !featNote ? feat.text : feat.text.includes('\n') ? feat.text.slice(feat.text.indexOf('\n') + 1) : '';
+const featBody = featRest ? excerpt(strip(featRest), 520) : '';
 const featTopic = feat ? topicsOf(feat)[0] : undefined;
 
 /* Now: Quran */
@@ -191,7 +192,7 @@ const jsonLd = [
       feat && (
         <article class="feature">
           <p class="feature__label">
-            <span>{feat.pinned ? u.pinned : feat.source === 'youtube' ? u.featuredVideo : u.featured}</span>
+            <span>{feat.pinned ? u.pinned : feat.source === 'youtube' || feat.kind === 'video' ? u.featuredVideo : u.featured}</span>
             <time datetime={feat.date} data-rel>
               {date(locale, feat.date, 'short')}
             </time>
@@ -202,9 +203,11 @@ const jsonLd = [
           <h2 class="feature__title x" lang={contentLang(feat)} dir={dirOf(contentLang(feat))} data-tr>
             <a href={featHref} rel={featExternal ? 'noopener' : undefined} target={featExternal ? '_blank' : undefined}>{featTitle}</a>
           </h2>
-          <p class="feature__body x clamp-4" lang={contentLang(feat)} dir={dirOf(contentLang(feat))} data-tr>
-            {featBody}
-          </p>
+          {featBody && (
+            <p class="feature__body x clamp-4" lang={contentLang(feat)} dir={dirOf(contentLang(feat))} data-tr>
+              {featBody}
+            </p>
+          )}
           <p class="feature__foot">
             <a class="feature__go" href={featHref} rel={featExternal ? 'noopener' : undefined} target={featExternal ? '_blank' : undefined}>
               {s.readMore}
