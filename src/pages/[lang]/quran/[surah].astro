@@ -9,6 +9,7 @@ import { personRef } from '../../../lib/schema';
 import { linkRoots } from '../../../lib/glossary';
 import { richNote } from '../../../lib/quran-refs';
 import { date, num, plain } from '../../../lib/format';
+import { quranOg } from '../../../lib/og';
 import { href } from '../../../lib/paths';
 
 export function getStaticPaths() {
@@ -37,6 +38,8 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
   noindex={locale !== 'fa'}
   alternates={false}
   title={title}
+  image={quranOg(String(meta.n))}
+  imageAlt={`سُورَةُ ${meta.ar} · ${title}`}
   crumbs={[
     { name: s.sections.quran.title, path: 'quran' },
     { name: title, path: `quran/${meta.n}` },

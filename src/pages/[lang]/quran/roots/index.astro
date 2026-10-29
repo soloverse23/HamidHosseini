@@ -6,6 +6,7 @@ import { t } from '../../../../i18n/strings';
 import Base from '../../../../layouts/Base.astro';
 import { num } from '../../../../lib/format';
 import { firstLetter, ROOTS, rootSlug } from '../../../../lib/glossary';
+import { quranOg } from '../../../../lib/og';
 import { href } from '../../../../lib/paths';
 
 export const getStaticPaths = () => [{ params: { lang: 'fa' } }];
@@ -23,6 +24,8 @@ for (const e of ROOTS) (groups.get(firstLetter(e)) ?? groups.set(firstLetter(e),
   alternates={false}
   title={s.quran.roots}
   description={s.quran.rootsLede}
+  image={quranOg('roots')}
+  imageAlt={s.quran.roots}
   crumbs={[
     { name: s.sections.quran.title, path: 'quran' },
     { name: s.quran.roots, path: 'quran/roots' },

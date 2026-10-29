@@ -11,6 +11,7 @@ import Base from '../../../../layouts/Base.astro';
 import { citationsOf, type Citation } from '../../../../lib/citations';
 import { arabic, noteById, quranFa, surahs } from '../../../../lib/data';
 import { date, num, plain } from '../../../../lib/format';
+import { quranOg } from '../../../../lib/og';
 import { href } from '../../../../lib/paths';
 import { linkRoots } from '../../../../lib/glossary';
 import { richNote, verseHref } from '../../../../lib/quran-refs';
@@ -50,6 +51,8 @@ const url = new URL(href('fa', `quran/${meta.n}/${ayah}`), Astro.site).toString(
   alternates={false}
   title={title}
   description={excerpt(`${meta.fa} ${n(ayah)}: ${v.text}`, 158)}
+  image={quranOg(`${meta.n}/${ayah}`)}
+  imageAlt={excerpt(`${ar} — ${v.text}`, 400)}
   ogType="article"
   published={v.date}
   crumbs={[

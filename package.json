@@ -14,6 +14,7 @@
     "fetch:playlists": "tsx scripts/fetch/playlists.ts",
     "fetch:all": "tsx scripts/fetch/all.ts",
     "check:seo": "tsx scripts/check/seo.ts",
+    "og:quran": "tsx scripts/og/quran.ts",
     "check": "astro check"
   },
   "dependencies": {

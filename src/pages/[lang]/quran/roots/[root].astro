@@ -8,6 +8,7 @@ import Base from '../../../../layouts/Base.astro';
 import { arabic, noteById, quranFa, surahs } from '../../../../lib/data';
 import { num } from '../../../../lib/format';
 import { linkRoots, ROOTS, rootSlug, type RootEntry } from '../../../../lib/glossary';
+import { quranOg } from '../../../../lib/og';
 import { href } from '../../../../lib/paths';
 import { richNote, verseHref } from '../../../../lib/quran-refs';
 import { personRef } from '../../../../lib/schema';
@@ -36,6 +37,8 @@ const url = new URL(href('fa', `quran/roots/${slug}`), Astro.site).toString();
   alternates={false}
   title={title}
   description={excerpt(e.definitions[0].text, 158)}
+  image={quranOg(`roots/${slug}`)}
+  imageAlt={title}
   crumbs={[
     { name: s.sections.quran.title, path: 'quran' },
     { name: s.quran.roots, path: 'quran/roots' },

@@ -78,6 +78,8 @@ const nodes = [
     : []),
 ];
 const ogImage = new URL(image ?? '/og.png', site).toString();
+// The site card and the Quran cards (lib/og) are 1200×630; other images vary.
+const ogSized = !image || image.startsWith('/og/');
 ---
 
 <!doctype html>
@@ -108,8 +110,8 @@ const ogImage = new URL(image ?? '/og.png', site).toString();
     <meta property="og:locale" content={ogLocale(locale)} />
     {alternates && locales.filter((l) => l !== locale).map((l) => <meta property="og:locale:alternate" content={ogLocale(l)} />)}
     <meta property="og:image:alt" content={imageAlt ?? s.name} />
-    {!image && <meta property="og:image:width" content="1200" />}
-    {!image && <meta property="og:image:height" content="630" />}
+    {ogSized && <meta property="og:image:width" content="1200" />}
+    {ogSized && <meta property="og:image:height" content="630" />}
     {ogType === 'article' && published && <meta property="article:published_time" content={published} />}
     {ogType === 'article' && (modified ?? published) && <meta property="article:modified_time" content={modified ?? published} />}
     <meta name="twitter:card" content="summary_large_image" />
