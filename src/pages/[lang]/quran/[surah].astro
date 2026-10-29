@@ -107,7 +107,12 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
                 {n(a)}
               </a>
               <p class="quran-ar ayah__ar" lang="ar" translate="no">
-                {text} <span class="ayah__end">﴿{num('ar', a)}﴾</span>
+                {text}{' '}
+                {v ? (
+                  <a class="ayah__end" href={href('fa', `quran/${meta.n}/${a}`)} aria-label={s.quran.verseTitle(n(a), meta.fa)}>﴿{num('ar', a)}﴾</a>
+                ) : (
+                  <span class="ayah__end">﴿{num('ar', a)}﴾</span>
+                )}
               </p>
               {v ? (
                 <div class="ayah__tr">
@@ -275,6 +280,14 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
   .ayah__end {
     color: var(--accent);
     font-size: 0.85em;
+  }
+  a.ayah__end {
+    text-decoration: none;
+    border-radius: var(--radius);
+  }
+  a.ayah__end:hover {
+    color: var(--accent-ink);
+    background: var(--accent-wash);
   }
   .ayah__tr {
     display: grid;
