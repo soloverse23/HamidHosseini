@@ -1,12 +1,14 @@
 name: Sync content
 
 # Pulls new posts from Telegram, YouTube, TikTok and Instagram, and new
-# episodes of the Imam Ali Foundation playlists, every 6 hours. Commits the
+# episodes of the Imam Ali Foundation playlists, about every 6 hours. Commits the
 # data if anything changed and lets Vercel redeploy from that commit.
 on:
   schedule:
-    # Every 6 hours, off the :00 mark, where GitHub delays or drops scheduled runs under load.
-    - cron: '7 */6 * * *'
+    # GitHub delays scheduled runs by hours and drops some outright, so a 6-hourly
+    # cron left 10-hour gaps. Firing hourly (off the :00 mark) gives it many chances;
+    # the gate job below only lets a real sync through every ~6 hours.
+    - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       full:
@@ -19,11 +21,39 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  actions: read
   contents: write
   issues: write
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      due: ${{ steps.check.outputs.due }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "due=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # Newest successful run whose sync job actually ran (gated runs skip it).
+          last=""
+          for row in $(gh run list -R "$GITHUB_REPOSITORY" -w sync.yml -s success -L 30 \
+                         --json databaseId,createdAt -q '.[] | "\(.databaseId),\(.createdAt)"'); do
+            id=${row%,*}
+            [ "$id" = "$GITHUB_RUN_ID" ] && continue
+            ran=$(gh run view -R "$GITHUB_REPOSITORY" "$id" --json jobs -q '.jobs[] | select(.name == "sync") | .conclusion')
+            if [ "$ran" = "success" ]; then last=${row#*,}; break; fi
+          done
+          age=$(( $(date +%s) - $(date -d "${last:-1970-01-01T00:00:00Z}" +%s) ))
+          echo "Last sync: ${last:-never} (${age}s ago)"
+          if [ "$age" -ge 19800 ]; then echo "due=true" >> "$GITHUB_OUTPUT"; else echo "due=false" >> "$GITHUB_OUTPUT"; fi
+
   sync:
+    needs: gate
+    if: needs.gate.outputs.due == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
