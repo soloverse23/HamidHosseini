@@ -192,7 +192,7 @@ const jsonLd = [
       feat && (
         <article class="feature">
           <p class="feature__label">
-            <span>{feat.pinned ? u.pinned : feat.source === 'youtube' || feat.kind === 'video' ? u.featuredVideo : u.featured}</span>
+            <span>{feat.pinned ? u.pinned : feat.source === 'youtube' ? u.featuredVideo : u.featured}</span>
             <time datetime={feat.date} data-rel>
               {date(locale, feat.date, 'short')}
             </time>

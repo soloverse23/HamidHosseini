@@ -240,34 +240,18 @@ export function timeline(locale: Locale): TimelineChunk[] {
   return chunks;
 }
 
-const HIS_NAME = /حمید حسینی|Hamid Hosseini/i;
-
 /**
- * A repost of his own earlier note (forwarded from his channel) counts as his note, and so
- * does a forward signed with his name on its last line (his talk shared by an archive channel).
- */
-const isOwn = (n: FeedItem) =>
-  !n.forwardedFrom ||
-  /^https:\/\/t\.me\/hamidhossaini\//.test(n.forwardedFrom.url ?? '') ||
-  HIS_NAME.test(n.forwardedFrom.name) ||
-  HIS_NAME.test(n.text.trim().split('\n').at(-1) ?? '');
-
-/**
- * The newest Telegram post that is an actual written note, Quran
- * translations included (not a video, clip or podcast, however long its
- * caption). Posts are Persian, so other languages get the newest long-form
- * item in their own language (a video with its description), and the
- * Persian note only when there is none.
+ * The channel's newest post, whatever it is: a note, a video, or a forward he
+ * chose to share (only the AI clip and podcast companions are skipped). Posts
+ * are Persian, so other languages get the newest long-form item in their own
+ * language (a video with its description), and the Persian post only when
+ * there is none.
  */
 export function featuredNote(locale: Locale): FeedItem | undefined {
   const note =
     notes.find((n) => n.pinned) ??
     notes.find(
-      (n) =>
-        n.text.length > 400 &&
-        n.kind !== 'video' &&
-        isOwn(n) &&
-        !(n.tags ?? []).some((t) => t === '#پادکست' || t === '#کلیپ_آموزشی'),
+      (n) => n.text.trim() && !(n.tags ?? []).some((t) => t === '#پادکست' || t === '#کلیپ_آموزشی'),
     );
   if (locale === 'fa') return note;
   const pool = feedFor(locale).pool.filter((i) => !isShort(i) && i.text.trim());
