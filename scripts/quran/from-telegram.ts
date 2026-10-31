@@ -46,7 +46,7 @@ export interface Translation {
 const read = async (p: string) => JSON.parse(await readFile(join(ROOT, p), 'utf8'));
 
 /** Letters-only Arabic for fuzzy comparison between spelling conventions. */
-function skeleton(s: string) {
+export function skeleton(s: string) {
   return s
     .replace(/[ً-ٰٟۖ-ۭـؐ-ؚ]/g, '')
     .replace(/[ٱأإآءؤئاىی]/g, '')
@@ -56,7 +56,7 @@ function skeleton(s: string) {
     .replace(/[^ء-ۿ]/g, '');
 }
 
-function dice(a: string, b: string) {
+export function dice(a: string, b: string) {
   if (a.length < 2 || b.length < 2) return a === b ? 1 : 0;
   const grams = new Map<string, number>();
   for (let i = 0; i < a.length - 1; i++) {
