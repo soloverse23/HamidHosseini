@@ -1070,6 +1070,10 @@ const jsonLd = [
     .shorts4 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+    /* One row in the narrow column; the rest are a click away */
+    .shorts4 > li:nth-child(n + 3) {
+      display: none;
+    }
   }
   .shorts4 .frame {
     display: block;
