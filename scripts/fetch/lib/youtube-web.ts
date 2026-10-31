@@ -31,7 +31,9 @@ const WEB_CLIENT = { clientName: 'WEB', clientVersion: '2.20251021.01.00', hl: '
 
 export const unavailable = (title?: string) => !!title && /^\[?(private|deleted) video\]?$/i.test(title.trim());
 
-const blocked = (status?: string, reason?: string) => status === 'LOGIN_REQUIRED' || /private|deleted/i.test(reason ?? '');
+// LOGIN_REQUIRED alone is not proof: from GitHub's runners it is the "confirm
+// you're not a bot" wall on public videos, which must not be dropped as private.
+const blocked = (status?: string, reason?: string) => !!status && /private|deleted|removed/i.test(reason ?? '');
 
 function iso(raw?: string): string | undefined {
   if (!raw) return undefined;
