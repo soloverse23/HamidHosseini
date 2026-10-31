@@ -14,7 +14,8 @@
 //
 // Each language version shows only what is in its own language, so an
 // English reader never lands on a Persian post or a Romanian caption. The
-// Persian archive (notes, articles) stays one link away.
+// Persian archive (notes, articles) stays one link away. A reader who wants
+// everything can switch the timeline to every language (scope 'all').
 
 import type { Locale } from '../i18n/locales';
 import { seriesPages } from './collections';
@@ -118,20 +119,26 @@ const FOUNDATION: { item: FeedItem; mark: SeriesMark }[] = (() => {
   return out;
 })();
 
-const FEEDS = new Map<Locale, LocaleFeed>();
-function feedFor(locale: Locale): LocaleFeed {
-  const cached = FEEDS.get(locale);
+/** 'own': only the reader's language; 'all': every language */
+export type FeedScope = 'own' | 'all';
+
+const FEEDS = new Map<string, LocaleFeed>();
+function feedFor(locale: Locale, scope: FeedScope = 'own'): LocaleFeed {
+  const cached = FEEDS.get(`${locale}:${scope}`);
   if (cached) return cached;
   // The language channels already carry "Islam: why and how?". The foundation
-  // series are Persian talks on another channel, so only Persian readers see them,
-  // and a video already in the channel feed is not listed twice.
-  const own = new Set(ALL.filter((i) => contentLang(i) === locale).map((i) => i.id));
-  const extra = locale === 'fa' ? FOUNDATION.filter((row) => !own.has(row.item.id)) : [];
+  // series are Persian talks on another channel, so only Persian readers see them
+  // (or anyone who asked for every language), and a video already in the channel
+  // feed is not listed twice.
+  const base = scope === 'all' ? ALL : ALL.filter((i) => contentLang(i) === locale);
+  const own = new Set(base.map((i) => i.id));
+  const extra = locale === 'fa' || scope === 'all' ? FOUNDATION.filter((row) => !own.has(row.item.id)) : [];
   const seriesOf = new Map(extra.map((row) => [row.item.id, row.mark]));
-  const pool = [...ALL.filter((i) => contentLang(i) === locale), ...extra.map((row) => row.item)].sort((a, b) =>
-    b.date.localeCompare(a.date),
-  );
+  const pool = [...base, ...extra.map((row) => row.item)].sort((a, b) => b.date.localeCompare(a.date));
+  // The reader's own language carries an episode's companions when it has that episode.
   const carrier = new Map<number, string>();
+  for (const v of pool)
+    if (v.source === 'youtube' && v.episode && contentLang(v) === locale && !carrier.has(v.episode)) carrier.set(v.episode, v.id);
   for (const v of pool) if (v.source === 'youtube' && v.episode && !carrier.has(v.episode)) carrier.set(v.episode, v.id);
   const companions = new Map<number, FeedItem[]>();
   const folded = new Set<string>();
@@ -142,12 +149,12 @@ function feedFor(locale: Locale): LocaleFeed {
     }
   }
   const feed = { pool, companions, folded, carrier, seriesOf };
-  FEEDS.set(locale, feed);
+  FEEDS.set(`${locale}:${scope}`, feed);
   return feed;
 }
 
-function buildDays(locale: Locale, pool: FeedItem[], limit = Infinity): FeedDay[] {
-  const { folded, companions: COMPANIONS, carrier, seriesOf } = feedFor(locale);
+function buildDays(feed: LocaleFeed, pool: FeedItem[], limit = Infinity): FeedDay[] {
+  const { folded, companions: COMPANIONS, carrier, seriesOf } = feed;
   const entries: { day: string; date: string; entry: FeedEntry }[] = [];
   let used = 0;
   for (const item of pool) {
@@ -202,6 +209,8 @@ const TIMELINE_MAX_DAYS = 400;
 
 export interface TimelineChunk {
   index: number;
+  /** Path segment of this window's fragment: "3" for the reader's language, "all-3" for every language */
+  slug: string;
   /** Newest and oldest calendar day covered (YYYY-MM-DD) */
   from: string;
   to: string;
@@ -210,7 +219,7 @@ export interface TimelineChunk {
 
 const DAY_MS = 86_400_000;
 
-const TIMELINES = new Map<Locale, TimelineChunk[]>();
+const TIMELINES = new Map<string, TimelineChunk[]>();
 
 /**
  * The timeline split into windows of ten calendar days, counted back from
@@ -218,10 +227,11 @@ const TIMELINES = new Map<Locale, TimelineChunk[]>();
  * adds something. Index 0 is rendered on the home page; later windows are
  * pre-built fragments fetched on demand.
  */
-export function timeline(locale: Locale): TimelineChunk[] {
-  const cached = TIMELINES.get(locale);
+export function timeline(locale: Locale, scope: FeedScope = 'own'): TimelineChunk[] {
+  const cached = TIMELINES.get(`${locale}:${scope}`);
   if (cached) return cached;
-  const ALL = feedFor(locale).pool;
+  const feed = feedFor(locale, scope);
+  const ALL = feed.pool;
   const newest = ALL[0] ? Date.parse(dayKey(ALL[0].date)) : Date.now();
   const chunks: TimelineChunk[] = [];
   for (let k = 0; k * TIMELINE_SPAN < TIMELINE_MAX_DAYS; k++) {
@@ -233,10 +243,11 @@ export function timeline(locale: Locale): TimelineChunk[] {
       const d = dayKey(i.date);
       return d <= from && d >= to;
     });
-    const days = buildDays(locale, pool);
-    if (days.length) chunks.push({ index: chunks.length, from, to, days });
+    const days = buildDays(feed, pool);
+    const index = chunks.length;
+    if (days.length) chunks.push({ index, slug: scope === 'all' ? `all-${index}` : String(index), from, to, days });
   }
-  TIMELINES.set(locale, chunks);
+  TIMELINES.set(`${locale}:${scope}`, chunks);
   return chunks;
 }
 

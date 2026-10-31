@@ -362,12 +362,18 @@ const jsonLd = [
           <span>{u.lastDays(n(TIMELINE_SPAN))}</span>
         </p>
       </div>
-      <div class="filters" role="toolbar" aria-label={u.fromAll}>
-        <button type="button" aria-pressed="true" data-filter="all">{u.all}</button>
-        <button type="button" aria-pressed="false" data-filter="note"><Icon name="telegram" />{u.notes}</button>
-        <button type="button" aria-pressed="false" data-filter="video"><Icon name="youtube" />{u.videos}</button>
-        <button type="button" aria-pressed="false" data-filter="shorts"><Icon name="tiktok" />{u.shorts}</button>
-        {instagram.items.length > 0 && <button type="button" aria-pressed="false" data-filter="photo"><Icon name="instagram" />{u.instagram}</button>}
+      <div class="tl-bar__tools">
+        <button type="button" class="tl-scope" aria-pressed="false">
+          <Icon name="globe" />
+          {u.allLanguages}
+        </button>
+        <div class="filters" role="toolbar" aria-label={u.fromAll}>
+          <button type="button" aria-pressed="true" data-filter="all">{u.all}</button>
+          <button type="button" aria-pressed="false" data-filter="note"><Icon name="telegram" />{u.notes}</button>
+          <button type="button" aria-pressed="false" data-filter="video"><Icon name="youtube" />{u.videos}</button>
+          <button type="button" aria-pressed="false" data-filter="shorts"><Icon name="tiktok" />{u.shorts}</button>
+          {instagram.items.length > 0 && <button type="button" aria-pressed="false" data-filter="photo"><Icon name="instagram" />{u.instagram}</button>}
+        </div>
       </div>
     </div>
 
@@ -377,27 +383,24 @@ const jsonLd = [
 
     <div class="tl-more">
       <span class="tl-more__rail" aria-hidden="true"></span>
-      {
-        next ? (
-          <button
-            type="button"
-            class="tl-more__btn"
-            data-next={next.index}
-            data-next-to={next.to}
-            data-label={u.loadMore}
-            data-loading={u.loading}
-            data-back={u.backTo('%')}
-          >
-            <span class="tl-more__plus" aria-hidden="true">
-              <span class="tl-more__spin" />
-            </span>
-            <span class="tl-more__text">
-              <span class="tl-more__label">{u.loadMore}</span>
-              <span class="tl-more__range">{u.backTo(date(locale, `${next.to}T12:00:00Z`))}</span>
-            </span>
-          </button>
-        ) : null
-      }
+      <button
+        type="button"
+        class="tl-more__btn"
+        hidden={!next}
+        data-next={next?.slug}
+        data-next-to={next?.to}
+        data-label={u.loadMore}
+        data-loading={u.loading}
+        data-back={u.backTo('%')}
+      >
+        <span class="tl-more__plus" aria-hidden="true">
+          <span class="tl-more__spin" />
+        </span>
+        <span class="tl-more__text">
+          <span class="tl-more__label">{u.loadMore}</span>
+          <span class="tl-more__range">{next ? u.backTo(date(locale, `${next.to}T12:00:00Z`)) : ''}</span>
+        </span>
+      </button>
       <p class="tl-more__end" hidden={!!next}>
         {u.timelineEnd}{' '}
         <a href={href(locale, 'notes')}>{s.sections.notes.title}</a> ·{' '}
@@ -525,40 +528,48 @@ const jsonLd = [
     day: 'numeric',
     timeZone: 'Asia/Tehran',
   });
+  const range = btn?.querySelector('.tl-more__range');
+  function setNext(next?: string, to?: string) {
+    if (!btn) return;
+    if (next) btn.dataset.next = next;
+    else delete btn.dataset.next;
+    if (range && to) range.textContent = (btn.dataset.back ?? '%').replace('%', fmt.format(new Date(`${to}T12:00:00Z`)));
+    btn.hidden = !next;
+    if (end) end.hidden = !!next;
+  }
+
+  async function fetchChunk(slug: string) {
+    const res = await fetch(`/${section!.dataset.locale}/timeline/${slug}/`);
+    if (!res.ok) throw new Error(String(res.status));
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const tpl = doc.querySelector<HTMLTemplateElement>('template[data-chunk]');
+    if (!tpl) throw new Error('fragment');
+    return { days: [...tpl.content.querySelectorAll<HTMLElement>('.tl-day')], next: tpl.dataset.next, to: tpl.dataset.nextTo };
+  }
+
+  function append(days: HTMLElement[]) {
+    days.forEach((d, i) => {
+      d.classList.add('is-new');
+      d.style.setProperty('--i', String(i));
+      // Animate once; toggling a filter later must not replay it.
+      d.addEventListener('animationend', () => d.classList.remove('is-new'), { once: true });
+      list!.append(d);
+    });
+    labelDays(list!);
+    applyFilter();
+  }
+
   btn?.addEventListener('click', async () => {
-    if (!list || btn.classList.contains('is-loading')) return;
-    const lang = section!.dataset.locale;
+    if (!list || !btn.dataset.next || btn.classList.contains('is-loading')) return;
     btn.classList.add('is-loading');
     btn.setAttribute('aria-busy', 'true');
     const label = btn.querySelector('.tl-more__label')!;
     label.textContent = btn.dataset.loading ?? '';
     try {
-      const res = await fetch(`/${lang}/timeline/${btn.dataset.next}/`);
-      if (!res.ok) throw new Error(String(res.status));
-      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-      const tpl = doc.querySelector<HTMLTemplateElement>('template[data-chunk]');
-      if (!tpl) throw new Error('fragment');
-      const days = [...tpl.content.querySelectorAll<HTMLElement>('.tl-day')];
-      days.forEach((d, i) => {
-        d.classList.add('is-new');
-        d.style.setProperty('--i', String(i));
-        // Animate once; toggling a filter later must not replay it.
-        d.addEventListener('animationend', () => d.classList.remove('is-new'), { once: true });
-        list.append(d);
-      });
-      labelDays(list);
-      applyFilter();
-      const nextIndex = tpl.dataset.next;
-      if (nextIndex) {
-        btn.dataset.next = nextIndex;
-        const range = btn.querySelector('.tl-more__range');
-        const to = tpl.dataset.nextTo;
-        if (range && to) range.textContent = (btn.dataset.back ?? '%').replace('%', fmt.format(new Date(`${to}T12:00:00Z`)));
-      } else {
-        btn.remove();
-        if (end) end.hidden = false;
-      }
-      days[0]?.querySelector<HTMLElement>('time')?.focus?.();
+      const chunk = await fetchChunk(btn.dataset.next);
+      append(chunk.days);
+      setNext(chunk.next, chunk.to);
+      chunk.days[0]?.querySelector<HTMLElement>('time')?.focus?.();
     } catch {
       label.textContent = '↻ ' + (btn.dataset.label ?? '');
     } finally {
@@ -566,6 +577,38 @@ const jsonLd = [
       btn.removeAttribute('aria-busy');
       if (label.textContent === btn.dataset.loading) label.textContent = btn.dataset.label ?? '';
     }
+  });
+
+  // Every language or only the reader's: each view keeps the days it has
+  // loaded, so switching back and forth costs one fetch.
+  const scopeBtn = section?.querySelector<HTMLButtonElement>('.tl-scope');
+  type View = { days: HTMLElement[]; next?: string; to?: string; range?: string | null };
+  const views = new Map<boolean, View>();
+  scopeBtn?.addEventListener('click', async () => {
+    if (!list || scopeBtn.getAttribute('aria-busy')) return;
+    const all = scopeBtn.getAttribute('aria-pressed') !== 'true';
+    views.set(!all, {
+      days: [...list.querySelectorAll<HTMLElement>(':scope > .tl-day')],
+      next: btn?.dataset.next,
+      range: range?.textContent,
+    });
+    let view = views.get(all);
+    if (!view) {
+      scopeBtn.setAttribute('aria-busy', 'true');
+      try {
+        const chunk = await fetchChunk('all-0');
+        view = { days: chunk.days, next: chunk.next, to: chunk.to };
+      } catch {
+        return;
+      } finally {
+        scopeBtn.removeAttribute('aria-busy');
+      }
+    }
+    scopeBtn.setAttribute('aria-pressed', String(all));
+    list.replaceChildren();
+    append(view.days);
+    setNext(view.next, view.to);
+    if (range && view.range) range.textContent = view.range;
   });
 </script>
 
@@ -1129,6 +1172,46 @@ const jsonLd = [
     gap: var(--space-2);
     font-size: 0.8125rem;
     color: var(--ink-3);
+  }
+  .tl-bar__tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  /* Every language or only the reader's: a pill beside the source filters */
+  .tl-scope {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: calc(0.3rem + 3px) 0.95rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--paper-2);
+    font-size: 0.8125rem;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition:
+      background 0.2s,
+      color 0.2s,
+      border-color 0.2s;
+  }
+  .tl-scope :global(svg) {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  .tl-scope:hover {
+    color: var(--ink);
+    border-color: var(--rule-strong);
+  }
+  .tl-scope[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+  }
+  .tl-scope[aria-busy='true'] {
+    opacity: 0.6;
+    cursor: progress;
   }
   .filters {
     display: flex;
