@@ -254,17 +254,18 @@ const isOwn = (n: FeedItem) =>
 
 /**
  * The newest Telegram post that is an actual written note, Quran
- * translations included, or a video of his however short its caption (not
- * a clip or podcast). Posts are Persian, so other languages get the newest
- * long-form item in their own language (a video with its description), and
- * the Persian note only when there is none.
+ * translations included (not a video, clip or podcast, however long its
+ * caption). Posts are Persian, so other languages get the newest long-form
+ * item in their own language (a video with its description), and the
+ * Persian note only when there is none.
  */
 export function featuredNote(locale: Locale): FeedItem | undefined {
   const note =
     notes.find((n) => n.pinned) ??
     notes.find(
       (n) =>
-        (n.text.length > 400 || n.kind === 'video') &&
+        n.text.length > 400 &&
+        n.kind !== 'video' &&
         isOwn(n) &&
         !(n.tags ?? []).some((t) => t === '#پادکست' || t === '#کلیپ_آموزشی'),
     );
