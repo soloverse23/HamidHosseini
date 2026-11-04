@@ -403,8 +403,7 @@ const jsonLd = [
       </button>
       <p class="tl-more__end" hidden={!!next}>
         {u.timelineEnd}{' '}
-        <a href={href(locale, 'notes')}>{s.sections.notes.title}</a> ·{' '}
-        <a href={href(locale, 'videos')}>{s.sections.series.title}</a>
+        <a href={href(locale, 'search')}><Icon name="search" />{s.nav.search}</a>
       </p>
     </div>
   </section>
@@ -1371,6 +1370,10 @@ const jsonLd = [
   }
   .tl-more__end a {
     color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-weight: 600;
   }
   @media (max-width: 40rem) {
     .tl-more {
