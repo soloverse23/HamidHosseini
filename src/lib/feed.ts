@@ -206,6 +206,8 @@ function buildDays(feed: LocaleFeed, pool: FeedItem[], limit = Infinity): FeedDa
 export const TIMELINE_SPAN = 10;
 /** How far back "load more" goes before pointing to the archives. */
 const TIMELINE_MAX_DAYS = 400;
+/** The every-language view is built for all five locales, so it goes back less far (keeps the build's memory down). */
+const TIMELINE_MAX_DAYS_ALL = 50;
 
 export interface TimelineChunk {
   index: number;
@@ -234,7 +236,7 @@ export function timeline(locale: Locale, scope: FeedScope = 'own'): TimelineChun
   const ALL = feed.pool;
   const newest = ALL[0] ? Date.parse(dayKey(ALL[0].date)) : Date.now();
   const chunks: TimelineChunk[] = [];
-  for (let k = 0; k * TIMELINE_SPAN < TIMELINE_MAX_DAYS; k++) {
+  for (let k = 0; k * TIMELINE_SPAN < (scope === 'all' ? TIMELINE_MAX_DAYS_ALL : TIMELINE_MAX_DAYS); k++) {
     const fromMs = newest - k * TIMELINE_SPAN * DAY_MS;
     const toMs = fromMs - (TIMELINE_SPAN - 1) * DAY_MS;
     const from = new Date(fromMs).toISOString().slice(0, 10);
