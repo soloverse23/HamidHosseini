@@ -1,6 +1,6 @@
 {
  "source": "youtube",
- "updatedAt": "2026-11-04T21:17:56.821Z",
+ "updatedAt": "2026-11-05T18:43:33.943Z",
  "profiles": {
   "fa": {
    "name": "کلام - سید حمید حسینی",
@@ -12,7 +12,7 @@
    "name": "Islam, de ce și cum?",
    "handle": "@Islamdeceșicum",
    "url": "https://www.youtube.com/@Islamdece%C8%99icum",
-   "followers": 234
+   "followers": 235
   },
   "ar": {
    "name": "الإسلام، لماذا وكيف؟",
@@ -53,7 +53,7 @@
      "duration": 388
     }
    ],
-   "views": 4,
+   "views": 1000,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -76,7 +76,7 @@
      "duration": 393
     }
    ],
-   "views": 7,
+   "views": 930,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -99,7 +99,7 @@
      "duration": 312
     }
    ],
-   "views": 6,
+   "views": 1100,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -122,7 +122,7 @@
      "duration": 365
     }
    ],
-   "views": 4,
+   "views": 858,
    "series": "islam-why-how",
    "episode": 61
   },
@@ -145,7 +145,7 @@
      "duration": 697
     }
    ],
-   "views": 9,
+   "views": 1300,
    "series": "islam-why-how",
    "episode": 63
   },
@@ -302,7 +302,7 @@
      "duration": 1612
     }
    ],
-   "views": 63
+   "views": 64
   },
   {
    "source": "youtube",
@@ -323,7 +323,7 @@
      "duration": 1495
     }
    ],
-   "views": 101
+   "views": 102
   },
   {
    "source": "youtube",
@@ -655,7 +655,7 @@
      "duration": 601
     }
    ],
-   "views": 948,
+   "views": 949,
    "series": "islam-why-how",
    "episode": 58
   },
@@ -678,7 +678,7 @@
      "duration": 487
     }
    ],
-   "views": 943,
+   "views": 944,
    "series": "islam-why-how",
    "episode": 60
   },
@@ -701,7 +701,7 @@
      "duration": 503
     }
    ],
-   "views": 924,
+   "views": 926,
    "series": "islam-why-how",
    "episode": 58
   },
@@ -1009,7 +1009,7 @@
      "duration": 514
     }
    ],
-   "views": 830,
+   "views": 832,
    "series": "islam-why-how",
    "episode": 56
   },
@@ -1213,7 +1213,7 @@
      "duration": 311
     }
    ],
-   "views": 567,
+   "views": 568,
    "series": "islam-why-how",
    "episode": 54
   },
@@ -1305,7 +1305,7 @@
      "duration": 407
     }
    ],
-   "views": 874,
+   "views": 888,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -1374,7 +1374,7 @@
      "duration": 275
     }
    ],
-   "views": 753,
+   "views": 779,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -1595,7 +1595,7 @@
      "duration": 9406
     }
    ],
-   "views": 69
+   "views": 70
   },
   {
    "source": "youtube",
@@ -1662,7 +1662,7 @@
      "duration": 570
     }
    ],
-   "views": 582,
+   "views": 583,
    "series": "islam-why-how",
    "episode": 51
   },
@@ -1844,7 +1844,7 @@
      "duration": 1834
     }
    ],
-   "views": 22
+   "views": 23
   },
   {
    "source": "youtube",
@@ -2359,7 +2359,7 @@
      "duration": 554
     }
    ],
-   "views": 80,
+   "views": 81,
    "series": "islam-why-how",
    "episode": 45
   },
@@ -2405,7 +2405,7 @@
      "duration": 488
     }
    ],
-   "views": 3300,
+   "views": 3400,
    "series": "islam-why-how",
    "episode": 45
   },
@@ -2675,7 +2675,7 @@
      "duration": 472
     }
    ],
-   "views": 3100,
+   "views": 3300,
    "series": "islam-why-how",
    "episode": 53
   },
@@ -2836,7 +2836,7 @@
      "duration": 496
     }
    ],
-   "views": 595,
+   "views": 598,
    "series": "islam-why-how",
    "episode": 41
   },
@@ -3840,7 +3840,7 @@
      "duration": 319
     }
    ],
-   "views": 132,
+   "views": 133,
    "series": "islam-why-how",
    "episode": 32
   },
@@ -4018,7 +4018,7 @@
      "duration": 274
     }
    ],
-   "views": 260,
+   "views": 261,
    "series": "islam-why-how",
    "episode": 31
   },
@@ -4087,7 +4087,7 @@
      "duration": 312
     }
    ],
-   "views": 20,
+   "views": 21,
    "series": "islam-why-how",
    "episode": 30
   },
@@ -4233,7 +4233,7 @@
      "duration": 150
     }
    ],
-   "views": 85
+   "views": 86
   },
   {
    "source": "youtube",
@@ -4346,7 +4346,7 @@
      "duration": 340
     }
    ],
-   "views": 17,
+   "views": 18,
    "series": "islam-why-how",
    "episode": 29
   },
@@ -4699,7 +4699,7 @@
      "duration": 502
     }
    ],
-   "views": 1200,
+   "views": 1300,
    "series": "islam-why-how",
    "episode": 45
   },
@@ -4906,7 +4906,7 @@
      "duration": 299
     }
    ],
-   "views": 24,
+   "views": 25,
    "series": "islam-why-how",
    "episode": 25
   },
@@ -4952,7 +4952,7 @@
      "duration": 586
     }
    ],
-   "views": 100,
+   "views": 104,
    "series": "islam-why-how",
    "episode": 42
   },
@@ -5055,7 +5055,7 @@
      "duration": 149
     }
    ],
-   "views": 7,
+   "views": 9,
    "series": "islam-why-how",
    "episode": 24
   },
@@ -5170,7 +5170,7 @@
      "duration": 553
     }
    ],
-   "views": 38,
+   "views": 39,
    "episode": 40,
    "series": "islam-why-how"
   },
@@ -5239,7 +5239,7 @@
      "duration": 223
     }
    ],
-   "views": 65,
+   "views": 66,
    "series": "islam-why-how",
    "episode": 23
   },
@@ -5285,7 +5285,7 @@
      "duration": 468
     }
    ],
-   "views": 132,
+   "views": 133,
    "episode": 39,
    "series": "islam-why-how"
   },
@@ -6090,7 +6090,7 @@
      "duration": 297
     }
    ],
-   "views": 460,
+   "views": 462,
    "episode": 33,
    "series": "islam-why-how"
   },
@@ -6205,7 +6205,7 @@
      "duration": 298
     }
    ],
-   "views": 442,
+   "views": 444,
    "episode": 32,
    "series": "islam-why-how"
   },
@@ -6228,7 +6228,7 @@
      "duration": 236
     }
    ],
-   "views": 10,
+   "views": 11,
    "series": "islam-why-how",
    "episode": 14
   },
@@ -6320,7 +6320,7 @@
      "duration": 311
     }
    ],
-   "views": 402,
+   "views": 403,
    "episode": 31,
    "series": "islam-why-how"
   },
@@ -6412,7 +6412,7 @@
      "duration": 197
     }
    ],
-   "views": 15,
+   "views": 17,
    "series": "islam-why-how",
    "episode": 13
   },
@@ -6688,7 +6688,7 @@
      "duration": 218
     }
    ],
-   "views": 376,
+   "views": 377,
    "series": "islam-why-how",
    "episode": 11
   },
@@ -6895,7 +6895,7 @@
      "duration": 313
     }
    ],
-   "views": 46,
+   "views": 47,
    "series": "islam-why-how",
    "episode": 9
   },
@@ -7010,7 +7010,7 @@
      "duration": 239
     }
    ],
-   "views": 84,
+   "views": 85,
    "series": "islam-why-how",
    "episode": 8
   },
@@ -7537,7 +7537,7 @@
      "duration": 109
     }
    ],
-   "views": 247
+   "views": 248
   },
   {
    "source": "youtube",
@@ -7558,7 +7558,7 @@
      "duration": 113
     }
    ],
-   "views": 100
+   "views": 101
   },
   {
    "source": "youtube",
@@ -7761,7 +7761,7 @@
      "duration": 159
     }
    ],
-   "views": 421,
+   "views": 422,
    "series": "islam-why-how",
    "episode": 2
   },
@@ -7784,7 +7784,7 @@
      "duration": 186
     }
    ],
-   "views": 309,
+   "views": 310,
    "series": "islam-why-how",
    "episode": 1
   },
@@ -8313,7 +8313,7 @@
      "duration": 185
     }
    ],
-   "views": 405,
+   "views": 409,
    "series": "islam-why-how",
    "episode": 1
   }
