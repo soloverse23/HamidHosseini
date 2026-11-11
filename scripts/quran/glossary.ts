@@ -512,20 +512,6 @@ for (const { s, a, i, sentence, targets } of pointers) {
 
 const translated = new Set(verses.map((v) => `${v.s}:${v.a}`));
 const sortKey = (r: string) => r.replace(/[أإآ]/g, 'ا');
-const GLOSS = /^[^.؛]{0,40}?به[‌ ]?معن(?:ی|ای)\s*«([^«»]{2,70})»/;
-
-/** A short meaning for the index: the «…» after به‌معنی in the headword's own sentence. */
-function gloss(items: Item[]): string | undefined {
-  for (const it of [...items.filter((x) => x.k === 'core'), ...items.filter((x) => x.k === 'word')]) {
-    const text = fa.surahs[it.s][it.a].notes![it.i];
-    for (const w of it.w) {
-      const at = text.indexOf(`«${w}»`);
-      const m = at >= 0 ? text.slice(at + w.length + 2).match(GLOSS) : null;
-      if (m) return m[1].trim();
-    }
-  }
-  return undefined;
-}
 
 const entries = [...byRoot]
   .filter(([, items]) => items.some((x) => x.k !== 'ref'))
@@ -536,7 +522,6 @@ const entries = [...byRoot]
     return {
       root,
       slug: rootSlugOf(root),
-      gloss: gloss(items),
       /** Occurrences in the Quran */
       count: rootCount.get(root) ?? 0,
       lemmas: lemmas.slice(0, 16),

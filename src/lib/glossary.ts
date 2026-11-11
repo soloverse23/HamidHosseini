@@ -25,8 +25,6 @@ export interface GlossItem {
 export interface RootEntry {
   root: string;
   slug: string;
-  /** Short meaning from the first explanation */
-  gloss?: string;
   /** Occurrences in the Quran (Quranic Arabic Corpus) */
   count: number;
   /** Most frequent lemmas of the root, with occurrences */

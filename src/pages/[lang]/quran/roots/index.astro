@@ -23,7 +23,7 @@ const noteCount = ROOTS.reduce((t, e) => t + explanations(e).length, 0);
 const letters = (root: string) => [...root].join(' ');
 /** What the filter matches: the root, every word explained under it, its meaning. */
 const haystack = (e: (typeof ROOTS)[number]) =>
-  searchFold([e.root, ...new Set(e.items.flatMap((x) => x.w)), ...e.lemmas.map(([l]) => l), e.gloss ?? ''].join(' '));
+  searchFold([e.root, ...new Set(e.items.flatMap((x) => x.w)), ...e.lemmas.map(([l]) => l)].join(' '));
 ---
 
 <Base
@@ -49,7 +49,6 @@ const haystack = (e: (typeof ROOTS)[number]) =>
     hasDefinedTerm: ROOTS.map((e) => ({
       '@type': 'DefinedTerm',
       name: e.root,
-      ...(e.gloss ? { description: e.gloss } : {}),
       url: new URL(rootHref(e.slug), Astro.site).toString(),
     })),
   }}
@@ -93,11 +92,7 @@ const haystack = (e: (typeof ROOTS)[number]) =>
                 >
                   <a href={rootHref(e.slug)}>
                     <span class="list__root" lang="ar">{letters(e.root)}</span>
-                    {e.gloss ? (
-                      <span class="list__gloss" lang="fa">{e.gloss}</span>
-                    ) : (
-                      <span class="list__gloss list__gloss--ar" lang="ar">{[...new Set(e.items.flatMap((x) => x.w))].slice(0, 3).join('، ')}</span>
-                    )}
+                    <span class="list__gloss list__gloss--ar" lang="ar">{[...new Set(e.items.flatMap((x) => x.w))].slice(0, 3).join('، ')}</span>
                     <span class="list__meta meta">
                       <span>{n(explanations(e).length)} توضیح</span>
                       {e.count > 0 && <span>{n(e.count)} بار در قرآن</span>}

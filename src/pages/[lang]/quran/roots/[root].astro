@@ -68,7 +68,7 @@ const bySurah = new Map<number, number[]>();
 for (const [su, a] of verses) (bySurah.get(su) ?? bySurah.set(su, []).get(su)!).push(a);
 const explained = new Set(e.items.map((x) => `${x.s}:${x.a}`));
 
-const description = e.gloss ? `${title}: ${e.gloss}. ${excerpt(noteOf(explanations(e)[0]), 120)}` : excerpt(noteOf(explanations(e)[0]), 158);
+const description = excerpt(noteOf(explanations(e)[0]), 158);
 ---
 
 <Base
@@ -91,7 +91,6 @@ const description = e.gloss ? `${title}: ${e.gloss}. ${excerpt(noteOf(explanatio
     '@type': 'DefinedTerm',
     '@id': url,
     name: e.root,
-    ...(e.gloss ? { alternateName: e.gloss } : {}),
     description: explanations(e)
       .map((x) => noteOf(x))
       .join('\n'),
@@ -114,7 +113,6 @@ const description = e.gloss ? `${title}: ${e.gloss}. ${excerpt(noteOf(explanatio
           {letters.map((l) => <span class="rt__letter" aria-hidden="true">{l}</span>)}
         </span>
       </h1>
-      {e.gloss && <p class="rt__gloss">{e.gloss}</p>}
       <dl class="rt__facts">
         {
           e.count > 0 && (
@@ -369,12 +367,6 @@ const description = e.gloss ? `${title}: ${e.gloss}. ${excerpt(noteOf(explanatio
     line-height: 1;
     color: var(--accent);
     overflow: hidden;
-  }
-  .rt__gloss {
-    font-size: var(--step-1);
-    line-height: 1.8;
-    color: var(--ink);
-    max-width: var(--measure);
   }
   .rt__facts {
     display: grid;
