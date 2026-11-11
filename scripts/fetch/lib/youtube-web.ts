@@ -8,6 +8,7 @@
  * and the playlist/channel HTML still lists the videos.
  */
 import { fetchText } from './store';
+import { ytdlpJson } from './ytdlp';
 
 export interface ListedVideo {
   id: string;
@@ -184,6 +185,19 @@ export async function videoDetails(id: string): Promise<VideoDetails> {
   // A sign-in wall on the watch page is not proof: the player API still dates
   // a public video. Only give up when the player agrees it is private.
   if (player?.unavailable) return { unavailable: true };
+  // Last resort: yt-dlp reads the date through its own client, which still
+  // works when GitHub's runner IP is refused by the watch page and player API.
+  const info = await ytdlpJson(`https://www.youtube.com/watch?v=${id}`, ['--skip-download']);
+  const stamp = Number(info?.timestamp ?? info?.release_timestamp);
+  const fromTool = stamp ? iso(new Date(stamp * 1000).toISOString()) : /^\d{8}$/.test(info?.upload_date ?? '') ? iso(`${info.upload_date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')}T00:00:00Z`) : undefined;
+  if (fromTool) {
+    return {
+      date: fromTool,
+      duration: page?.duration ?? player?.duration ?? (Number(info?.duration) || undefined),
+      title: page?.title || player?.title || info?.title,
+      text: page?.text ?? player?.text ?? (String(info?.description ?? '').trim() || undefined),
+    };
+  }
   return {
     duration: page?.duration ?? player?.duration,
     title: page?.title || player?.title,
