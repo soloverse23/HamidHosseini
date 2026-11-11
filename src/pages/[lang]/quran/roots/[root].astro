@@ -1,13 +1,15 @@
 ---
-// One root: each note that explains it (with its verse), and the verses whose
-// notes refer back to that explanation.
+// One root: what it means (the notes that explain the root itself), the words
+// of it the translation explains, where the notes refer back to them, its
+// words across the Quran, and the translated verses in which it occurs.
 import '@fontsource/amiri-quran/400.css';
 import { type Locale } from '../../../../i18n/locales';
 import { t } from '../../../../i18n/strings';
 import Base from '../../../../layouts/Base.astro';
+import { norm } from '../../../../lib/arabic';
 import { arabic, noteById, quranFa, surahs } from '../../../../lib/data';
 import { num } from '../../../../lib/format';
-import { linkRoots, ROOTS, rootSlug, type RootEntry } from '../../../../lib/glossary';
+import { explanations, furtherUses, linkRoots, markWords, noteOf, REDIRECTS, rootHref, ROOTS, type GlossItem, type RootEntry } from '../../../../lib/glossary';
 import { quranOg } from '../../../../lib/og';
 import { href } from '../../../../lib/paths';
 import { richNote, verseHref } from '../../../../lib/quran-refs';
@@ -15,127 +17,628 @@ import { personRef } from '../../../../lib/schema';
 import { excerpt } from '../../../../lib/text';
 
 export function getStaticPaths() {
-  return ROOTS.map((e) => ({ params: { lang: 'fa', root: rootSlug(e) }, props: { e } }));
+  return [
+    ...ROOTS.map((e, i) => ({ params: { lang: 'fa', root: e.slug }, props: { e, prev: ROOTS[i - 1], next: ROOTS[i + 1] } })),
+    // Roots whose spelling was corrected keep their old address.
+    ...Object.entries(REDIRECTS).map(([from, to]) => ({ params: { lang: 'fa', root: from }, props: { to } })),
+    // The same root typed with Arabic letters (وفي for وفی).
+    ...ROOTS.filter((e) => e.root !== e.slug && !REDIRECTS[e.root]).map((e) => ({ params: { lang: 'fa', root: e.root }, props: { to: e.slug } })),
+  ];
 }
 
+type Props = { e: RootEntry; prev?: RootEntry; next?: RootEntry } | { to: string };
+const props = Astro.props as Props;
+if ('to' in props) return Astro.redirect(rootHref(props.to), 301);
+const { e, prev, next } = props;
+
 const locale = Astro.params.lang as Locale;
-const { e } = Astro.props as { e: RootEntry };
 const s = t(locale);
 const n = (x: number) => num(locale, x);
-const slug = rootSlug(e);
 const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) : undefined);
-const name = (r: { surah: number; ayah: number }) => `${surahs[r.surah - 1].fa} ${n(r.ayah)}`;
+const verseName = (r: { surah: number; ayah: number }) => `${surahs[r.surah - 1].fa} ${n(r.ayah)}`;
+const at = (it: GlossItem) => ({ surah: it.s, ayah: it.a });
+const letters = [...e.root];
 const title = s.quran.rootTitle(e.root);
-const url = new URL(href('fa', `quran/roots/${slug}`), Astro.site).toString();
+const url = new URL(rootHref(e.slug), Astro.site).toString();
+
+const noteHtml = (it: GlossItem) => markWords(linkRoots(richNote(noteOf(it), it.s, localPost), { surah: it.s, ayah: it.a, note: it.i }, e.slug), it.w);
+
+const core = explanations(e).filter((x) => x.k === 'core');
+// Word explanations, one group per word (by lemma when the corpus gives one).
+const wordGroups = new Map<string, { words: string[]; items: GlossItem[] }>();
+for (const it of explanations(e).filter((x) => x.k === 'word')) {
+  const key = it.lem ? norm(it.lem) : norm(it.w[0] ?? '');
+  const g = wordGroups.get(key) ?? wordGroups.set(key, { words: [], items: [] }).get(key)!;
+  for (const w of it.w) if (!g.words.some((x) => norm(x) === norm(w))) g.words.push(w);
+  g.items.push(it);
+}
+/** A further use worth reading in full: it says more than "explained in verse X". */
+const substantive = (it: GlossItem) => noteOf(it).length > 110 || /به[‌ ]?معن/.test(noteOf(it));
+const refs = furtherUses(e);
+const refsRead = refs.filter(substantive);
+// The rest, by the verse whose explanation they point back to.
+const refsByTarget = new Map<string, { to?: [number, number]; items: GlossItem[] }>();
+for (const it of refs.filter((x) => !substantive(x))) {
+  const key = it.to?.join(':') ?? '';
+  (refsByTarget.get(key) ?? refsByTarget.set(key, { to: it.to, items: [] }).get(key)!).items.push(it);
+}
+
+const verses = e.verses ? e.verses.split(' ').map((v) => v.split(':').map(Number) as [number, number]) : [];
+const bySurah = new Map<number, number[]>();
+for (const [su, a] of verses) (bySurah.get(su) ?? bySurah.set(su, []).get(su)!).push(a);
+const explained = new Set(e.items.map((x) => `${x.s}:${x.a}`));
+
+const description = e.gloss ? `${title}: ${e.gloss}. ${excerpt(noteOf(explanations(e)[0]), 120)}` : excerpt(noteOf(explanations(e)[0]), 158);
 ---
 
 <Base
   locale={locale}
-  path={`quran/roots/${slug}`}
+  path={`quran/roots/${e.slug}`}
   locales={['fa']}
   switchPath="quran"
   alternates={false}
   title={title}
-  description={excerpt(e.definitions[0].text, 158)}
-  image={quranOg(`roots/${slug}`)}
+  description={excerpt(description, 158)}
+  image={quranOg(`roots/${e.slug}`)}
   imageAlt={title}
   crumbs={[
     { name: s.sections.quran.title, path: 'quran' },
     { name: s.quran.roots, path: 'quran/roots' },
-    { name: e.root, path: `quran/roots/${slug}` },
+    { name: e.root, path: `quran/roots/${e.slug}` },
   ]}
   jsonLd={{
     '@context': 'https://schema.org',
     '@type': 'DefinedTerm',
     '@id': url,
     name: e.root,
-    description: e.definitions.map((d) => d.text).join('\n'),
+    ...(e.gloss ? { alternateName: e.gloss } : {}),
+    description: explanations(e)
+      .map((x) => noteOf(x))
+      .join('\n'),
     inLanguage: 'fa',
     url,
     author: personRef(Astro.site),
     inDefinedTermSet: { '@type': 'DefinedTermSet', name: s.quran.roots, url: new URL(href('fa', 'quran/roots'), Astro.site).toString() },
   }}
 >
-  <article class="wrap root">
+  <article class="wrap rt">
     <p class="crumb meta">
       <a href={href(locale, 'quran')}>{s.sections.quran.title}</a>
       <a href={href(locale, 'quran/roots')}>{s.quran.roots}</a>
     </p>
-    <h1><span lang="ar">{title}</span></h1>
+
+    <header class="rt__head">
+      <h1>
+        <span class="rt__kicker">ماده</span>
+        <span class="rt__letters" lang="ar" dir="rtl" aria-label={e.root}>
+          {letters.map((l) => <span class="rt__letter" aria-hidden="true">{l}</span>)}
+        </span>
+      </h1>
+      {e.gloss && <p class="rt__gloss">{e.gloss}</p>}
+      <dl class="rt__facts">
+        {
+          e.count > 0 && (
+            <div>
+              <dt>در قرآن</dt>
+              <dd>{n(e.count)} بار</dd>
+            </div>
+          )
+        }
+        {
+          e.lemmaCount > 0 && (
+            <div>
+              <dt>واژه</dt>
+              <dd>{n(e.lemmaCount)}</dd>
+            </div>
+          )
+        }
+        <div>
+          <dt>توضیح در ترجمه</dt>
+          <dd>{n(explanations(e).length)}</dd>
+        </div>
+        {
+          verses.length > 0 && (
+            <div>
+              <dt>آیهٔ ترجمه‌شده</dt>
+              <dd>{n(verses.length)}</dd>
+            </div>
+          )
+        }
+      </dl>
+    </header>
 
     {
-      e.definitions.map((d) => (
-        <section class="def">
-          <p class="def__at meta">
-            {s.quran.explainedAt} <a href={verseHref(d)}>{s.quran.surah} {name(d)}</a>
-          </p>
-          <p class="def__ar quran-ar" lang="ar" dir="rtl" translate="no">{arabic[d.surah][d.ayah - 1]}</p>
-          <p class="def__tr" lang="fa" dir="rtl" translate="no">{quranFa.surahs[d.surah][d.ayah].text}</p>
-          <p class="def__note" lang="fa" dir="rtl" translate="no" set:html={linkRoots(richNote(d.text, d.surah, localPost), slug)} />
-        </section>
-      ))
-    }
-
-    {
-      e.mentions.length > 0 && (
-        <section class="mentions">
-          <h2>{s.quran.referredAt}</h2>
-          <p>
-            {e.mentions.map((m) => (
-              <a class="pill" href={verseHref(m)}>
-                {name(m)}
-              </a>
-            ))}
-          </p>
+      core.length > 0 && (
+        <section class="block" aria-labelledby="core-h">
+          <h2 id="core-h">معنای ماده</h2>
+          {core.map((it) => (
+            <figure class="ex">
+              <blockquote class="ex__note" lang="fa" dir="rtl" translate="no" set:html={noteHtml(it)} />
+              <figcaption class="ex__verse">
+                <a class="ex__ref" href={verseHref(at(it))}>{s.quran.explainedAt} {s.quran.surah} {verseName(at(it))}</a>
+                <p class="ex__ar" lang="ar" dir="rtl" translate="no">{arabic[it.s][it.a - 1]}</p>
+                <p class="ex__tr" lang="fa" dir="rtl" translate="no">{quranFa.surahs[it.s][it.a].text}</p>
+              </figcaption>
+            </figure>
+          ))}
         </section>
       )
     }
+
+    {
+      wordGroups.size > 0 && (
+        <section class="block" aria-labelledby="words-h">
+          <h2 id="words-h">معنای واژه‌ها</h2>
+          {[...wordGroups.values()].map((g) => (
+            <div class="word">
+              <h3 class="word__head" lang="ar">{g.words.join('، ')}</h3>
+              {g.items.map((it) => (
+                <figure class="ex">
+                  <blockquote class="ex__note" lang="fa" dir="rtl" translate="no" set:html={noteHtml(it)} />
+                  <figcaption class="ex__verse">
+                    <a class="ex__ref" href={verseHref(at(it))}>{s.quran.explainedAt} {s.quran.surah} {verseName(at(it))}</a>
+                    <p class="ex__ar" lang="ar" dir="rtl" translate="no">{arabic[it.s][it.a - 1]}</p>
+                    <p class="ex__tr" lang="fa" dir="rtl" translate="no">{quranFa.surahs[it.s][it.a].text}</p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          ))}
+        </section>
+      )
+    }
+
+    {
+      e.lemmas.length > 0 && (
+        <section class="block" aria-labelledby="lemmas-h">
+          <h2 id="lemmas-h">واژه‌های این ماده در قرآن</h2>
+          <ul class="lemmas">
+            {e.lemmas.map(([l, c]) => (
+              <li>
+                <span lang="ar">{l}</span>
+                <span class="num meta">{n(c)}</span>
+              </li>
+            ))}
+          </ul>
+          {e.lemmaCount > e.lemmas.length && <p class="meta">و {n(e.lemmaCount - e.lemmas.length)} واژهٔ کم‌کاربردتر</p>}
+        </section>
+      )
+    }
+
+    {
+      refs.length > 0 && (
+        <section class="block" aria-labelledby="refs-h">
+          <h2 id="refs-h">کاربردهای دیگر</h2>
+          <p class="block__lede">آیه‌هایی که توضیح آنها به معنای این ماده برمی‌گردد.</p>
+          {refsByTarget.size > 0 && (
+            <dl class="refs-to">
+              {[...refsByTarget.values()].map((g) => (
+                <div>
+                  <dt>
+                    {g.to ? (
+                      <>
+                        توضیح در <a href={verseHref({ surah: g.to[0], ayah: g.to[1] })}>{verseName({ surah: g.to[0], ayah: g.to[1] })}</a>
+                      </>
+                    ) : (
+                      'ارجاع'
+                    )}
+                  </dt>
+                  <dd>
+                    {g.items.map((it) => (
+                      <a href={verseHref(at(it))} class="refs-to__v">
+                        {verseName(at(it))}
+                        {it.w.length > 0 && <span lang="ar">{it.w.join('، ')}</span>}
+                      </a>
+                    ))}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {refsRead.length > 0 && (
+            <ul class="refs">
+              {refsRead.map((it) => (
+                <li>
+                  <p class="refs__line">
+                    <a href={verseHref(at(it))}>{verseName(at(it))}</a>
+                    {it.w.length > 0 && (
+                      <span lang="ar" class="refs__w">
+                        {it.w.join('، ')}
+                      </span>
+                    )}
+                  </p>
+                  <p class="refs__note" lang="fa" dir="rtl" translate="no" set:html={noteHtml(it)} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )
+    }
+
+    {
+      verses.length > 0 && (
+        <section class="block" aria-labelledby="verses-h">
+          <h2 id="verses-h">در آیات ترجمه‌شده</h2>
+          <details class="occ" open={verses.length <= 24}>
+            <summary>
+              واژه‌ای از این ماده در {n(verses.length)} آیهٔ ترجمه‌شده آمده است؛ ترجمهٔ هر کدام را ببینید.
+            </summary>
+            <dl>
+              {[...bySurah].map(([su, ayahs]) => (
+                <div>
+                  <dt>
+                    <a href={href('fa', `quran/${su}`)}>{surahs[su - 1].fa}</a>
+                  </dt>
+                  <dd>
+                    {ayahs.map((a) => (
+                      <a href={verseHref({ surah: su, ayah: a })} class:list={['occ__a', { 'occ__a--ex': explained.has(`${su}:${a}`) }]}>
+                        {n(a)}
+                      </a>
+                    ))}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p class="meta">آیه‌های پررنگ در توضیح ترجمه به این ماده پرداخته‌اند.</p>
+          </details>
+        </section>
+      )
+    }
+
+    <nav class="pager" aria-label="ماده‌های دیگر">
+      {
+        prev ? (
+          <a href={rootHref(prev.slug)} rel="prev">
+            <span class="meta">مادهٔ قبل</span>
+            <span lang="ar">{prev.root}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      <a class="pager__all" href={href('fa', 'quran/roots')}>همهٔ ماده‌ها</a>
+      {
+        next ? (
+          <a href={rootHref(next.slug)} rel="next" class="pager__next">
+            <span class="meta">مادهٔ بعد</span>
+            <span lang="ar">{next.root}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+    </nav>
+
+    <p class="source meta">
+      شمار کاربرد و واژه‌های قرآنی هر ماده از <a href="https://corpus.quran.com" rel="noopener" target="_blank">پیکرهٔ عربی قرآن</a> (مجوز GNU GPL)
+      است؛ معنا و توضیح‌ها از همین ترجمه.
+    </p>
   </article>
 </Base>
 
 <style>
-  .root {
+  .rt {
     max-width: 48rem;
     display: grid;
-    gap: var(--space-5);
+    gap: var(--space-6);
+    padding-block-end: var(--space-7);
   }
-  .crumb a {
+  .crumb a,
+  .rt :global(.gloss-link),
+  .ex__ref,
+  .refs a,
+  .source a {
     color: var(--accent);
   }
-  h1 {
-    font-size: var(--step-3);
-  }
-  .def {
+
+  /* ---------- Head: the root's letters, its meaning, a few numbers ---------- */
+  .rt__head {
     display: grid;
     gap: var(--space-3);
-    padding-block: var(--space-4);
+    padding-block-end: var(--space-5);
+    border-block-end: 1px solid var(--rule);
+  }
+  h1 {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+  }
+  .rt__kicker {
+    font-size: var(--step-0);
+    font-weight: 500;
+    color: var(--ink-3);
+  }
+  .rt__letters {
+    display: inline-flex;
+    gap: var(--space-2);
+  }
+  .rt__letter {
+    display: grid;
+    place-items: center;
+    min-width: 3.5rem;
+    height: 4.5rem;
+    padding-inline: var(--space-3);
+    border: 1px solid var(--rule);
+    border-radius: 0.6rem;
+    background: var(--paper-2);
+    font-family: var(--font-naskh);
+    font-size: 2.5rem;
+    line-height: 1;
+    color: var(--accent);
+    overflow: hidden;
+  }
+  .rt__gloss {
+    font-size: var(--step-1);
+    line-height: 1.8;
+    color: var(--ink);
+    max-width: var(--measure);
+  }
+  .rt__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: var(--space-3);
+    margin: var(--space-2) 0 0;
+  }
+  .rt__facts div {
+    display: grid;
+    gap: 0.2rem;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--rule);
+    border-radius: 0.6rem;
+    background: var(--paper-2);
+  }
+  .rt__facts dt {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .rt__facts dd {
+    margin: 0;
+    font-size: var(--step-1);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Sections ---------- */
+  .block {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .block h2 {
+    font-size: var(--step-1);
+  }
+  .block__lede {
+    margin-block-start: calc(-1 * var(--space-3));
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  /* An explanation: the note first, the verse it was written for below it. */
+  .ex {
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .ex + .ex {
+    padding-block-start: var(--space-4);
     border-block-start: 1px solid var(--rule);
   }
-  .def__at a,
-  .def__note :global(a) {
-    color: var(--accent);
-  }
-  .def__ar {
-    font-family: var(--font-quran);
-    font-size: 1.5rem;
-    line-height: 2;
-  }
-  .def__tr {
-    color: var(--ink-2);
-  }
-  .def__note {
+  .ex__note {
+    margin: 0;
     padding: var(--space-3) var(--space-4);
     border-inline-start: 3px solid var(--accent);
     background: var(--paper-2);
+    line-height: 1.95;
+  }
+  .ex__note :global(mark) {
+    background: var(--accent-wash);
+    color: inherit;
+    padding-inline: 0.1em;
+    border-radius: var(--radius);
+  }
+  .ex__verse {
+    display: grid;
+    gap: var(--space-1);
+    padding-inline-start: var(--space-4);
+  }
+  .ex__ref {
+    font-size: var(--step--1);
+  }
+  .ex__ar {
+    font-family: var(--font-quran);
+    font-size: 1.35rem;
+    line-height: 2.1;
+  }
+  .ex__tr {
+    color: var(--ink-2);
+    font-size: var(--step--1);
     line-height: 1.9;
   }
-  .mentions h2 {
-    font-size: var(--step-0);
-    margin-block-end: var(--space-3);
+
+  .word {
+    display: grid;
+    gap: var(--space-3);
   }
-  .mentions p {
+  .word + .word {
+    padding-block-start: var(--space-5);
+    border-block-start: 1px solid var(--rule);
+  }
+  .word__head {
+    font-family: var(--font-quran);
+    font-size: 1.7rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  /* Words of the root in the Quran, most frequent first */
+  .lemmas {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+  .lemmas li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: 0.1em 0.8em;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+  }
+  .lemmas [lang='ar'] {
+    font-family: var(--font-quran);
+    font-size: 1.25rem;
+    line-height: 1.8;
+  }
+
+  .refs-to {
+    display: grid;
+    margin: 0;
+  }
+  .refs-to div {
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: var(--space-2) var(--space-4);
+    align-items: baseline;
+    padding-block: var(--space-3);
+    border-block-end: 1px solid var(--rule);
+  }
+  .refs-to div:first-child {
+    border-block-start: 1px solid var(--rule);
+  }
+  .refs-to dt {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .refs-to dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+  }
+  .refs-to__v {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .refs-to__v [lang='ar'] {
+    font-family: var(--font-quran);
+    color: var(--ink-2);
+  }
+  @media (max-width: 40rem) {
+    .refs-to div,
+    .occ dl div {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+  }
+  .refs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .refs li {
+    padding-block: var(--space-3);
+    border-block-end: 1px solid var(--rule);
+  }
+  .refs li:first-child {
+    border-block-start: 1px solid var(--rule);
+  }
+  .refs__line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+  }
+  .refs__w {
+    font-family: var(--font-quran);
+    font-size: 1.2rem;
+  }
+  .refs__note {
+    margin-block-start: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.9;
+  }
+
+  /* Translated verses with the root, by surah */
+  .occ summary {
+    cursor: pointer;
+    color: var(--ink-2);
+  }
+  .occ dl {
+    display: grid;
+    gap: var(--space-2);
+    margin-block: var(--space-4) var(--space-2);
+  }
+  .occ dl div {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: baseline;
+  }
+  .occ dt a {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .occ dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+  }
+  .occ__a {
+    min-width: 1.8rem;
+    text-align: center;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+    border-block-end: 1px solid var(--rule-strong);
+  }
+  .occ__a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .occ__a--ex {
+    color: var(--accent);
+    font-weight: 600;
+    border-color: var(--accent);
+  }
+
+  /* ---------- Previous / next root ---------- */
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-block: 1px solid var(--rule);
+  }
+  .pager a {
+    display: grid;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .pager [lang='ar'] {
+    font-family: var(--font-quran);
+    font-size: 1.5rem;
+    line-height: 1.6;
+  }
+  .pager a:hover [lang='ar'] {
+    color: var(--accent);
+  }
+  .pager__next {
+    text-align: end;
+  }
+  .pager__all {
+    color: var(--accent) !important;
+    font-size: var(--step--1);
+  }
+  .source {
+    max-width: var(--measure);
   }
 </style>

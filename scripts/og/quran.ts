@@ -21,7 +21,7 @@ import sharp from 'sharp';
 import { t } from '../../src/i18n/strings';
 import { arabic, quranFa, surahs, totalTranslated, translatedCount } from '../../src/lib/data';
 import { num } from '../../src/lib/format';
-import { ROOTS, rootSlug } from '../../src/lib/glossary';
+import { explanations, noteOf, ROOTS, rootSlug } from '../../src/lib/glossary';
 import { excerpt } from '../../src/lib/text';
 
 const ROOT = resolve(import.meta.dirname, '../..');
@@ -137,8 +137,8 @@ function rootsCard() {
 }
 
 function rootCard(e: (typeof ROOTS)[number]) {
-  const d = e.definitions[0];
-  const verses = new Set([...e.definitions, ...e.mentions].map((r) => `${r.surah}:${r.ayah}`)).size;
+  const d = explanations(e)[0];
+  const verses = new Set(e.items.map((r) => `${r.s}:${r.a}`)).size;
   return card(
     'root',
     `${head(`<span>${esc(s.quran.roots)}</span>`)}
@@ -147,8 +147,8 @@ function rootCard(e: (typeof ROOTS)[number]) {
         <p class="letters" lang="ar">${[...e.root].map(esc).join(' ')}</p>
         <p class="meta">${esc(s.quran.rootTitle(e.root))}<span>${fa(verses)} آیه</span></p>
       </div>
-      <p class="def">${esc(excerpt(d.text, 420))}</p>
-      <p class="meta">${s.quran.explainedAt} ${s.quran.verse} ${fa(d.ayah)} ${s.quran.surah} ${esc(surahs[d.surah - 1].fa)}</p>
+      <p class="def">${esc(excerpt(noteOf(d), 420))}</p>
+      <p class="meta">${s.quran.explainedAt} ${s.quran.verse} ${fa(d.a)} ${s.quran.surah} ${esc(surahs[d.s - 1].fa)}</p>
     </section>
     ${foot(`quran/roots/${rootSlug(e)}`)}`,
   );

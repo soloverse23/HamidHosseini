@@ -1,5 +1,6 @@
 ---
 import Chapter from '../../../components/Chapter.astro';
+import Icon from '../../../components/Icon.astro';
 import QuranMap from '../../../components/QuranMap.astro';
 import SearchField from '../../../components/SearchField.astro';
 import { type Locale } from '../../../i18n/locales';
@@ -7,6 +8,7 @@ import { t } from '../../../i18n/strings';
 import Base from '../../../layouts/Base.astro';
 import { quranNow, surahs, surahsStarted, totalTranslated, translatedCount } from '../../../lib/data';
 import { num, percent } from '../../../lib/format';
+import { explanations, ROOTS } from '../../../lib/glossary';
 import { verseHref } from '../../../lib/quran-refs';
 import { quranOg } from '../../../lib/og';
 import { href, localePaths } from '../../../lib/paths';
@@ -19,6 +21,7 @@ const n = (x: number) => num(locale, x);
 const started = surahs.filter((m) => translatedCount(m.n) > 0);
 const rest = surahs.filter((m) => translatedCount(m.n) === 0);
 const pct = (totalTranslated / 6236) * 100;
+const noteCount = ROOTS.reduce((a, e) => a + explanations(e).length, 0);
 const localName = (m: (typeof surahs)[number]) =>
   locale === 'fa' || locale === 'ur' ? m.fa : locale === 'ar' ? null : locale === 'ro' ? m.translit : `${m.translit} · ${m.en}`;
 ---
@@ -35,6 +38,20 @@ const localName = (m: (typeof surahs)[number]) =>
     {locale !== 'fa' && <p class="note-lang">{s.quran.onlyPersian}</p>}
 
     <SearchField locale={locale} type="quran" class="page-search" />
+
+    {
+      locale === 'fa' && (
+        <aside class="roots-card">
+          <p class="roots-card__lede">
+            {s.quran.rootsLede}
+            <span class="meta"> · {n(ROOTS.length)} ماده · {n(noteCount)} توضیح</span>
+          </p>
+          <a class="roots-card__btn" href={href('fa', 'quran/roots')}>
+            {s.quran.roots} <Icon name="arrow" />
+          </a>
+        </aside>
+      )
+    }
 
     <section class="overview" aria-label={s.quran.progress}>
       <div class="total" role="progressbar" aria-valuemin="0" aria-valuemax="6236" aria-valuenow={totalTranslated} aria-label={s.quran.progress}>
@@ -53,13 +70,6 @@ const localName = (m: (typeof surahs)[number]) =>
         )
       }
     </section>
-
-    {locale === 'fa' && (
-      <p class="glossary-link">
-        <a class="link-arrow" href={href('fa', 'quran/roots')}>{s.quran.roots} →</a>
-        <span class="meta">{s.quran.rootsLede}</span>
-      </p>
-    )}
 
     <h2 class="list-head">{s.quran.started}</h2>
     <ol class="surahs">
@@ -130,10 +140,45 @@ const localName = (m: (typeof surahs)[number]) =>
     font-size: var(--step--1);
     color: var(--ink-2);
   }
-  .glossary-link {
-    display: grid;
-    gap: var(--space-1);
-    margin-block-start: var(--space-6);
+  .roots-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    margin-block-end: var(--space-6);
+    border: 1px solid var(--rule);
+    border-inline-start: 3px solid var(--accent);
+    border-radius: 0.5rem;
+    background: var(--paper-2);
+  }
+  .roots-card__lede {
+    flex: 1 1 20rem;
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+  .roots-card__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--paper);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .roots-card__btn:hover {
+    opacity: 0.88;
+  }
+  .roots-card__btn :global(svg) {
+    width: 1.1em;
+    height: 1.1em;
+  }
+  :global([dir='rtl']) .roots-card__btn :global(svg) {
+    transform: scaleX(-1);
   }
   .list-head {
     font-size: var(--step-1);

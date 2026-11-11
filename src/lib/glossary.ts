@@ -1,59 +1,94 @@
-// Quranic glossary: the root analyses in the translation notes ("مادهٔ «ذمم»
-// در اصل به‌معنی …"), gathered by root. A note that only points back to an
-// earlier explanation ("… در ترجمهٔ آیهٔ ۳۴ سورهٔ بقره بیان شد") counts as a
-// mention; the others are the definitions.
+// The Quranic glossary, built from the translation notes by
+// scripts/quran/glossary.ts (see there for how words and roots are found).
+// Pages read the result here; nothing is worked out at build time.
 
+import glossary from '../data/quran/glossary.json';
+import redirectsJson from '../data/quran/glossary-redirects.json';
 import { quranFa } from './data';
-import { findRefs } from './quran-refs';
+import { norm, rootSlugOf } from './arabic';
+
+export interface GlossItem {
+  s: number;
+  a: number;
+  /** Index of the note among the verse's notes */
+  i: number;
+  /** Words of this root the note explains, as written there */
+  w: string[];
+  /** core: the root's meaning · word: one word's meaning · ref: points to an explanation elsewhere */
+  k: 'core' | 'word' | 'ref';
+  /** The word's lemma in the corpus */
+  lem?: string;
+  /** For `ref`: the verse whose note has the explanation */
+  to?: [number, number];
+}
 
 export interface RootEntry {
   root: string;
-  /** Notes that explain the root, in Quran order */
-  definitions: { surah: number; ayah: number; text: string }[];
-  /** Verses whose notes refer back to an explanation */
-  mentions: { surah: number; ayah: number }[];
+  slug: string;
+  /** Short meaning from the first explanation */
+  gloss?: string;
+  /** Occurrences in the Quran (Quranic Arabic Corpus) */
+  count: number;
+  /** Most frequent lemmas of the root, with occurrences */
+  lemmas: [string, number][];
+  lemmaCount: number;
+  /** Translated verses with a word of this root, "s:a s:a …" */
+  verses: string;
+  items: GlossItem[];
 }
 
-const ROOT_RE = /ماده(?:ٔ|ی|‌ی)?\s*«([^»]{2,6})»/g;
-const POINTER = /(گذشت|بیان شد|توضیح داده شد|اشاره شد|ذکر شد)/;
-const fold = (s: string) => s.trim().replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/[ً-ْٰ]/g, '');
+const data = glossary as unknown as { roots: RootEntry[]; links: Record<string, Record<string, string>> };
 
-/** Hamza seats sort with alif. */
-const sortKey = (s: string) => fold(s).replace(/[أإآٱ]/g, 'ا').replace(/[ؤ]/g, 'و').replace(/[ئ]/g, 'ی');
-export const firstLetter = (e: RootEntry) => sortKey(e.root).charAt(0);
+/** Every root with at least one explanation, in Arabic alphabetical order. */
+export const ROOTS: RootEntry[] = data.roots;
+export const rootBySlug = new Map(ROOTS.map((e) => [e.slug, e]));
+/** Slugs that moved (a corrected root), old → new. */
+export const REDIRECTS = redirectsJson as Record<string, string>;
 
-const BY_KEY = new Map<string, RootEntry>();
-const order = Object.entries(quranFa.surahs).flatMap(([s, ayahs]) =>
-  Object.entries(ayahs).map(([a, v]) => ({ surah: Number(s), ayah: Number(a), notes: v.notes ?? [] })),
-);
-order.sort((x, y) => x.surah - y.surah || x.ayah - y.ayah);
-for (const { surah, ayah, notes } of order) {
-  for (const text of notes) {
-    const roots = [...new Set([...text.matchAll(ROOT_RE)].map((m) => m[1].trim()))];
-    if (!roots.length) continue;
-    const pointer = POINTER.test(text) && findRefs(text, surah).length > 0;
-    for (const root of roots) {
-      const key = fold(root);
-      const entry = BY_KEY.get(key) ?? BY_KEY.set(key, { root, definitions: [], mentions: [] }).get(key)!;
-      if (pointer) entry.mentions.push({ surah, ayah });
-      else entry.definitions.push({ surah, ayah, text });
-    }
-  }
+export const rootSlug = (e: RootEntry) => e.slug;
+export const rootHref = (slug: string) => `/fa/quran/roots/${encodeURIComponent(slug)}/`;
+/** Hamza seats sort and group with alif. */
+export const firstLetter = (e: RootEntry) => e.root.charAt(0).replace(/[أإآ]/g, 'ا');
+
+export const noteOf = (it: GlossItem) => quranFa.surahs[it.s][it.a].notes![it.i];
+export const explanations = (e: RootEntry) => e.items.filter((x) => x.k !== 'ref');
+export const furtherUses = (e: RootEntry) => e.items.filter((x) => x.k === 'ref');
+
+/** By the root's letters, for "مادهٔ «X»" in notes the script did not tie to a verse. */
+const bySpelling = new Map<string, string>();
+for (const e of ROOTS) bySpelling.set(norm(e.root), e.slug);
+for (const [from, to] of Object.entries(REDIRECTS)) if (!bySpelling.has(norm(from))) bySpelling.set(norm(from), to);
+
+/**
+ * In a note's HTML, each word the glossary explains («X») links to its root,
+ * once per note; so does "مادهٔ «X»". Existing links are left alone. `except`
+ * is the page's own root, which isn't linked to itself.
+ */
+export function linkRoots(html: string, at?: { surah: number; ayah: number; note: number }, except?: string): string {
+  const words = at ? data.links[`${at.surah}:${at.ayah}:${at.note}`] ?? {} : {};
+  const done = new Set<string>();
+  return html
+    .split(/(<a\b[^>]*>[\s\S]*?<\/a>)/)
+    .map((part, i) =>
+      i % 2
+        ? part
+        : part.replace(/(ماده(?:ٔ|ی|‌ی)?\s*)?«([^«»<]{2,40})»/g, (m, madde: string | undefined, word: string) => {
+            const key = norm(word);
+            const slug = words[key] ?? (madde ? bySpelling.get(key) ?? bySpelling.get(norm(rootSlugOf(word))) : undefined);
+            if (!slug || slug === except || done.has(key)) return m;
+            done.add(key);
+            return `${madde ?? ''}«<a class="gloss-link" href="${rootHref(slug)}">${word}</a>»`;
+          }),
+    )
+    .join('');
 }
 
-/** Roots with at least one explanation, in Arabic alphabetical order. */
-export const ROOTS: RootEntry[] = [...BY_KEY.values()]
-  .filter((e) => e.definitions.length)
-  .sort((a, b) => sortKey(a.root).localeCompare(sortKey(b.root), 'ar'));
-
-export const rootByKey = new Map(ROOTS.map((e) => [fold(e.root), e]));
-export const rootHref = (root: string) => (rootByKey.has(fold(root)) ? `/fa/quran/roots/${encodeURIComponent(fold(root))}/` : undefined);
-export const rootSlug = (e: RootEntry) => fold(e.root);
-
-/** In note HTML, "مادهٔ «X»" links to the glossary entry for X. */
-export function linkRoots(html: string, except?: string): string {
-  return html.replace(/(ماده(?:ٔ|ی|‌ی)?\s*«)([^»<]{2,6})(»)/g, (m, a, root, b) => {
-    const to = rootHref(root);
-    return to && fold(root) !== except ? `${a}<a href="${to}">${root}</a>${b}` : m;
-  });
+/** Wrap the headwords of a note in <mark> (on the root's own page). */
+export function markWords(html: string, words: string[]): string {
+  const keys = new Set(words.map(norm));
+  if (!keys.size) return html;
+  return html
+    .split(/(<[^>]+>)/)
+    .map((part) => (part.startsWith('<') ? part : part.replace(/«([^«»]{2,40})»/g, (m, w: string) => (keys.has(norm(w)) ? `«<mark>${w}</mark>»` : m))))
+    .join('');
 }

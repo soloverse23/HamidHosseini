@@ -1,19 +1,29 @@
 ---
-// The glossary: every root explained in the translation notes, A to Y.
+// The glossary: every root explained in the translation notes, with a filter
+// (by root, word or meaning) and three orders: alphabetical, most explained,
+// most frequent in the Quran. Without JavaScript it is the alphabetical list.
 import Chapter from '../../../../components/Chapter.astro';
+import Icon from '../../../../components/Icon.astro';
 import { type Locale } from '../../../../i18n/locales';
 import { t } from '../../../../i18n/strings';
 import Base from '../../../../layouts/Base.astro';
+import { searchFold } from '../../../../lib/arabic';
 import { num } from '../../../../lib/format';
-import { firstLetter, ROOTS, rootSlug } from '../../../../lib/glossary';
+import { explanations, firstLetter, rootHref, ROOTS } from '../../../../lib/glossary';
 import { quranOg } from '../../../../lib/og';
-import { href } from '../../../../lib/paths';
 
 export const getStaticPaths = () => [{ params: { lang: 'fa' } }];
 const locale = Astro.params.lang as Locale;
 const s = t(locale);
+const n = (x: number) => num(locale, x);
+
 const groups = new Map<string, typeof ROOTS>();
 for (const e of ROOTS) (groups.get(firstLetter(e)) ?? groups.set(firstLetter(e), []).get(firstLetter(e))!).push(e);
+const noteCount = ROOTS.reduce((t, e) => t + explanations(e).length, 0);
+const letters = (root: string) => [...root].join(' ');
+/** What the filter matches: the root, every word explained under it, its meaning. */
+const haystack = (e: (typeof ROOTS)[number]) =>
+  searchFold([e.root, ...new Set(e.items.flatMap((x) => x.w)), ...e.lemmas.map(([l]) => l), e.gloss ?? ''].join(' '));
 ---
 
 <Base
@@ -36,40 +46,209 @@ for (const e of ROOTS) (groups.get(firstLetter(e)) ?? groups.set(firstLetter(e),
     name: s.quran.roots,
     description: s.quran.rootsLede,
     inLanguage: 'fa',
-    hasDefinedTerm: ROOTS.map((e) => ({ '@type': 'DefinedTerm', name: e.root, url: new URL(href('fa', `quran/roots/${rootSlug(e)}`), Astro.site).toString() })),
+    hasDefinedTerm: ROOTS.map((e) => ({
+      '@type': 'DefinedTerm',
+      name: e.root,
+      ...(e.gloss ? { description: e.gloss } : {}),
+      url: new URL(rootHref(e.slug), Astro.site).toString(),
+    })),
   }}
 >
-  <div class="wrap">
+  <div class="wrap gl">
     <Chapter locale={locale} title={s.quran.roots} lede={s.quran.rootsLede}>
-      <span class="meta">{num(locale, ROOTS.length)}</span>
+      <p class="meta"><span>{n(ROOTS.length)} ماده</span><span>{n(noteCount)} توضیح</span></p>
     </Chapter>
-    <nav class="letters" aria-label={s.quran.roots}>
-      {[...groups.keys()].map((l) => <a href={`#l-${l}`} lang="ar">{l}</a>)}
+
+    <div class="tools" role="search" data-tools hidden>
+      <label class="tools__find">
+        <Icon name="search" />
+        <span class="visually-hidden">جستجو در واژه‌نامه</span>
+        <input type="search" placeholder="ماده، واژه یا معنا؛ مثلاً رحم، الرحمن، مهربانی" autocomplete="off" data-find />
+      </label>
+      <div class="chips" role="group" aria-label="ترتیب">
+        <button type="button" class="chip" data-sort="alpha" aria-pressed="true">الفبایی</button>
+        <button type="button" class="chip" data-sort="notes" aria-pressed="false">بیشترین توضیح</button>
+        <button type="button" class="chip" data-sort="quran" aria-pressed="false">پرکاربرد در قرآن</button>
+      </div>
+      <p class="meta tools__count" aria-live="polite" data-count></p>
+    </div>
+
+    <nav class="letters" aria-label="حروف" data-letters>
+      {[...groups.keys()].map((l) => <a href={`#l-${l}`} lang="ar" data-letter={l}>{l}</a>)}
     </nav>
-    {
-      [...groups].map(([letter, entries]) => (
-        <section class="group" id={`l-${letter}`}>
-          <h2 lang="ar">{letter}</h2>
-          <ul>
-            {entries.map((e) => (
-              <li>
-                <a href={href('fa', `quran/roots/${rootSlug(e)}`)} lang="ar">{e.root}</a>
-                <span class="meta num">{num(locale, e.definitions.length + e.mentions.length)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))
-    }
+
+    <div data-groups>
+      {
+        [...groups].map(([letter, entries]) => (
+          <section class="group" id={`l-${letter}`} data-group={letter} aria-labelledby={`h-${letter}`}>
+            <h2 id={`h-${letter}`} lang="ar">{letter}</h2>
+            <ol class="list">
+              {entries.map((e) => (
+                <li
+                  data-k={haystack(e)}
+                  data-g={letter}
+                  data-i={ROOTS.indexOf(e)}
+                  data-n={explanations(e).length}
+                  data-q={e.count}
+                >
+                  <a href={rootHref(e.slug)}>
+                    <span class="list__root" lang="ar">{letters(e.root)}</span>
+                    {e.gloss ? (
+                      <span class="list__gloss" lang="fa">{e.gloss}</span>
+                    ) : (
+                      <span class="list__gloss list__gloss--ar" lang="ar">{[...new Set(e.items.flatMap((x) => x.w))].slice(0, 3).join('، ')}</span>
+                    )}
+                    <span class="list__meta meta">
+                      <span>{n(explanations(e).length)} توضیح</span>
+                      {e.count > 0 && <span>{n(e.count)} بار در قرآن</span>}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ))
+      }
+    </div>
+    <ol class="list list--flat" data-flat hidden></ol>
+    <p class="empty" data-empty hidden>واژه‌ای با این جستجو پیدا نشد. ماده را با سه حرف اصلی (مثلاً «قول») یا معنای فارسی آن امتحان کنید.</p>
+
+    <p class="source meta">
+      ریشه و صورت‌های هر واژه از
+      <a href="https://corpus.quran.com" rel="noopener" target="_blank">پیکرهٔ عربی قرآن</a>
+      (مجوز GNU GPL) گرفته شده و معنای هر ماده از توضیحات همین ترجمه است.
+    </p>
   </div>
 </Base>
 
+<script>
+  import { searchFold } from '../../../../lib/arabic';
+
+  const tools = document.querySelector<HTMLElement>('[data-tools]')!;
+  const find = tools.querySelector<HTMLInputElement>('[data-find]')!;
+  const count = tools.querySelector<HTMLElement>('[data-count]')!;
+  const groupsEl = document.querySelector<HTMLElement>('[data-groups]')!;
+  const flat = document.querySelector<HTMLOListElement>('[data-flat]')!;
+  const empty = document.querySelector<HTMLElement>('[data-empty]')!;
+  const lettersNav = document.querySelector<HTMLElement>('[data-letters]')!;
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-group]')];
+  const items = [...groupsEl.querySelectorAll<HTMLLIElement>('li[data-k]')];
+  const fa = new Intl.NumberFormat('fa');
+  let sort = 'alpha';
+  tools.hidden = false;
+
+  function apply() {
+    const q = searchFold(find.value);
+    let shown = 0;
+    for (const li of items) {
+      const hit = !q || li.dataset.k!.includes(q);
+      li.hidden = !hit;
+      if (hit) shown++;
+    }
+    if (sort === 'alpha') {
+      for (const li of [...items].sort((a, b) => +a.dataset.i! - +b.dataset.i!)) {
+        groups.find((g) => g.dataset.group === li.dataset.g)!.querySelector('ol')!.append(li);
+      }
+      for (const g of groups) g.hidden = !g.querySelector('li:not([hidden])');
+      for (const a of lettersNav.querySelectorAll<HTMLAnchorElement>('a')) {
+        a.toggleAttribute('aria-disabled', !!groups.find((g) => g.dataset.group === a.dataset.letter)?.hidden);
+      }
+    } else {
+      const key = sort === 'notes' ? 'n' : 'q';
+      flat.append(...[...items].sort((a, b) => +b.dataset[key]! - +a.dataset[key]! || +a.dataset.i! - +b.dataset.i!));
+    }
+    groupsEl.hidden = sort !== 'alpha';
+    lettersNav.hidden = sort !== 'alpha';
+    flat.hidden = sort === 'alpha';
+    empty.hidden = shown > 0;
+    count.textContent = q ? `${fa.format(shown)} از ${fa.format(items.length)} ماده` : '';
+    const url = new URL(location.href);
+    if (q) url.searchParams.set('q', find.value.trim());
+    else url.searchParams.delete('q');
+    history.replaceState(null, '', url);
+  }
+
+  for (const b of tools.querySelectorAll<HTMLButtonElement>('[data-sort]')) {
+    b.addEventListener('click', () => {
+      sort = b.dataset.sort!;
+      for (const x of tools.querySelectorAll('[data-sort]')) x.setAttribute('aria-pressed', String(x === b));
+      apply();
+    });
+  }
+  find.addEventListener('input', apply);
+  const initial = new URLSearchParams(location.search).get('q');
+  if (initial) {
+    find.value = initial;
+    apply();
+  }
+</script>
+
 <style>
-  .letters {
+  .gl {
+    padding-block-end: var(--space-7);
+  }
+
+  /* ---------- Filter ---------- */
+  .tools {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-block: var(--space-5);
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    margin-block: var(--space-6) var(--space-4);
+  }
+  .tools__find {
+    position: relative;
+    flex: 1 1 18rem;
+    max-width: 28rem;
+  }
+  .tools__find :global(svg) {
+    position: absolute;
+    inset-inline-start: 0.8rem;
+    top: 50%;
+    width: 1.05rem;
+    height: 1.05rem;
+    transform: translateY(-50%);
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .tools__find input {
+    width: 100%;
+    padding: 0.6em 0.9em;
+    padding-inline-start: 2.4rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: var(--step--1);
+  }
+  .tools__find input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+  }
+  .tools .chip {
+    background: none;
+    cursor: pointer;
+  }
+  .tools .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .tools__count {
+    margin-inline-start: auto;
+  }
+
+  /* ---------- Letter index: stays in reach while scrolling (wide screens;
+     narrow ones already keep the site header pinned there) ---------- */
+  .letters {
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-1);
+    padding-block: var(--space-2);
+    background: var(--paper);
+    border-block-end: 1px solid var(--rule);
     font-family: var(--font-quran);
     font-size: 1.3rem;
   }
@@ -78,35 +257,112 @@ for (const e of ROOTS) (groups.get(firstLetter(e)) ?? groups.set(firstLetter(e),
     text-align: center;
     color: var(--accent);
     text-decoration: none;
+    border-radius: var(--radius);
   }
+  .letters a:hover {
+    background: var(--accent-wash);
+  }
+  .letters a[aria-disabled] {
+    color: var(--rule-strong);
+    pointer-events: none;
+  }
+
+  /* ---------- Entries: rows in columns, hairlines between ---------- */
   .group {
-    padding-block: var(--space-4);
-    border-block-start: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-block: var(--space-5);
+    border-block-end: 1px solid var(--rule);
+    scroll-margin-top: 4rem;
   }
   .group h2 {
     font-family: var(--font-quran);
-    font-size: 1.8rem;
+    font-size: 2.2rem;
+    line-height: 1.2;
     color: var(--accent);
   }
-  .group ul {
+  .list {
     list-style: none;
     padding: 0;
+    margin: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
-    gap: var(--space-2) var(--space-4);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: 0 var(--space-6);
   }
-  .group li {
-    display: flex;
-    gap: var(--space-2);
-    align-items: baseline;
+  .list--flat {
+    margin-block-start: var(--space-4);
   }
-  .group a {
-    font-family: var(--font-quran);
-    font-size: 1.35rem;
+  .list li {
+    border-block-end: 1px solid var(--rule);
+  }
+  .list li[hidden] {
+    display: none;
+  }
+  .list a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'root gloss' 'root meta';
+    gap: 0 var(--space-3);
+    align-items: center;
+    padding-block: var(--space-3);
     color: var(--ink);
     text-decoration: none;
   }
-  .group a:hover {
+  .list__root {
+    grid-area: root;
+    min-width: 4.2rem;
+    font-family: var(--font-quran);
+    font-size: 1.55rem;
+    line-height: 1.5;
+    word-spacing: -0.05em;
+  }
+  .list__gloss {
+    grid-area: gloss;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+  }
+  .list__gloss--ar {
+    font-family: var(--font-quran);
+    font-size: 1.05rem;
+  }
+  .list__meta {
+    grid-area: meta;
+    font-size: 0.78rem;
+  }
+  .list a:hover .list__root,
+  .list a:focus-visible .list__root {
     color: var(--accent);
+  }
+
+  .empty {
+    padding-block: var(--space-6);
+    color: var(--ink-2);
+  }
+  .source {
+    margin-block-start: var(--space-6);
+    max-width: var(--measure);
+  }
+  .source a {
+    color: var(--accent);
+  }
+
+  @media (min-width: 62.01rem) {
+    .letters {
+      position: sticky;
+      inset-block-start: 0;
+    }
+  }
+  @media (max-width: 40rem) {
+    .group {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+    .group h2 {
+      font-size: 1.8rem;
+    }
   }
 </style>

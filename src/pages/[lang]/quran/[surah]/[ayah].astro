@@ -35,7 +35,7 @@ const prev = ayah > 1 ? { surah: meta.n, ayah: ayah - 1 } : undefined;
 const next = ayah < meta.ayahs ? { surah: meta.n, ayah: ayah + 1 } : undefined;
 const title = s.quran.verseTitle(n(ayah), meta.fa);
 const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) : undefined);
-const notes = (v.notes ?? []).map((x) => linkRoots(richNote(x, meta.n, localPost)));
+const notes = (v.notes ?? []).map((x, i) => linkRoots(richNote(x, meta.n, localPost), { surah: meta.n, ayah, note: i }));
 const cited = citationsOf(meta.n, ayah);
 const fromVerses = cited.filter((c) => c.kind === 'verse');
 const elsewhere = cited.filter((c) => c.kind !== 'verse');

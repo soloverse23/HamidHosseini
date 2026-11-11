@@ -1,0 +1,17 @@
+# Corrections to the glossary's automatic root finding (scripts/quran/glossary.ts).
+# They win over everything the script works out. Add a line whenever a word
+# lands under the wrong root, or is reported as unresolved; never regenerate.
+#
+#   surah,ayah,word,root
+#
+# word: as the note quotes it (vowels and ی/ي don't matter).
+# surah/ayah: "*" applies everywhere (a recurring masdar, say).
+# root: corpus spelling (أ for hamza, doubled roots in full); "-" leaves the word out.
+surah,ayah,word,root
+*,*,تأیید,أيد
+*,*,تأدیه,أدي
+*,*,تأدیة,أدي
+*,*,ایفاء,وفي
+*,*,تأسیس,أسس
+*,*,انهیار,هور
+2,111,بره,برهن

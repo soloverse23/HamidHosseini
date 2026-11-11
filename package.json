@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && tsx scripts/search/build-index.ts dist",
+    "build": "tsx scripts/quran/glossary.ts && astro build && tsx scripts/search/build-index.ts dist",
     "preview": "astro preview",
     "fetch:telegram": "tsx scripts/fetch/telegram.ts",
     "fetch:youtube": "tsx scripts/fetch/youtube.ts",
@@ -15,6 +15,7 @@
     "fetch:all": "tsx scripts/fetch/all.ts",
     "check:seo": "tsx scripts/check/seo.ts",
     "og:quran": "tsx scripts/og/quran.ts",
+    "glossary": "tsx scripts/quran/glossary.ts",
     "check": "astro check"
   },
   "dependencies": {

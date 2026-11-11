@@ -123,8 +123,8 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
                     <details class="ayah__notes">
                       <summary>{s.quran.notes} ({n(v.notes.length)})</summary>
                       <ul lang="fa" dir="rtl" translate="no">
-                        {v.notes.map((x) => (
-                          <li set:html={linkRoots(richNote(x, meta.n, localPost))} />
+                        {v.notes.map((x, i) => (
+                          <li set:html={linkRoots(richNote(x, meta.n, localPost), { surah: meta.n, ayah: Number(a), note: i })} />
                         ))}
                       </ul>
                     </details>

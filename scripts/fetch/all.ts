@@ -41,6 +41,13 @@ try {
   failures.push(`quran (database): ${(err as Error).message}`);
   console.error('✗ quran:', (err as Error).message);
 }
+// The glossary is built from the notes just fetched (it also runs before every build).
+try {
+  await import('../quran/glossary');
+} catch (err) {
+  failures.push(`quran (glossary): ${(err as Error).message}`);
+  console.error('✗ glossary:', (err as Error).message);
+}
 
 await writeFile(join(ROOT, '.fetch-failures.txt'), failures.join('\n'));
 if (failures.length) {
