@@ -19,7 +19,7 @@ import { dice, skeleton, type TranslatedAyah, type Translation } from '../quran/
 import { fetchText, ROOT } from './lib/store';
 
 const API = process.env.QURAN_API_URL ?? 'http://51.68.220.90:3333/api/verses';
-const PAGE = 1000;
+const PAGE = 500; // the API rejects limit > 500 (HTTP 422)
 const TOTAL_AYAHS = 6236;
 /** A drop below this share of the previous count is treated as a fault, not an edit. */
 const MIN_KEEP = 0.95;
