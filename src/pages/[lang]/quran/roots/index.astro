@@ -7,7 +7,7 @@ import Icon from '../../../../components/Icon.astro';
 import { type Locale } from '../../../../i18n/locales';
 import { t } from '../../../../i18n/strings';
 import Base from '../../../../layouts/Base.astro';
-import { searchFold } from '../../../../lib/arabic';
+import { distinctWords, searchFold } from '../../../../lib/arabic';
 import { num } from '../../../../lib/format';
 import { explanations, firstLetter, rootHref, ROOTS } from '../../../../lib/glossary';
 import { quranOg } from '../../../../lib/og';
@@ -92,7 +92,7 @@ const haystack = (e: (typeof ROOTS)[number]) =>
                 >
                   <a href={rootHref(e.slug)}>
                     <span class="list__root" lang="ar">{letters(e.root)}</span>
-                    <span class="list__gloss list__gloss--ar" lang="ar">{[...new Set(e.items.flatMap((x) => x.w))].slice(0, 3).join('، ')}</span>
+                    <span class="list__gloss list__gloss--ar" lang="ar">{distinctWords(e.items.flatMap((x) => x.w)).slice(0, 3).join('، ')}</span>
                     <span class="list__meta meta">
                       <span>{n(explanations(e).length)} توضیح</span>
                       {e.count > 0 && <span>{n(e.count)} بار در قرآن</span>}

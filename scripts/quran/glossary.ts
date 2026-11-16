@@ -7,8 +7,9 @@
  * 1. Headwords. Each note is split into sentences. A quoted Arabic word is a
  *    headword when the sentence explains it: «X» به‌معنی/به‌معنای/یعنی/معادل/
  *    جمع «…»/نقطهٔ مقابل, «X» در اصل/در لغت, «X» از مادهٔ «R», مادهٔ «R»,
- *    معنای/واژهٔ «X», «X» می‌گویند/گفته می‌شود. A quote after به‌معنی is the
- *    meaning, not a headword, and is never taken.
+ *    معنای (لغوی …)/واژهٔ «X», «X» بیانگر «…»/جامع معنای/بر … دلالت دارد/
+ *    معنایی گسترده‌تر از/نوع خاصی از/به … گفته می‌شود, برای «X» … معانی … ذکر
+ *    شده. A quote after به‌معنی is the meaning, not a headword, and is never taken.
  * 2. Roots, most trusted first: overrides.csv → a root the note names
  *    («X» از مادهٔ «R», مادهٔ «R») → the same word in the verse, in the
  *    Quranic Arabic Corpus morphology → the same word anywhere in the Quran,
@@ -17,7 +18,11 @@
  *    Anything else is reported and left out: no guessing.
  * 3. Pointers. A sentence that sends the reader to another verse ("… در
  *    ترجمهٔ آیهٔ ۲۶ سورهٔ بقره بیان شد") is a further use, not a definition;
- *    its word takes the root it was given at that verse.
+ *    its word takes the root it was given at that verse. When no pattern took
+ *    the word there, the target note's sentence quoting it (or, for مادهٔ «R»,
+ *    a word of R) is taken as the explanation. A pointer sentence that also
+ *    gives a meaning («لمس» به‌معنی … همچون «مسّ» که … گذشت) defines that word,
+ *    unless the target already explains the word or its root.
  * 4. Roots use the corpus spelling (ي، ك، أ for hamza, doubled roots in full:
  *    مسس، ظلل), so variant spellings in the notes land on one entry.
  *
@@ -57,6 +62,8 @@ interface Word {
 }
 
 const verseWords = new Map<string, Word[]>();
+/** Words the corpus gives no root (names like عَدْن، بَكَّة): norm(lemma) → occurrences */
+const rootless = new Map<string, { lemma: string; count: number; verses: Set<string> }>();
 const rootCount = new Map<string, number>();
 const rootLemmas = new Map<string, Map<string, number>>();
 const rootVerses = new Map<string, Set<string>>();
@@ -70,6 +77,12 @@ const skelIndex = new Map<string, Map<string, number>>();
     if (!cur) return;
     const vk = cur.key.split(':').slice(0, 2).join(':');
     (verseWords.get(vk) ?? verseWords.set(vk, []).get(vk)!).push(cur);
+    if (!cur.root && !cur.particle && cur.lemma) {
+      const k = norm(stripAl(cur.lemma));
+      const e = rootless.get(k) ?? rootless.set(k, { lemma: cur.lemma, count: 0, verses: new Set() }).get(k)!;
+      e.count++;
+      e.verses.add(vk);
+    }
     if (cur.root) {
       const r = cur.root;
       rootCount.set(r, (rootCount.get(r) ?? 0) + 1);
@@ -103,7 +116,7 @@ const skelIndex = new Map<string, Map<string, number>>();
       cur.root = root;
       cur.stem = form;
       cur.lemma = lemma ?? form;
-    }
+    } else if (lemma && !tag.includes('PREF') && !tag.includes('SUFF') && pos === 'N' && !cur.root) cur.lemma = lemma;
   }
   flush();
 }
@@ -273,7 +286,16 @@ const ORIGIN_RE = new RegExp(`${Q}\\s*(?:در اصل|در لغت|اصلاً|از
 /** «X» (و «Y») … به‌معنی: a few words may come between, never another quote or a new clause */
 const MEANS_RE = new RegExp(`${Q}((?:\\s*(?:و|یا|،)\\s*«[^«»]{1,40}»)*)((?:(?!قرار|وقتی|اگر|چون|برای)[^«».؛:]){0,25}?)\\s*${MEANS}`, 'gd');
 const YANI_RE = new RegExp(`${Q}\\s*یعنی`, 'gd');
-const OF_RE = new RegExp(`(?:معنای|معنی|واژهٔ|کلمهٔ)\\s*${Q}`, 'gd');
+/** Other ways the notes define «X» (and «Y»): بیانگر «…» (not بیانگر شرط), جامع معنای، بر … دلالت دارد، به … گفته می‌شود … */
+const GAP = '(?:(?!قرار|وقتی|اگر|چون|برای)[^«».؛:]){0,25}?';
+const DEF_RE = new RegExp(
+  `${Q}((?:\\s*(?:و|یا|،)\\s*«[^«»]{1,40}»)*)(?:${GAP}\\s*(?:بیانگر\\s*(?=«)|جامع معنای|معنایی گسترده‌تر از|نوع خاصی از)|\\s*بر\\s[^.؛:]{1,50}?دلالت\\s*(?:دارد|می‌کند)|\\s*به\\s[^.؛:]{1,60}?گفته\\s*می‌شود)`,
+  'gd',
+);
+/** برای «X» … معانی … ذکر شده */
+const SENSES_RE = new RegExp(`برای\\s*${Q}[^.؛:]{0,40}?معان(?:ی|ي)[^.؛:]{0,30}?ذکر\\s*شده`, 'gd');
+/** معنای «X», also with a few qualifiers between: معنای لغوی «X»، معنای عمیق و گستردهٔ «X» */
+const OF_RE = new RegExp(`(?:(?:معنای|معنی)(?:\\s+(?:لغوی|اصلی|دقیق|عمیق|گسترده|گستردهٔ|و)){0,4}|واژهٔ|کلمهٔ)\\s*${Q}`, 'gd');
 
 /** A quote in this position is a meaning or a named root, never a headword. */
 const SLOT = new RegExp(`(?:به[‌ ]?معن(?:ی|ای)|معادل|یعنی|ترجمه(?:ٔ آن)? به|نقطهٔ مقابل|از\\s+(?:واژهٔ|تعبیر|کلمهٔ)|از\\s+${MADDE}|${MADDE}\\s*«[^«»]+»\\s*(?:یا|و))\\s*$`);
@@ -328,7 +350,9 @@ function headwords(sentence: string): Headword[] {
     if (!looksArabic(word) || PARTICLES.has(norm(word))) return;
     if (!force && SLOT.test(sentence.slice(0, at - 1))) return;
     const prev = out.get(norm(word));
-    out.set(norm(word), { word, kind: prev?.kind === 'core' ? 'core' : kind, named: named ?? prev?.named });
+    // A later match never respells the root a pattern already took as the core («نصب» … «نَصَب» … گفته می‌شود).
+    const keep = prev?.kind === 'core' && kind !== 'core';
+    out.set(norm(word), { word: keep ? prev.word : word, kind: prev?.kind === 'core' ? 'core' : kind, named: named ?? prev?.named });
   };
   const at = (m: RegExpMatchArray, g: number) => m.indices![g]![0];
   for (const m of sentence.matchAll(FROM_RE)) {
@@ -344,6 +368,11 @@ function headwords(sentence: string): Headword[] {
     if (m[2]) for (const q of m[2].matchAll(/«([^«»]+)»/g)) add(q[1], at(m, 2) + q.index! + 1, 'word');
   }
   for (const m of sentence.matchAll(YANI_RE)) add(m[1], at(m, 1), 'word');
+  for (const m of sentence.matchAll(DEF_RE)) {
+    add(m[1], at(m, 1), 'word');
+    if (m[2]) for (const q of m[2].matchAll(/«([^«»]+)»/g)) add(q[1], at(m, 2) + q.index! + 1, 'word');
+  }
+  for (const m of sentence.matchAll(SENSES_RE)) add(m[1], at(m, 1), 'word');
   for (const m of sentence.matchAll(OF_RE)) add(m[1], at(m, 1), 'word');
   return [...out.values()];
 }
@@ -384,6 +413,8 @@ const links: Record<string, Record<string, string>> = {};
 /** "s:a" → norm(word) → root, from the definitions; pointers look up their target here */
 const defined = new Map<string, Map<string, string>>();
 const defRoots = new Map<string, Set<string>>();
+/** "s:a:i" → roots that note defines */
+const noteRoots = new Map<string, Set<string>>();
 
 function resolveWord(h: { word: string; named?: string }, s: number, a: number): Resolved | '-' | undefined {
   const o = override(s, a, h.word);
@@ -434,43 +465,120 @@ const verses = Object.entries(fa.surahs)
   .flatMap(([s, ayahs]) => Object.entries(ayahs).map(([a, v]) => ({ s: Number(s), a: Number(a), notes: v.notes ?? [] })))
   .sort((x, y) => x.s - y.s || x.a - y.a);
 
-const pointers: { s: number; a: number; i: number; sentence: string; targets: [number, number][] }[] = [];
+const pointers: { s: number; a: number; i: number; sentence: string; targets: [number, number][]; skip?: Set<string> }[] = [];
+
+function define(h: Headword, s: number, a: number, i: number) {
+  const r = resolveWord(h, s, a);
+  if (r === '-') {
+    report.push([`${s}:${a}`, String(i), h.word, h.kind, '-', 'override']);
+    return;
+  }
+  if (!r) {
+    // Words found under several roots need a decision; the rest are Persian words or not in the Quran.
+    if (ambiguous) unresolved.push(`${s}:${a} «${h.word}»`);
+    report.push([`${s}:${a}`, String(i), h.word, h.kind, '?', ambiguous ? 'ambiguous' : 'not found']);
+    return;
+  }
+  place({ s, a, i, w: [h.word], k: h.kind, ...(r.lemma ? { lem: r.lemma } : {}) }, r.root);
+  const dk = `${s}:${a}`;
+  (defined.get(dk) ?? defined.set(dk, new Map()).get(dk)!).set(norm(h.word), r.root);
+  (defRoots.get(dk) ?? defRoots.set(dk, new Set()).get(dk)!).add(r.root);
+  (noteRoots.get(`${dk}:${i}`) ?? noteRoots.set(`${dk}:${i}`, new Set()).get(`${dk}:${i}`)!).add(r.root);
+  report.push([dk, String(i), h.word, h.kind, r.root, r.how]);
+}
+
+/** Does any quote in the text hold `word` (alone or as one of its words)? */
+function quotes(text: string, word: string): boolean {
+  const k = norm(word);
+  return [...text.matchAll(/«([^«»]{1,40})»/g)].some((q) => norm(q[1]) === k || q[1].split(/\s+/).some((t) => norm(t) === k));
+}
+
+/** A sentence's verse references, when it sends the reader elsewhere. */
+function pointerTargets(sentence: string, s: number, a: number): [number, number][] | undefined {
+  if (!POINTER.test(sentence)) return undefined;
+  const refs = findRefs(sentence, s).map((m) => [m.ref.surah, m.ref.ayah] as [number, number]);
+  if (PREV_VERSE.test(sentence) && a > 1) refs.push([s, a - 1]);
+  if (NEXT_VERSE.test(sentence)) refs.push([s, a + 1]);
+  return refs.length ? refs : undefined;
+}
 
 for (const { s, a, notes } of verses) {
   notes.forEach((note, i) => {
     for (const sentence of sentences(note)) {
-      const refs = findRefs(sentence, s).map((m) => [m.ref.surah, m.ref.ayah] as [number, number]);
-      if (PREV_VERSE.test(sentence) && a > 1) refs.push([s, a - 1]);
-      if (NEXT_VERSE.test(sentence)) refs.push([s, a + 1]);
-      if (POINTER.test(sentence) && refs.length) {
-        pointers.push({ s, a, i, sentence, targets: refs });
+      const targets = pointerTargets(sentence, s, a);
+      if (targets) {
+        // "«لمس» به‌معنی … همچون «مسّ» که در آیهٔ … گذشت": a meaning given here for a word the
+        // target doesn't explain is a definition. Restating the target's own word stays a pointer.
+        const own =
+          sentence.search(MEANS_RE) >= 0
+            ? headwords(sentence).filter(
+                (h) =>
+                  sentence.search(new RegExp(`«${h.word}»[^«»]{0,40}?${MEANS}`)) >= 0 &&
+                  !targets.some(([ts, ta]) => {
+                    if (defined.get(`${ts}:${ta}`)?.has(norm(h.word)) || (fa.surahs[ts]?.[ta]?.notes ?? []).some((n) => quotes(n, h.word))) return true;
+                    const r = resolveWord(h, s, a);
+                    return typeof r === 'object' && defRoots.get(`${ts}:${ta}`)?.has(r.root);
+                  }),
+              )
+            : [];
+        for (const h of own) define(h, s, a, i);
+        pointers.push({ s, a, i, sentence, targets, skip: new Set(own.map((h) => norm(h.word))) });
         continue;
       }
-      for (const h of headwords(sentence)) {
-        const r = resolveWord(h, s, a);
-        if (r === '-') {
-          report.push([`${s}:${a}`, String(i), h.word, h.kind, '-', 'override']);
-          continue;
-        }
-        if (!r) {
-          // Words found under several roots need a decision; the rest are Persian words or not in the Quran.
-          if (ambiguous) unresolved.push(`${s}:${a} «${h.word}»`);
-          report.push([`${s}:${a}`, String(i), h.word, h.kind, '?', ambiguous ? 'ambiguous' : 'not found']);
-          continue;
-        }
-        place({ s, a, i, w: [h.word], k: h.kind, ...(r.lemma ? { lem: r.lemma } : {}) }, r.root);
-        const dk = `${s}:${a}`;
-        (defined.get(dk) ?? defined.set(dk, new Map()).get(dk)!).set(norm(h.word), r.root);
-        (defRoots.get(dk) ?? defRoots.set(dk, new Set()).get(dk)!).add(r.root);
-        report.push([dk, String(i), h.word, h.kind, r.root, r.how]);
-      }
+      for (const h of headwords(sentence)) define(h, s, a, i);
     }
   });
 }
 
+const quoteTokens = (sentence: string) => [...sentence.matchAll(/«([^«»]{1,40})»/g)].flatMap((q) => [q[1], ...q[1].split(/\s+/)]);
+
+/**
+ * Where the target verse explains `word`, for a pointer the patterns missed:
+ * the sentence that quotes it; for a root the pointer names (مادهٔ «ضیع»),
+ * the sentence quoting a word of that root («ضایع»); failing both, a
+ * sentence with the word unquoted (… دربارهٔ جهان غیب …). A sentence that
+ * points on elsewhere counts only when it also gives a meaning.
+ */
+function explainedAt(word: string, root: string | undefined, ts: number, ta: number): { i: number; word: string } | undefined {
+  const notes = fa.surahs[ts]?.[ta]?.notes ?? [];
+  const candidates = notes.flatMap((n, i) =>
+    sentences(n)
+      .filter((x) => !pointerTargets(x, ts, ta) || new RegExp(MEANS).test(x))
+      .map((x) => ({ i, x })),
+  );
+  const k = norm(word);
+  for (const { i, x } of candidates) if (quoteTokens(x).some((t) => norm(t) === k)) return { i, word };
+  if (root)
+    for (const { i, x } of candidates)
+      for (const t of quoteTokens(x)) if (looksArabic(t) && !PARTICLES.has(norm(t)) && findRoot(t, ts, ta)?.root === root) return { i, word: t.trim() };
+  const whole = new RegExp(`(?:^|[\\s،؛(])${word}(?=$|[\\s،.؛:)])`);
+  for (const { i, x } of candidates) if (whole.test(x.replace(/«[^«»]*»/g, ''))) return { i, word };
+  return undefined;
+}
+
+// A pointer names the verse whose note explains its word. When no pattern
+// took the word there, the sentence explainedAt finds is the explanation.
+for (const p of pointers) {
+  const named = [...p.sentence.matchAll(MADDE_RE)].map((m) => corpusRoot(m[1])).filter(Boolean) as string[];
+  for (const word of quotedWords(p.sentence)) {
+    if (p.skip?.has(norm(word)) || override(p.s, p.a, word) === '-') continue;
+    const root = corpusRoot(word) && named.includes(corpusRoot(word)!) ? corpusRoot(word) : undefined;
+    // "مفهوم «حضور» در مادهٔ «شهد»": the pointer is about the root it names, not the other quotes.
+    if (named.length && !root) continue;
+    for (const [ts, ta] of p.targets) {
+      const known = defined.get(`${ts}:${ta}`);
+      if (known?.has(norm(word)) || (root && defRoots.get(`${ts}:${ta}`)?.has(root))) break;
+      const hit = explainedAt(word, root, ts, ta);
+      if (!hit) continue;
+      define({ word: hit.word, kind: 'word' }, ts, ta, hit.i);
+      break;
+    }
+  }
+}
+
 // Pointers, once every definition is known.
-for (const { s, a, i, sentence, targets } of pointers) {
-  const words = quotedWords(sentence);
+for (const { s, a, i, sentence, targets, skip } of pointers) {
+  const words = quotedWords(sentence).filter((w) => !skip?.has(norm(w)));
   const named = [...sentence.matchAll(MADDE_RE)].map((m) => corpusRoot(m[1])).filter(Boolean) as string[];
   const placed = new Set<string>();
   for (const word of words) {
@@ -492,14 +600,29 @@ for (const { s, a, i, sentence, targets } of pointers) {
       const r = inVerse(word, `${s}:${a}`) ?? inQuran(word);
       root = r?.root;
     }
-    if (!root || !rootCount.has(root)) continue;
+    if (!root || !(rootCount.has(root) || byRoot.has(root))) continue;
     placed.add(root);
     place({ s, a, i, w: [word], k: 'ref', to: targets[0] }, root);
     report.push([`${s}:${a}`, String(i), word, 'ref', root, `→${targets[0].join(':')}`]);
   }
   // "توضیح این ماده در آیهٔ … گذشت": no word quoted, the target verse defines one root.
-  if (!words.length) {
-    const roots = defRoots.get(targets[0].join(':'));
+  // With several roots there, the note quoting the same thing («صراط مستقیم») decides.
+  if (!words.length && !skip?.size) {
+    let roots = defRoots.get(targets[0].join(':'));
+    if (roots && roots.size > 1) {
+      const [ts, ta] = targets[0];
+      const qs = [...sentence.matchAll(/«([^«»]{1,40})»/g)].map((q) => norm(q[1]));
+      const at = (fa.surahs[ts]?.[ta]?.notes ?? []).findIndex((n) => qs.length && qs.every((q) => [...n.matchAll(/«([^«»]{1,40})»/g)].some((m) => norm(m[1]) === q)));
+      if (at >= 0) roots = noteRoots.get(`${ts}:${ta}:${at}`);
+      // Still several: the words inside the quote («لا تعثوا في الأرض») pick one.
+      if (roots && roots.size > 1) {
+        const inQuote = new Set(
+          qs.length ? [...sentence.matchAll(/«([^«»]{1,40})»/g)].flatMap((q) => q[1].split(/\s+/)).map((t) => inVerse(t, `${ts}:${ta}`)?.root) : [],
+        );
+        const picked = [...roots].filter((r) => inQuote.has(r));
+        roots = picked.length === 1 ? new Set(picked) : roots;
+      }
+    }
     if (roots?.size === 1) {
       const [root] = roots;
       place({ s, a, i, w: [], k: 'ref', to: targets[0] }, root);
@@ -518,16 +641,29 @@ const entries = [...byRoot]
   .sort((a, b) => sortKey(a[0]).localeCompare(sortKey(b[0]), 'ar'))
   .map(([root, items]) => {
     items.sort((x, y) => x.s - y.s || x.a - y.a || x.i - y.i);
-    const lemmas = [...(rootLemmas.get(root) ?? [])].sort((x, y) => y[1] - x[1]);
+    let lemmas = [...(rootLemmas.get(root) ?? [])].sort((x, y) => y[1] - x[1]);
+    let count = rootCount.get(root) ?? 0;
+    let inVerses = rootVerses.get(root) ?? new Set<string>();
+    if (!count) {
+      // A root the corpus doesn't give (a name: عَدْن، بَكَّة): count the rootless words its notes explain.
+      const hits = new Map<string, NonNullable<ReturnType<typeof rootless.get>>>();
+      for (const w of [root, ...items.flatMap((x) => x.w)]) for (const v of variants(w)) {
+        const e = rootless.get(norm(stripAl(v)));
+        if (e) hits.set(e.lemma, e);
+      }
+      lemmas = [...hits.values()].map((e) => [e.lemma, e.count] as [string, number]).sort((x, y) => y[1] - x[1]);
+      count = lemmas.reduce((t, [, c]) => t + c, 0);
+      inVerses = new Set([...hits.values()].flatMap((e) => [...e.verses]));
+    }
     return {
       root,
       slug: rootSlugOf(root),
       /** Occurrences in the Quran */
-      count: rootCount.get(root) ?? 0,
+      count,
       lemmas: lemmas.slice(0, 16),
       lemmaCount: lemmas.length,
       /** Translated verses in which a word of this root occurs */
-      verses: [...(rootVerses.get(root) ?? [])].filter((v) => translated.has(v)).join(' '),
+      verses: [...inVerses].filter((v) => translated.has(v)).join(' '),
       items,
     };
   });

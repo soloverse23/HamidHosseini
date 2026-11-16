@@ -6,7 +6,7 @@ import '@fontsource/amiri-quran/400.css';
 import { type Locale } from '../../../../i18n/locales';
 import { t } from '../../../../i18n/strings';
 import Base from '../../../../layouts/Base.astro';
-import { norm } from '../../../../lib/arabic';
+import { distinctWords, norm } from '../../../../lib/arabic';
 import { arabic, noteById, quranFa, surahs } from '../../../../lib/data';
 import { num } from '../../../../lib/format';
 import { explanations, furtherUses, linkRoots, markWords, noteOf, REDIRECTS, rootHref, ROOTS, type GlossItem, type RootEntry } from '../../../../lib/glossary';
@@ -49,7 +49,7 @@ const wordGroups = new Map<string, { words: string[]; items: GlossItem[] }>();
 for (const it of explanations(e).filter((x) => x.k === 'word')) {
   const key = it.lem ? norm(it.lem) : norm(it.w[0] ?? '');
   const g = wordGroups.get(key) ?? wordGroups.set(key, { words: [], items: [] }).get(key)!;
-  for (const w of it.w) if (!g.words.some((x) => norm(x) === norm(w))) g.words.push(w);
+  g.words = distinctWords([...g.words, ...it.w]);
   g.items.push(it);
 }
 /** A further use worth reading in full: it says more than "explained in verse X". */
@@ -225,7 +225,7 @@ const description = excerpt(noteOf(explanations(e)[0]), 158);
                     {g.items.map((it) => (
                       <a href={verseHref(at(it))} class="refs-to__v">
                         {verseName(at(it))}
-                        {it.w.length > 0 && <span lang="ar">{it.w.join('، ')}</span>}
+                        {it.w.length > 0 && <span lang="ar">{distinctWords(it.w).join('، ')}</span>}
                       </a>
                     ))}
                   </dd>
@@ -241,7 +241,7 @@ const description = excerpt(noteOf(explanations(e)[0]), 158);
                     <a href={verseHref(at(it))}>{verseName(at(it))}</a>
                     {it.w.length > 0 && (
                       <span lang="ar" class="refs__w">
-                        {it.w.join('، ')}
+                        {distinctWords(it.w).join('، ')}
                       </span>
                     )}
                   </p>

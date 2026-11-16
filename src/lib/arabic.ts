@@ -41,3 +41,26 @@ export function searchFold(s: string): string {
 
 /** URL slug of a root: Persian letters, as the glossary has always used. */
 export const rootSlugOf = (r: string) => r.replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+
+/** The vowel marks of a word (shadda aside), to tell جَنب from جُنُب. */
+const vowels = (s: string) => s.replace(/[^ًٌٍَُِْ]/g, '');
+/** A word's spelling for comparison: `norm`, without a leading «ال». */
+const bareKey = (s: string) => {
+  const k = norm(s);
+  return k.startsWith('ال') && k.length > 4 ? k.slice(2) : k;
+};
+
+/**
+ * One form per word, for lists: «تأدیه»/«تأدیة», «ربانی»/«ربّانی» and
+ * «الرسول»/«رسول» are one word, the first form kept (the one without «ال»
+ * when both occur). Words whose written vowels differ (جَنب، جُنُب) stay apart.
+ */
+export function distinctWords(words: Iterable<string>): string[] {
+  const out: string[] = [];
+  for (const w of words) {
+    const i = out.findIndex((x) => bareKey(x) === bareKey(w) && (!vowels(x) || !vowels(w) || vowels(x) === vowels(w)));
+    if (i < 0) out.push(w);
+    else if (norm(out[i]).startsWith('ال') && !norm(w).startsWith('ال')) out[i] = w;
+  }
+  return out;
+}
