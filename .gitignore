@@ -4,3 +4,4 @@ dist/
 .vercel/
 .fetch-failures.txt
 .DS_Store
+.env

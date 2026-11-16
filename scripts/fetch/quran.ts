@@ -18,7 +18,14 @@ import { join } from 'node:path';
 import { dice, skeleton, type TranslatedAyah, type Translation } from '../quran/from-telegram';
 import { fetchText, ROOT } from './lib/store';
 
-const API = process.env.QURAN_API_URL ?? 'http://51.68.220.90:3333/api/verses';
+// The database's address is kept out of the repository: QURAN_API_URL comes
+// from the environment (a repository secret in CI, a git-ignored .env locally).
+try {
+  process.loadEnvFile(join(ROOT, '.env'));
+} catch {
+  /* no .env: the environment must provide it */
+}
+const API = process.env.QURAN_API_URL;
 const PAGE = 500; // the API rejects limit > 500 (HTTP 422)
 const TOTAL_AYAHS = 6236;
 /** A drop below this share of the previous count is treated as a fault, not an edit. */
@@ -40,6 +47,7 @@ const read = async <T>(p: string): Promise<T | undefined> => {
 };
 
 async function fetchAll(): Promise<ApiVerse[]> {
+  if (!API) throw new Error('QURAN_API_URL is not set (add it to .env, or as a repository secret in CI)');
   const out: ApiVerse[] = [];
   for (let skip = 0; ; skip += PAGE) {
     const page = JSON.parse(await fetchText(`${API}?skip=${skip}&limit=${PAGE}`)) as { total: number; items: ApiVerse[] };

@@ -1,8 +1,10 @@
 name: Sync content
 
 # Pulls new posts from Telegram, YouTube, TikTok and Instagram, and new
-# episodes of the Imam Ali Foundation playlists, about every 6 hours. Commits the
-# data if anything changed and lets Vercel redeploy from that commit.
+# episodes of the Imam Ali Foundation playlists, about every 6 hours. The Quran
+# translation (text and notes, edited in its own database) is pulled every hour
+# in between, so corrections reach the site quickly. Commits the data if
+# anything changed and lets Vercel redeploy from that commit.
 on:
   schedule:
     # GitHub delays scheduled runs by hours and drops some outright, so a 6-hourly
@@ -77,6 +79,7 @@ jobs:
         continue-on-error: true
         env:
           IG_SESSIONID: ${{ secrets.IG_SESSIONID }}
+          QURAN_API_URL: ${{ secrets.QURAN_API_URL }}
         run: npx tsx scripts/fetch/all.ts ${{ inputs.full && '--full' || '' }}
 
       - name: Draw Quran share cards
@@ -118,4 +121,49 @@ jobs:
             gh issue comment "$existing" --body "$body"
           else
             gh issue create --title "Content sync failing" --label sync-failure --body "$body"
+          fi
+
+  # The hours the full sync isn't due: only the Quran translation and what is
+  # derived from it (glossary, share cards).
+  quran:
+    needs: gate
+    if: needs.gate.outputs.due != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fetch the Quran translation
+        env:
+          QURAN_API_URL: ${{ secrets.QURAN_API_URL }}
+        run: |
+          npx tsx scripts/fetch/quran.ts
+          npx tsx scripts/quran/glossary.ts
+
+      - name: Draw Quran share cards
+        continue-on-error: true
+        run: |
+          if [ "$(npx tsx scripts/og/quran.ts --pending)" != "0" ]; then
+            npx playwright-core install --with-deps chromium
+            npx tsx scripts/og/quran.ts
+          fi
+
+      - name: Commit changes
+        run: |
+          git config user.name "content-sync[bot]"
+          git config user.email "content-sync@users.noreply.github.com"
+          git add src/data public/og
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "content: sync Quran translation $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git pull --rebase --autostash origin main
+            git push
           fi
