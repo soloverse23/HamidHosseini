@@ -1,16 +1,37 @@
 {
  "source": "tiktok",
- "updatedAt": "2026-11-20T11:35:13.116Z",
+ "updatedAt": "2026-11-20T20:15:05.090Z",
  "profiles": {
   "main": {
    "name": "Islam De Ce Si Cum?",
    "handle": "@islam.de.ce.si.cum",
    "url": "https://www.tiktok.com/@islam.de.ce.si.cum",
    "description": "Răspunsurile lui Hamid Hosseini la cele mai importante întrebări religioase",
-   "followers": 7054
+   "followers": 7065
   }
  },
  "items": [
+  {
+   "title": "AI auzit de halal și haram Dar nu știi ce înseamnă e simplu…",
+   "source": "tiktok",
+   "id": "7710278704982805782",
+   "url": "https://www.tiktok.com/@islam.de.ce.si.cum/video/7710278704982805782",
+   "date": "2026-11-20T15:39:21.000Z",
+   "kind": "short",
+   "lang": "ro",
+   "text": "#fyp #românia #halal #emotii",
+   "media": [
+    {
+     "kind": "video",
+     "src": "/media/tiktok/7710278704982805782.webp",
+     "width": 540,
+     "height": 960,
+     "duration": 26
+    }
+   ],
+   "views": 1774,
+   "likes": 283
+  },
   {
    "source": "tiktok",
    "id": "7709161244846001430",
@@ -28,8 +49,8 @@
      "duration": 11
     }
    ],
-   "views": 25300,
-   "likes": 1247
+   "views": 39900,
+   "likes": 1895
   },
   {
    "title": "Poate ați văzut și voi imaginile 1 cruce uriașă care se…",
@@ -49,8 +70,8 @@
      "duration": 31
     }
    ],
-   "views": 6285,
-   "likes": 653
+   "views": 7971,
+   "likes": 721
   },
   {
    "source": "tiktok",
@@ -69,8 +90,8 @@
      "duration": 31
     }
    ],
-   "views": 5607,
-   "likes": 544
+   "views": 6445,
+   "likes": 580
   },
   {
    "title": "De ce femeile poartă hijab într-o lume obsedată de aparențe…",
@@ -90,8 +111,8 @@
      "duration": 24
     }
    ],
-   "views": 13300,
-   "likes": 931
+   "views": 14500,
+   "likes": 985
   },
   {
    "title": "Pun pariu că nu știai asta despre Fecioara Maria în coran…",
@@ -111,8 +132,8 @@
      "duration": 22
     }
    ],
-   "views": 9510,
-   "likes": 798
+   "views": 10100,
+   "likes": 828
   },
   {
    "title": "Că musulmani în România cel mai des sunt întrebat nu te…",
@@ -132,8 +153,8 @@
      "duration": 22
     }
    ],
-   "views": 30400,
-   "likes": 1820
+   "views": 47000,
+   "likes": 2301
   },
   {
    "source": "tiktok",
@@ -152,8 +173,8 @@
      "duration": 23
     }
    ],
-   "views": 6670,
-   "likes": 661,
+   "views": 6936,
+   "likes": 671,
    "title": "E normal să fim diferiți până și oamenii din aceeași familie…"
   },
   {
@@ -173,8 +194,8 @@
      "duration": 22
     }
    ],
-   "views": 6276,
-   "likes": 577
+   "views": 6476,
+   "likes": 590
   },
   {
    "source": "tiktok",
@@ -193,8 +214,8 @@
      "duration": 36
     }
    ],
-   "views": 7653,
-   "likes": 779,
+   "views": 7954,
+   "likes": 803,
    "title": "Există 1 omenescu al orientului hafez este unul dintre cei…"
   },
   {
@@ -214,8 +235,8 @@
      "duration": 19
     }
    ],
-   "views": 17200,
-   "likes": 1240,
+   "views": 17600,
+   "likes": 1270,
    "title": "Știai că Iisus are 2 anume unici în coran pe care niciun alt…"
   },
   {
@@ -235,8 +256,8 @@
      "duration": 23
     }
    ],
-   "views": 13300,
-   "likes": 1199,
+   "views": 13700,
+   "likes": 1219,
    "title": "Musulmanii și creștinii au diferențe da și creștinii între…"
   },
   {
@@ -256,8 +277,8 @@
      "duration": 21
     }
    ],
-   "views": 159200,
-   "likes": 7634,
+   "views": 160400,
+   "likes": 7690,
    "title": "Și musulmanii cred în Iisus în coran el este numit mesia…"
   },
   {
@@ -277,8 +298,8 @@
      "duration": 17
     }
    ],
-   "views": 7174,
-   "likes": 791,
+   "views": 7285,
+   "likes": 803,
    "title": "Când auzi allahu Akbar la ce te gândești înseamnă doar atât…"
   },
   {
@@ -298,8 +319,8 @@
      "duration": 29
     }
    ],
-   "views": 14700,
-   "likes": 1423,
+   "views": 15000,
+   "likes": 1448,
    "title": "Trebuie să te închizi într-o singură religie coranul spune…"
   },
   {
@@ -319,8 +340,8 @@
      "duration": 18
     }
    ],
-   "views": 58600,
-   "likes": 2088,
+   "views": 59100,
+   "likes": 2112,
    "title": "Ciudat nu în coran Iisus face minuni vindeca orbi da viața…"
   },
   {
@@ -340,8 +361,8 @@
      "duration": 16
     }
    ],
-   "views": 15300,
-   "likes": 1359,
+   "views": 15400,
+   "likes": 1366,
    "title": "Tu îi știi ce înseamnă allahu Akbar de fapt nu doar dumnezeu…"
   },
   {
@@ -361,8 +382,8 @@
      "duration": 24
     }
    ],
-   "views": 27800,
-   "likes": 2378,
+   "views": 28000,
+   "likes": 2391,
    "title": "Poate AI crezut că Islam le spune Ori te faci musulman Ori…"
   },
   {
@@ -382,8 +403,8 @@
      "duration": 21
     }
    ],
-   "views": 56200,
-   "likes": 2707,
+   "views": 56300,
+   "likes": 2716,
    "title": "Soțul meu era 1 doar soție iar și EU sunt de acord asta mi-a…"
   },
   {
@@ -403,8 +424,8 @@
      "duration": 21
     }
    ],
-   "views": 68600,
-   "likes": 4616,
+   "views": 68800,
+   "likes": 4629,
    "title": "Te-ai întrebat vreodată ce înseamnă cuvintele care…"
   },
   {
@@ -424,8 +445,8 @@
      "duration": 23
     }
    ],
-   "views": 22500,
-   "likes": 1848,
+   "views": 22600,
+   "likes": 1852,
    "title": "La mulți ani știați că este ziua de naștere a profetului…"
   },
   {
@@ -445,8 +466,8 @@
      "duration": 84
     }
    ],
-   "views": 28100,
-   "likes": 1769,
+   "views": 28200,
+   "likes": 1776,
    "title": "În Iran te poți căsători la 1 vârstă foarte fragedă de unde…"
   },
   {
@@ -487,7 +508,7 @@
      "duration": 77
     }
    ],
-   "views": 6952,
+   "views": 6970,
    "likes": 792,
    "title": "În ultimele sale clipă profetul Muhammad avea lacrimi în…"
   },
@@ -529,8 +550,8 @@
      "duration": 50
     }
    ],
-   "views": 7326,
-   "likes": 881,
+   "views": 7345,
+   "likes": 882,
    "title": "Locul în care bogăția nu are valoare chiar Bella e orașul în…"
   },
   {
@@ -571,7 +592,7 @@
      "duration": 21
     }
    ],
-   "views": 8854,
+   "views": 8864,
    "likes": 836,
    "title": "Mulți dintre noi se întreabă mai are credință în loc în…"
   },
@@ -634,7 +655,7 @@
      "duration": 28
     }
    ],
-   "views": 9682,
+   "views": 9691,
    "likes": 1367,
    "title": "Sunt Iranian și musulman și locuiesc în România mă numesc…"
   },
@@ -676,7 +697,7 @@
      "duration": 79
     }
    ],
-   "views": 13700,
+   "views": 13800,
    "likes": 1419,
    "title": "Copiilor lui le era sete Dar dușmanii nu l-au dat niciun…"
   },
@@ -738,7 +759,7 @@
      "duration": 599
     }
    ],
-   "views": 2676,
+   "views": 2688,
    "likes": 172
   },
   {
@@ -758,7 +779,7 @@
      "duration": 601
     }
    ],
-   "views": 3406,
+   "views": 3413,
    "likes": 231
   },
   {
@@ -778,7 +799,7 @@
      "duration": 480
     }
    ],
-   "views": 3213,
+   "views": 3218,
    "likes": 155
   },
   {
@@ -798,7 +819,7 @@
      "duration": 393
     }
    ],
-   "views": 2294,
+   "views": 2300,
    "likes": 123
   },
   {
@@ -818,7 +839,7 @@
      "duration": 429
     }
    ],
-   "views": 1578,
+   "views": 1582,
    "likes": 55
   },
   {
@@ -838,7 +859,7 @@
      "duration": 415
     }
    ],
-   "views": 1513,
+   "views": 1516,
    "likes": 74
   },
   {
@@ -858,7 +879,7 @@
      "duration": 287
     }
    ],
-   "views": 1431,
+   "views": 1435,
    "likes": 77
   },
   {
@@ -878,7 +899,7 @@
      "duration": 481
     }
    ],
-   "views": 968,
+   "views": 969,
    "likes": 36
   },
   {
@@ -898,7 +919,7 @@
      "duration": 420
     }
    ],
-   "views": 768,
+   "views": 769,
    "likes": 24
   },
   {
@@ -918,7 +939,7 @@
      "duration": 307
     }
    ],
-   "views": 2360,
+   "views": 2361,
    "likes": 26
   },
   {
@@ -958,7 +979,7 @@
      "duration": 261
     }
    ],
-   "views": 1764,
+   "views": 1765,
    "likes": 18
   },
   {
@@ -978,7 +999,7 @@
      "duration": 269
     }
    ],
-   "views": 1003,
+   "views": 1005,
    "likes": 16
   },
   {
@@ -998,7 +1019,7 @@
      "duration": 317
     }
    ],
-   "views": 979,
+   "views": 981,
    "likes": 17
   },
   {
@@ -1018,7 +1039,7 @@
      "duration": 69
     }
    ],
-   "views": 589,
+   "views": 592,
    "likes": 22
   },
   {
@@ -1038,7 +1059,7 @@
      "duration": 332
     }
    ],
-   "views": 543,
+   "views": 545,
    "likes": 19
   },
   {
@@ -1058,7 +1079,7 @@
      "duration": 317
     }
    ],
-   "views": 512,
+   "views": 513,
    "likes": 75
   },
   {
@@ -1078,7 +1099,7 @@
      "duration": 265
     }
    ],
-   "views": 500,
+   "views": 501,
    "likes": 12
   },
   {
@@ -1098,7 +1119,7 @@
      "duration": 217
     }
    ],
-   "views": 676,
+   "views": 679,
    "likes": 13
   },
   {
@@ -1118,7 +1139,7 @@
      "duration": 80
     }
    ],
-   "views": 1453,
+   "views": 1456,
    "likes": 84
   },
   {
@@ -1258,7 +1279,7 @@
      "duration": 485
     }
    ],
-   "views": 8108,
+   "views": 8110,
    "likes": 567
   },
   {
@@ -1278,7 +1299,7 @@
      "duration": 300
     }
    ],
-   "views": 798,
+   "views": 800,
    "likes": 7
   },
   {
@@ -1298,7 +1319,7 @@
      "duration": 316
     }
    ],
-   "views": 2718,
+   "views": 2719,
    "likes": 58
   },
   {
@@ -1318,7 +1339,7 @@
      "duration": 273
     }
    ],
-   "views": 1072,
+   "views": 1073,
    "likes": 24
   },
   {
@@ -1338,7 +1359,7 @@
      "duration": 317
     }
    ],
-   "views": 779,
+   "views": 780,
    "likes": 8
   },
   {
@@ -1358,7 +1379,7 @@
      "duration": 276
     }
    ],
-   "views": 1586,
+   "views": 1587,
    "likes": 58
   },
   {
@@ -1378,7 +1399,7 @@
      "duration": 274
     }
    ],
-   "views": 1103,
+   "views": 1104,
    "likes": 22
   },
   {
@@ -1398,7 +1419,7 @@
      "duration": 220
     }
    ],
-   "views": 512,
+   "views": 513,
    "likes": 17
   },
   {
@@ -1598,7 +1619,7 @@
      "duration": 180
     }
    ],
-   "views": 241,
+   "views": 242,
    "likes": 9
   },
   {
@@ -1618,7 +1639,7 @@
      "duration": 246
     }
    ],
-   "views": 1292,
+   "views": 1293,
    "likes": 14
   },
   {
@@ -1638,7 +1659,7 @@
      "duration": 143
     }
    ],
-   "views": 1260,
+   "views": 1263,
    "likes": 41
   },
   {
@@ -1658,7 +1679,7 @@
      "duration": 170
     }
    ],
-   "views": 154,
+   "views": 158,
    "likes": 8
   },
   {
@@ -1678,7 +1699,7 @@
      "duration": 92
     }
    ],
-   "views": 357,
+   "views": 365,
    "likes": 22
   }
  ]
