@@ -75,7 +75,8 @@ export default defineConfig({
       // the Persian copy (posts, the list and its topics) and skip pagination.
       filter: (page) =>
         new URL(page).pathname !== '/' &&
-        !/\/404\/$/.test(page) &&
+        // Only the site's own 404 page: content can have id 404 too (/fa/notes/404/).
+        new URL(page).pathname !== '/404/' &&
         !/\/(en|ro|ar|ur)\/notes\//.test(page) &&
         // The Quran is indexed only in Persian; the other locales' copies are noindex.
         !/\/(en|ro|ar|ur)\/quran\//.test(page) &&
