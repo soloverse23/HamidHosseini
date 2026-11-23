@@ -35,7 +35,7 @@ const localPost = (id: string) => (noteById.has(id) ? href('fa', `notes/${id}`) 
 <Base
   locale={locale}
   path={`quran/${meta.n}`}
-  noindex={locale !== 'fa'}
+  noindex={locale !== 'fa' || done === 0}
   alternates={false}
   title={title}
   image={quranOg(String(meta.n))}
