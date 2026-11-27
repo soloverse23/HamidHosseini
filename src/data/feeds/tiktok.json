@@ -1,16 +1,36 @@
 {
  "source": "tiktok",
- "updatedAt": "2026-11-27T15:05:00.797Z",
+ "updatedAt": "2026-11-27T23:30:31.707Z",
  "profiles": {
   "main": {
    "name": "Islam De Ce Si Cum?",
    "handle": "@islam.de.ce.si.cum",
    "url": "https://www.tiktok.com/@islam.de.ce.si.cum",
    "description": "Răspunsurile lui Hamid Hosseini la cele mai importante întrebări religioase",
-   "followers": 7215
+   "followers": 7228
   }
  },
  "items": [
+  {
+   "source": "tiktok",
+   "id": "7712897071119863062",
+   "url": "https://www.tiktok.com/@islam.de.ce.si.cum/video/7712897071119863062",
+   "date": "2026-11-27T16:59:54.000Z",
+   "kind": "short",
+   "lang": "ro",
+   "text": "#fyp #românia #emotii",
+   "media": [
+    {
+     "kind": "video",
+     "src": "/media/tiktok/7712897071119863062.webp",
+     "width": 540,
+     "height": 960,
+     "duration": 8
+    }
+   ],
+   "views": 6029,
+   "likes": 477
+  },
   {
    "title": "De ce bărbații musulmani evită aurul Dar poartă inel de…",
    "source": "tiktok",
@@ -29,8 +49,8 @@
      "duration": 24
     }
    ],
-   "views": 6303,
-   "likes": 399
+   "views": 31700,
+   "likes": 1499
   },
   {
    "title": "AI auzit de halal și haram Dar nu știi ce înseamnă e simplu…",
@@ -50,8 +70,8 @@
      "duration": 26
     }
    ],
-   "views": 3525,
-   "likes": 487
+   "views": 4944,
+   "likes": 571
   },
   {
    "source": "tiktok",
@@ -70,8 +90,8 @@
      "duration": 11
     }
    ],
-   "views": 41600,
-   "likes": 1966
+   "views": 44200,
+   "likes": 2074
   },
   {
    "title": "Poate ați văzut și voi imaginile 1 cruce uriașă care se…",
@@ -91,8 +111,8 @@
      "duration": 31
     }
    ],
-   "views": 8390,
-   "likes": 739
+   "views": 9085,
+   "likes": 780
   },
   {
    "source": "tiktok",
@@ -111,8 +131,8 @@
      "duration": 31
     }
    ],
-   "views": 6728,
-   "likes": 592
+   "views": 7163,
+   "likes": 613
   },
   {
    "title": "De ce femeile poartă hijab într-o lume obsedată de aparențe…",
@@ -132,8 +152,8 @@
      "duration": 24
     }
    ],
-   "views": 15200,
-   "likes": 1020
+   "views": 16800,
+   "likes": 1116
   },
   {
    "title": "Pun pariu că nu știai asta despre Fecioara Maria în coran…",
@@ -153,8 +173,8 @@
      "duration": 22
     }
    ],
-   "views": 10400,
-   "likes": 840
+   "views": 11100,
+   "likes": 877
   },
   {
    "title": "Că musulmani în România cel mai des sunt întrebat nu te…",
@@ -174,8 +194,8 @@
      "duration": 22
     }
    ],
-   "views": 48500,
-   "likes": 2366
+   "views": 49900,
+   "likes": 2436
   },
   {
    "source": "tiktok",
@@ -194,8 +214,8 @@
      "duration": 23
     }
    ],
-   "views": 7021,
-   "likes": 678,
+   "views": 7240,
+   "likes": 690,
    "title": "E normal să fim diferiți până și oamenii din aceeași familie…"
   },
   {
@@ -215,8 +235,8 @@
      "duration": 22
     }
    ],
-   "views": 6560,
-   "likes": 596
+   "views": 6739,
+   "likes": 606
   },
   {
    "source": "tiktok",
@@ -235,8 +255,8 @@
      "duration": 36
     }
    ],
-   "views": 8103,
-   "likes": 815,
+   "views": 8308,
+   "likes": 827,
    "title": "Există 1 omenescu al orientului hafez este unul dintre cei…"
   },
   {
@@ -256,8 +276,8 @@
      "duration": 19
     }
    ],
-   "views": 17800,
-   "likes": 1279,
+   "views": 18200,
+   "likes": 1302,
    "title": "Știai că Iisus are 2 anume unici în coran pe care niciun alt…"
   },
   {
@@ -277,8 +297,8 @@
      "duration": 23
     }
    ],
-   "views": 13800,
-   "likes": 1235,
+   "views": 14100,
+   "likes": 1254,
    "title": "Musulmanii și creștinii au diferențe da și creștinii între…"
   },
   {
@@ -298,8 +318,8 @@
      "duration": 21
     }
    ],
-   "views": 161100,
-   "likes": 7719,
+   "views": 161900,
+   "likes": 7768,
    "title": "Și musulmanii cred în Iisus în coran el este numit mesia…"
   },
   {
@@ -319,8 +339,8 @@
      "duration": 17
     }
    ],
-   "views": 7337,
-   "likes": 806,
+   "views": 7503,
+   "likes": 816,
    "title": "Când auzi allahu Akbar la ce te gândești înseamnă doar atât…"
   },
   {
@@ -340,8 +360,8 @@
      "duration": 29
     }
    ],
-   "views": 15100,
-   "likes": 1459,
+   "views": 15400,
+   "likes": 1469,
    "title": "Trebuie să te închizi într-o singură religie coranul spune…"
   },
   {
@@ -361,8 +381,8 @@
      "duration": 18
     }
    ],
-   "views": 59400,
-   "likes": 2120,
+   "views": 59600,
+   "likes": 2126,
    "title": "Ciudat nu în coran Iisus face minuni vindeca orbi da viața…"
   },
   {
@@ -382,8 +402,8 @@
      "duration": 16
     }
    ],
-   "views": 15400,
-   "likes": 1368,
+   "views": 15500,
+   "likes": 1372,
    "title": "Tu îi știi ce înseamnă allahu Akbar de fapt nu doar dumnezeu…"
   },
   {
@@ -403,8 +423,8 @@
      "duration": 24
     }
    ],
-   "views": 28000,
-   "likes": 2395,
+   "views": 28200,
+   "likes": 2403,
    "title": "Poate AI crezut că Islam le spune Ori te faci musulman Ori…"
   },
   {
@@ -424,8 +444,8 @@
      "duration": 21
     }
    ],
-   "views": 56500,
-   "likes": 2719,
+   "views": 56700,
+   "likes": 2726,
    "title": "Soțul meu era 1 doar soție iar și EU sunt de acord asta mi-a…"
   },
   {
@@ -445,8 +465,8 @@
      "duration": 21
     }
    ],
-   "views": 68900,
-   "likes": 4635,
+   "views": 69100,
+   "likes": 4647,
    "title": "Te-ai întrebat vreodată ce înseamnă cuvintele care…"
   },
   {
@@ -466,8 +486,8 @@
      "duration": 23
     }
    ],
-   "views": 22600,
-   "likes": 1855,
+   "views": 22700,
+   "likes": 1857,
    "title": "La mulți ani știați că este ziua de naștere a profetului…"
   },
   {
@@ -488,7 +508,7 @@
     }
    ],
    "views": 28400,
-   "likes": 1778,
+   "likes": 1779,
    "title": "În Iran te poți căsători la 1 vârstă foarte fragedă de unde…"
   },
   {
@@ -529,7 +549,7 @@
      "duration": 77
     }
    ],
-   "views": 6978,
+   "views": 6998,
    "likes": 792,
    "title": "În ultimele sale clipă profetul Muhammad avea lacrimi în…"
   },
@@ -571,7 +591,7 @@
      "duration": 50
     }
    ],
-   "views": 7353,
+   "views": 7367,
    "likes": 882,
    "title": "Locul în care bogăția nu are valoare chiar Bella e orașul în…"
   },
@@ -613,7 +633,7 @@
      "duration": 21
     }
    ],
-   "views": 8871,
+   "views": 8879,
    "likes": 836,
    "title": "Mulți dintre noi se întreabă mai are credință în loc în…"
   },
@@ -635,7 +655,7 @@
     }
    ],
    "views": 63500,
-   "likes": 2569,
+   "likes": 2568,
    "title": "Că musulmani sunt foarte trist să văd că ceea ce este…"
   },
   {
@@ -656,7 +676,7 @@
     }
    ],
    "views": 24000,
-   "likes": 1518,
+   "likes": 1519,
    "title": "Корану coranul Iisus și spune că este 1 carte plină de…"
   },
   {
@@ -676,7 +696,7 @@
      "duration": 28
     }
    ],
-   "views": 9695,
+   "views": 9701,
    "likes": 1367,
    "title": "Sunt Iranian și musulman și locuiesc în România mă numesc…"
   },
@@ -698,7 +718,7 @@
     }
    ],
    "views": 37400,
-   "likes": 3301,
+   "likes": 3302,
    "title": "In Iran acum 1.400 de ani la kerbala imam hussain nepotul…"
   },
   {
@@ -719,7 +739,7 @@
     }
    ],
    "views": 13800,
-   "likes": 1419,
+   "likes": 1418,
    "title": "Copiilor lui le era sete Dar dușmanii nu l-au dat niciun…"
   },
   {
@@ -739,8 +759,8 @@
      "duration": 52
     }
    ],
-   "views": 55900,
-   "likes": 2521,
+   "views": 56000,
+   "likes": 2522,
    "title": "AI și tu 4 soții aceasta este întrebarea pe care 1 primesc…"
   },
   {
@@ -780,7 +800,7 @@
      "duration": 599
     }
    ],
-   "views": 2691,
+   "views": 2698,
    "likes": 172
   },
   {
@@ -800,7 +820,7 @@
      "duration": 601
     }
    ],
-   "views": 3417,
+   "views": 3421,
    "likes": 231
   },
   {
@@ -820,7 +840,7 @@
      "duration": 480
     }
    ],
-   "views": 3222,
+   "views": 3226,
    "likes": 155
   },
   {
@@ -840,7 +860,7 @@
      "duration": 393
     }
    ],
-   "views": 2303,
+   "views": 2307,
    "likes": 123
   },
   {
@@ -860,7 +880,7 @@
      "duration": 429
     }
    ],
-   "views": 1587,
+   "views": 1592,
    "likes": 55
   },
   {
@@ -880,7 +900,7 @@
      "duration": 415
     }
    ],
-   "views": 1518,
+   "views": 1522,
    "likes": 74
   },
   {
@@ -900,7 +920,7 @@
      "duration": 287
     }
    ],
-   "views": 1437,
+   "views": 1441,
    "likes": 77
   },
   {
@@ -920,7 +940,7 @@
      "duration": 481
     }
    ],
-   "views": 971,
+   "views": 975,
    "likes": 36
   },
   {
@@ -940,7 +960,7 @@
      "duration": 420
     }
    ],
-   "views": 772,
+   "views": 774,
    "likes": 24
   },
   {
@@ -960,7 +980,7 @@
      "duration": 307
     }
    ],
-   "views": 2364,
+   "views": 2367,
    "likes": 26
   },
   {
@@ -980,7 +1000,7 @@
      "duration": 258
     }
    ],
-   "views": 2197,
+   "views": 2199,
    "likes": 19
   },
   {
@@ -1000,7 +1020,7 @@
      "duration": 261
     }
    ],
-   "views": 1768,
+   "views": 1770,
    "likes": 18
   },
   {
@@ -1020,7 +1040,7 @@
      "duration": 269
     }
    ],
-   "views": 1009,
+   "views": 1010,
    "likes": 16
   },
   {
@@ -1040,7 +1060,7 @@
      "duration": 317
     }
    ],
-   "views": 984,
+   "views": 985,
    "likes": 17
   },
   {
@@ -1060,7 +1080,7 @@
      "duration": 69
     }
    ],
-   "views": 596,
+   "views": 597,
    "likes": 22
   },
   {
@@ -1080,7 +1100,7 @@
      "duration": 332
     }
    ],
-   "views": 547,
+   "views": 548,
    "likes": 19
   },
   {
@@ -1100,7 +1120,7 @@
      "duration": 317
     }
    ],
-   "views": 515,
+   "views": 516,
    "likes": 75
   },
   {
@@ -1120,7 +1140,7 @@
      "duration": 265
     }
    ],
-   "views": 503,
+   "views": 504,
    "likes": 12
   },
   {
@@ -1140,7 +1160,7 @@
      "duration": 217
     }
    ],
-   "views": 682,
+   "views": 685,
    "likes": 13
   },
   {
@@ -1160,7 +1180,7 @@
      "duration": 80
     }
    ],
-   "views": 1458,
+   "views": 1460,
    "likes": 84
   },
   {
@@ -1180,7 +1200,7 @@
      "duration": 70
     }
    ],
-   "views": 1676,
+   "views": 1678,
    "likes": 134
   },
   {
@@ -1200,7 +1220,7 @@
      "duration": 280
     }
    ],
-   "views": 321,
+   "views": 323,
    "likes": 9
   },
   {
@@ -1220,7 +1240,7 @@
      "duration": 185
     }
    ],
-   "views": 597,
+   "views": 599,
    "likes": 16
   },
   {
@@ -1240,7 +1260,7 @@
      "duration": 207
     }
    ],
-   "views": 792,
+   "views": 795,
    "likes": 22
   },
   {
@@ -1260,7 +1280,7 @@
      "duration": 202
     }
    ],
-   "views": 7908,
+   "views": 7910,
    "likes": 106
   },
   {
@@ -1280,7 +1300,7 @@
      "duration": 281
     }
    ],
-   "views": 1805,
+   "views": 1807,
    "likes": 7
   },
   {
@@ -1300,7 +1320,7 @@
      "duration": 485
     }
    ],
-   "views": 8114,
+   "views": 8117,
    "likes": 567
   },
   {
@@ -1320,7 +1340,7 @@
      "duration": 300
     }
    ],
-   "views": 805,
+   "views": 807,
    "likes": 7
   },
   {
@@ -1340,7 +1360,7 @@
      "duration": 316
     }
    ],
-   "views": 2723,
+   "views": 2724,
    "likes": 58
   },
   {
@@ -1360,7 +1380,7 @@
      "duration": 273
     }
    ],
-   "views": 1076,
+   "views": 1077,
    "likes": 24
   },
   {
@@ -1380,7 +1400,7 @@
      "duration": 317
     }
    ],
-   "views": 783,
+   "views": 784,
    "likes": 8
   },
   {
@@ -1420,7 +1440,7 @@
      "duration": 274
     }
    ],
-   "views": 1107,
+   "views": 1109,
    "likes": 22
   },
   {
@@ -1520,7 +1540,7 @@
      "duration": 355
     }
    ],
-   "views": 483,
+   "views": 484,
    "likes": 14
   },
   {
@@ -1540,7 +1560,7 @@
      "duration": 305
     }
    ],
-   "views": 479,
+   "views": 481,
    "likes": 13
   },
   {
@@ -1560,7 +1580,7 @@
      "duration": 232
     }
    ],
-   "views": 308,
+   "views": 309,
    "likes": 12
   },
   {
@@ -1580,7 +1600,7 @@
      "duration": 283
     }
    ],
-   "views": 138,
+   "views": 139,
    "likes": 7
   },
   {
@@ -1660,7 +1680,7 @@
      "duration": 246
     }
    ],
-   "views": 1294,
+   "views": 1296,
    "likes": 14
   },
   {
@@ -1680,7 +1700,7 @@
      "duration": 143
     }
    ],
-   "views": 1264,
+   "views": 1266,
    "likes": 41
   },
   {
@@ -1700,7 +1720,7 @@
      "duration": 170
     }
    ],
-   "views": 160,
+   "views": 161,
    "likes": 8
   },
   {
@@ -1720,7 +1740,7 @@
      "duration": 92
     }
    ],
-   "views": 370,
+   "views": 373,
    "likes": 22
   }
  ]
